@@ -1,35 +1,10 @@
-15:00:44 **** Incremental Build of configuration Debug for project me507_lab2 ****
+14:00:36 **** Incremental Build of configuration Debug for project me507_lab2 ****
 make -j12 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F411xE -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:152:80: warning: implicit declaration of function 'strlen' [-Wimplicit-function-declaration]
-  152 |                           HAL_UART_Transmit(&huart1, (uint8_t*)uart_rx_buffer, strlen((char*)uart_rx_buffer), 1000);
-      |                                                                                ^~~~~~
-../Core/Src/main.c:25:1: note: include '<string.h>' or provide a declaration of 'strlen'
-   24 | #include "motor_driver.h"
-  +++ |+#include <string.h>
-   25 | /* USER CODE END Includes */
-../Core/Src/main.c:152:80: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  152 |                           HAL_UART_Transmit(&huart1, (uint8_t*)uart_rx_buffer, strlen((char*)uart_rx_buffer), 1000);
-      |                                                                                ^~~~~~
-../Core/Src/main.c:152:80: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/main.c:118:9: warning: unused variable 'motor_2' [-Wunused-variable]
-  118 |   motor motor_2 = {
-      |         ^~~~~~~
-../Core/Src/main.c:109:9: warning: unused variable 'motor_1' [-Wunused-variable]
-  109 |   motor motor_1 = {
-      |         ^~~~~~~
-arm-none-eabi-gcc -o "me507_lab2.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\kyle\STM32CubeIDE\workspace_1.18.0\me507_lab2\STM32F411CEUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="me507_lab2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: me507_lab2.elf
- 
 arm-none-eabi-size  me507_lab2.elf 
-arm-none-eabi-objdump -h -S me507_lab2.elf  > "me507_lab2.list"
    text	   data	    bss	    dec	    hex	filename
-  13184	     12	   1788	  14984	   3a88	me507_lab2.elf
+  17212	     92	   2116	  19420	   4bdc	me507_lab2.elf
 Finished building: default.size.stdout
  
-Finished building: me507_lab2.list
- 
 
-15:00:45 Build Finished. 0 errors, 4 warnings. (took 965ms)
+14:00:37 Build Finished. 0 errors, 0 warnings. (took 294ms)
 

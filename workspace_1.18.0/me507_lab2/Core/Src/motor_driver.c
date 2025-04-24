@@ -33,7 +33,7 @@ void motor_enable(motor* m) {
 	if (m->direction > 0) {
 		__HAL_TIM_SET_COMPARE(m->htim, m->pwm_channel1, autoreload);
 		__HAL_TIM_SET_COMPARE(m->htim, m->pwm_channel2, pulse);
-	} else if (m->direction < 0) {
+	} else {
 		__HAL_TIM_SET_COMPARE(m->htim, m->pwm_channel1, pulse);
 		__HAL_TIM_SET_COMPARE(m->htim, m->pwm_channel2, autoreload);
 	}

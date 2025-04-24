@@ -22,6 +22,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "motor_driver.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +56,7 @@ uint8_t uart_rx_data;
 HAL_StatusTypeDef uart_status;
 uint8_t uart_rx_buffer[RX_BUFFER_SIZE];
 uint8_t uart_rx_index = 0;
+bool new_data = false;
 
 /* USER CODE END PV */
 
@@ -123,6 +128,12 @@ int main(void)
 		  .pwm_channel1 = TIM_CHANNEL_3,
 		  .pwm_channel2 = TIM_CHANNEL_4,
   };
+
+  struct motor motors[2];
+  motors[0] = motor_1;
+  motors[1] = motor_2;
+
+  HAL_UART_Receive_IT(&huart1, &uart_rx_data, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -140,26 +151,82 @@ int main(void)
 //	  motor_disable(&motor_2);
 //	  HAL_Delay(500);
 
-	  HAL_StatusTypeDef uart_status;
+//		HAL_StatusTypeDef uart_status;
 
-	  uart_status = HAL_UART_Receive(&huart1, &uart_rx_data, 1, 0);
+//		uart_status = HAL_UART_Receive(&huart1, &uart_rx_data, 1, 0);
 
-	  if (uart_status == HAL_OK) {
+//		if (uart_status == HAL_OK) {
+		if (new_data == true) {
+			new_data = false;
+			if (uart_rx_data == '\r' || uart_rx_data == '\n') {
+				uart_rx_buffer[uart_rx_index] = '\0';
 
-		  if (uart_rx_data == '\r' || uart_rx_data == '\n') {
-			  uart_rx_buffer[uart_rx_index] = '\0';
+				char reply[32];
+				int len = 0;
+				if (uart_rx_buffer[0] == 'M' && uart_rx_index >= 3) {
+					uint8_t motor = uart_rx_buffer[1];
+					if (motor >= 97)
+						motor = motor - 32;
+					int first = motor / 16 - 3;
+					int second = motor % 16;
+					int motornum = first * 10 + second;
+					if (motornum > 9) motornum--;
 
-			  HAL_UART_Transmit(&huart1, (uint8_t*)uart_rx_buffer, strlen((char*)uart_rx_buffer), 1000);
-			  HAL_UART_Transmit(&huart1, (uint8_t*)"\r\n", 2, 100);
+					char hex_str[3] = {
+						uart_rx_buffer[2],
+						uart_rx_buffer[3],
+						'\0'
+					};
+					int8_t value = (int8_t)strtoul(hex_str, NULL, 16);
 
-			  uart_rx_index = 0;
-		  } else {
 
-			  if (uart_rx_index < RX_BUFFER_SIZE - 1) {
-				  uart_rx_buffer[uart_rx_index++] = uart_rx_data;
-			  }
-		  }
-	  }
+					if (motornum != 1 && motornum != 2) {
+						len = snprintf(reply, sizeof(reply), "Use valid motor num (1,2)\r\n");
+					} else if (value > 100) {
+						len = snprintf(reply, sizeof(reply), "Too large duty cycle\r\n");
+					} else if (value < -100) {
+						len = snprintf(reply, sizeof(reply), "Duty cycle less than -100\r\n");
+					} else {
+						len = snprintf(reply, sizeof(reply), "Got M cmd: motor=%u  val=%d\r\n", motornum, value);
+						int8_t duty_cycle = abs(value);
+						int8_t dir = 1;
+						if (value != 0) {
+							dir = duty_cycle / value;
+						}
+						motor_set(&motors[motornum-1], duty_cycle, dir);
+					}
+				} else {
+					len = snprintf(reply, sizeof(reply), "Begin commands with 'M'\r\n");
+
+				}
+
+				HAL_UART_Transmit(&huart1, (uint8_t*)reply, len, 1000);
+
+
+
+				// Spit out what I put in, then add a new line
+				for (uint16_t i = 0; i < uart_rx_index; ++i) {
+					HAL_UART_Transmit(&huart1,
+									  (uint8_t*)&uart_rx_buffer[i],
+									  1,
+									  1000);
+				}
+				const char *nl = "\r\n";
+				HAL_UART_Transmit(&huart1,
+								  (uint8_t*)nl,
+								  2,
+								  100);
+
+				uart_rx_index = 0;
+			}
+			else {
+				if (uart_rx_index < RX_BUFFER_SIZE - 1) {
+					uart_rx_buffer[uart_rx_index++] = uart_rx_data;
+				}
+			}
+		}
+
+
 
     /* USER CODE END WHILE */
 
@@ -346,8 +413,20 @@ static void MX_GPIO_Init(void)
 //	HAL_UART_Transmit(&huart1, (uint8_t*)tx_buff, strlen(tx_buff), 1000);
 //
 
+void HAL_UART_RxCplt_Callback(UART_HandleTypeDef *huart)
+{
+	new_data = true;
+	HAL_UART_Receive_IT(&huart1, &uart_rx_data, 1);
+}
 
 //}
+int hex_to_int(char c) {
+	int first = c / 16 - 3;
+	int second = c % 16;
+	int result = first*10 + second;
+	if (result > 9) result--;
+	return result;
+}
 /* USER CODE END 4 */
 
 /**
