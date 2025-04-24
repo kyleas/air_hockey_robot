@@ -1,0 +1,20 @@
+/*
+ * motor_driver.h
+ *
+ *  Created on: Apr 17, 2025
+ *      Author: kyle
+ */
+
+#ifndef INC_MOTOR_DRIVER_H_
+#define INC_MOTOR_DRIVER_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+typedef struct motor {
+	uint32_t duty_cycle;
+	int8_t direction;
+} motor;
+
+#endif /* INC_MOTOR_DRIVER_H_ */

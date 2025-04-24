@@ -1,0 +1,39 @@
+/*
+ * motor_driver.h
+ *
+ *  Created on: Apr 17, 2025
+ *      Author: kyle
+ */
+
+#ifndef INC_MOTOR_DRIVER_H_
+#define INC_MOTOR_DRIVER_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include "stm32f4xx_hal.h"
+
+
+typedef struct motor {
+	uint32_t duty_cycle;
+	int8_t direction;
+
+	TIM_HandleTypeDef* htim;
+	uint32_t pwm_channel1;
+	uint32_t pwm_channel2;
+
+	GPIO_TypeDef* port_a;
+	uint16_t dir_pin_a;
+
+	GPIO_TypeDef* dir_port_b;
+	uint16_t dir_pin_b;
+} motor;
+
+
+void motor_set(motor* m, uint32_t duty_cycle, int8_t direction);
+
+void motor_enable(motor* m);
+
+void motor_disable(motor* m);
+
+#endif /* INC_MOTOR_DRIVER_H_ */

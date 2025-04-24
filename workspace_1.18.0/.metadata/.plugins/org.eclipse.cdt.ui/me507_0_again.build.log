@@ -1,0 +1,10 @@
+14:20:42 **** Incremental Build of configuration Debug for project me507_0_again ****
+make -j12 all 
+arm-none-eabi-size  me507_0_again.elf 
+   text	   data	    bss	    dec	    hex	filename
+  10980	     92	   2044	  13116	   333c	me507_0_again.elf
+Finished building: default.size.stdout
+ 
+
+14:20:42 Build Finished. 0 errors, 0 warnings. (took 297ms)
+
