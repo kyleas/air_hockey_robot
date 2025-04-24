@@ -3,6 +3,6 @@
 ../Core/Src/main.c:288:13:MX_TIM2_Init	9
 ../Core/Src/main.c:359:13:MX_USART1_UART_Init	2
 ../Core/Src/main.c:392:13:MX_GPIO_Init	1
-../Core/Src/main.c:416:6:HAL_UART_RxCplt_Callback	1
-../Core/Src/main.c:423:5:hex_to_int	2
-../Core/Src/main.c:436:6:Error_Handler	1
+../Core/Src/main.c:416:6:HAL_UART_RxCpltCallback	1
+../Core/Src/main.c:424:5:hex_to_int	2
+../Core/Src/main.c:437:6:Error_Handler	1

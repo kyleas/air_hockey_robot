@@ -413,7 +413,7 @@ static void MX_GPIO_Init(void)
 //	HAL_UART_Transmit(&huart1, (uint8_t*)tx_buff, strlen(tx_buff), 1000);
 //
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void HAL_UART_RxCplt_Callback(UART_HandleTypeDef *huart)
 {
 	new_data = true;
 	HAL_UART_Transmit(&huart1, (uint8_t*)&uart_rx_data, 1, 1000);
