@@ -1,8 +1,0 @@
-/*
- * motor_driver.c
- *
- *  Created on: Apr 17, 2025
- *      Author: kyle
- */
-
-#include "motor_driver.h"
