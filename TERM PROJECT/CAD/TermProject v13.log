@@ -1,0 +1,702 @@
+﻿STEP to UG
+! INFO-     NX STEP AP214 - V2312.6001
+! INFO-      
+! INFO-     Start of Translation: 2-MAY-2025  7:44:58 PM
+! INFO-      
+! STATUS-   Converting Part: C:\Users\kyle\Downloads\TermProject v13.step
+! SUMMARY-   
+! SUMMARY-    STEP Header Information
+! SUMMARY-   
+! SUMMARY-  Description      Unknown
+! SUMMARY-  Imp_Level        2;1
+! SUMMARY-  File_Name        TermProject v13.step
+! SUMMARY-  Date             2025-05-02T19:34:29-07:00
+! SUMMARY-  Author           Unknown
+! SUMMARY-  Organization     Unknown
+! SUMMARY-  Pre_Version      ST-DEVELOPER v20.1
+! SUMMARY-  Orig_System      Autodesk Translation Framework v14.4.0.0
+! SUMMARY-  Authorization    Unknown
+! SUMMARY-  Schema_ID        automotive_design
+! SUMMARY-   
+! SUMMARY-    Summary of STEP Entities
+! SUMMARY-   
+! SUMMARY-  Entity Type                                                   Count
+! SUMMARY-  -----------                                                   ------
+! SUMMARY-  advanced_face ..............................................:  10606
+! SUMMARY-  application_context ........................................:      1
+! SUMMARY-  axis2_placement_3d .........................................:  14833
+! SUMMARY-  b_spline_curve_with_knots ..................................:     48
+! SUMMARY-  b_spline_surface_with_knots_and_rational_b_spline_surface ..:      8
+! SUMMARY-  cartesian_point ............................................:  55143
+! SUMMARY-  circle .....................................................:   4073
+! SUMMARY-  closed_shell ...............................................:    756
+! SUMMARY-  conical_surface ............................................:     12
+! SUMMARY-  context_dependent_over_riding_styled_item ..................:      5
+! SUMMARY-  context_dependent_shape_representation .....................:    100
+! SUMMARY-  conversion_based_unit_and_length_unit ......................:      1
+! SUMMARY-  cylindrical_surface ........................................:   1998
+! SUMMARY-  dimensional_exponents ......................................:      1
+! SUMMARY-  direction ..................................................:  52084
+! SUMMARY-  edge_curve .................................................:  26539
+! SUMMARY-  edge_loop ..................................................:  12123
+! SUMMARY-  face_bound .................................................:   1517
+! SUMMARY-  face_outer_bound ...........................................:  10606
+! SUMMARY-  geometric_representation_context_and_global_uncertainty_a ..:     62
+! SUMMARY-  item_defined_transformation ................................:    100
+! SUMMARY-  length_measure_with_unit ...................................:      1
+! SUMMARY-  length_unit_and_si_unit ....................................:      1
+! SUMMARY-  line .......................................................:  22418
+! SUMMARY-  manifold_solid_brep ........................................:    756
+! SUMMARY-  mapped_item ................................................:      1
+! SUMMARY-  next_assembly_usage_occurrence .............................:    100
+! SUMMARY-  open_shell .................................................:     34
+! SUMMARY-  oriented_edge ..............................................:  52438
+! SUMMARY-  plane ......................................................:   8393
+! SUMMARY-  plane_angle_unit_and_si_unit ...............................:      1
+! SUMMARY-  product ....................................................:     61
+! SUMMARY-  product_context ............................................:      1
+! SUMMARY-  product_definition .........................................:     61
+! SUMMARY-  product_definition_context .................................:      1
+! SUMMARY-  product_definition_formation ...............................:     61
+! SUMMARY-  product_definition_shape ...................................:    161
+! SUMMARY-  product_related_product_category ...........................:     61
+! SUMMARY-  representation_map .........................................:      1
+! SUMMARY-  representation_relationship_with_transformation_and_shape ..:    100
+! SUMMARY-  shape_representation .......................................:     61
+! SUMMARY-  shell_based_surface_model ..................................:     34
+! SUMMARY-  si_unit_and_solid_angle_unit ...............................:      1
+! SUMMARY-  spherical_surface ..........................................:    176
+! SUMMARY-  toroidal_surface ...........................................:     19
+! SUMMARY-  uncertainty_measure_with_unit ..............................:     62
+! SUMMARY-  vector .....................................................:  22418
+! SUMMARY-  vertex_point ...............................................:  17500
+! SUMMARY-                                                               -------
+! SUMMARY-  Total                                                         315538
+! STATUS-    
+! STATUS-   Converting to Output Form (Phase 2 of 3): 2-MAY-2025 7:44:59 PM
+! STATUS-    
+! STATUS-    
+! STATUS-   Generating UG geometry and placing them in parts
+! STATUS-    
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:17 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\16-soldermask
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:17 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\1-soldermask
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:18 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\16-copper
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:   103
+! SUMMARY-                                 -----
+! SUMMARY-  Total                            103
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:18 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\1-copper
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:   394
+! SUMMARY-                                 -----
+! SUMMARY-  Total                            394
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:21 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\XTAL_TSX-3225_16.0000MF18X-AC3
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              0
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:21 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Pin (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:21 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Pin
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:21 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\RESC1005X40
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:21 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\LEAD-SOT
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\BODY-SOT
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\LM3940IMP-3.3_NOPB v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     5
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              5
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\TS-1187A-B-A-B--3DModel-STEP-56544 v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     7
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              7
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\IRF7404TRPBF_INF v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:    10
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             10
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\S2B-PH-SM4-TB v1 (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     5
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              5
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\S2B-PH-SM4-TB v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     5
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              5
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\XT30UPB-M--3DModel-STEP-510211 v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     5
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              5
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Model
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:    49
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             49
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\B4B-PH-SM4-TB(LF)(SN)_B4B-PH-SM4-TB(LF)(SN) (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     7
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              7
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\B4B-PH-SM4-TB(LF)(SN)_B4B-PH-SM4-TB(LF)(SN)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     7
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              7
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\QFN28_5X5_TRI v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:    31
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             31
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\RESC5025X71
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\RESC1608X60
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\CAPC3216X135
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\CAPC2012X110
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\CAPC1608X85
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\CAPC1005X60
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\INDC2009X120
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\CAPMP7343X310N
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\CAPMP6032X280N
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\42906.f3d
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\42904.f3d
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\FUSC3215X82N
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\16179718.f3d
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Board
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:   102
+! SUMMARY-                                 -----
+! SUMMARY-  Total                            102
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\PolySwitch 0603L001_60 v1 (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     2
+! SUMMARY-  Solid/Sheet .................:    20
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             22
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:25 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\LED_KT-0603R
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:25 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\PolySwitch 0603L001_60 v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     2
+! SUMMARY-  Solid/Sheet .................:    20
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             22
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:26 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\LED_SM0603GC
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:26 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\DDC0006A v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     7
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              7
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:26 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\DDC0006A-MFG
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:27 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\VREG_LM3940IMP-3.3_NOPB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:27 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\SW_TS-1187A-B-A-B
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:27 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\IRF7404TRPBF_INF
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:28 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\JST_S2B-PH-SM4-TB (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:28 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\JST_S2B-PH-SM4-TB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:28 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\XT30UPB-M v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:29 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\XT30UPB-M
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:29 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\QFN50P700X700X55-48 v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:29 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\QFN50P700X700X60-49N
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:29 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\B4B-PH-SM4-TB v1 (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:30 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\JST_B4B-PH-SM4-TB v2 (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:31 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\JST_B4B-PH-SM4-TB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:31 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\B4B-PH-SM4-TB v1
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:32 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\JST_B4B-PH-SM4-TB v2
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:32 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\JST_B4B-PH-SM4-TB (1)
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:32 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\QFN28_5X5_3X8_EPAD_TRI
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:33 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\2X04
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:33 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\1X03
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:33 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\CAPMP3528X210N
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:33 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Packages
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:    61
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             61
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:45:44 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\TermProject v13.prt
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:     6
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              6
+! INFO-      
+! INFO-     Total number of solids input for this translation       :       756
+! INFO-      
+! INFO-     Number of solids created without body validation faults :       756
+! INFO-      
+! INFO-     Number of solids created with body validation fault(s)  :         0
+! INFO-      
+! INFO-     Number of solids ending up as sheet bodies              :         0
+! INFO-      
+! INFO-     End of Translation: 2-MAY-2025  7:46:07 PM
+! INFO-      

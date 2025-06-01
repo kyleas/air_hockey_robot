@@ -1,0 +1,282 @@
+﻿STEP to UG
+! INFO-     NX STEP AP214 - V2312.6001
+! INFO-      
+! INFO-     Start of Translation: 2-MAY-2025  7:48:53 PM
+! INFO-      
+! STATUS-   Converting Part: C:\Users\kyle\Downloads\raspberry-pi-4-model-b-1.snapshot.3\Raspberry Pi 4 Model B.STEP
+! SUMMARY-   
+! SUMMARY-    STEP Header Information
+! SUMMARY-   
+! SUMMARY-  Description      STEP AP214
+! SUMMARY-  Imp_Level        1
+! SUMMARY-  File_Name        Raspberry Pi 4 Model B.STEP
+! SUMMARY-  Date             2019-07-22T10:16:29
+! SUMMARY-  Author           Unknown
+! SUMMARY-  Organization     Unknown
+! SUMMARY-  Pre_Version      SwSTEP 2.0
+! SUMMARY-  Orig_System      SolidWorks 2018
+! SUMMARY-  Authorization    Unknown
+! SUMMARY-  Schema_ID        automotive_design
+! SUMMARY-   
+! SUMMARY-    Summary of STEP Entities
+! SUMMARY-   
+! SUMMARY-  Entity Type                                                   Count
+! SUMMARY-  -----------                                                   ------
+! SUMMARY-  advanced_face ..............................................:   9429
+! SUMMARY-  application_context ........................................:     76
+! SUMMARY-  axis2_placement_3d .........................................:  11634
+! SUMMARY-  b_spline_curve_with_knots ..................................:   2101
+! SUMMARY-  b_spline_curve_with_knots_and_rational_b_spline_curve ......:     78
+! SUMMARY-  b_spline_surface_with_knots ................................:    411
+! SUMMARY-  b_spline_surface_with_knots_and_rational_b_spline_surface ..:     28
+! SUMMARY-  cartesian_point ............................................:  84935
+! SUMMARY-  circle .....................................................:   2621
+! SUMMARY-  closed_shell ...............................................:    108
+! SUMMARY-  conical_surface ............................................:     22
+! SUMMARY-  context_dependent_shape_representation .....................:     19
+! SUMMARY-  cylindrical_surface ........................................:   1814
+! SUMMARY-  direction ..................................................:  44801
+! SUMMARY-  edge_curve .................................................:  26333
+! SUMMARY-  edge_loop ..................................................:  10001
+! SUMMARY-  face_bound .................................................:    572
+! SUMMARY-  face_outer_bound ...........................................:   9429
+! SUMMARY-  geometric_representation_context_and_global_uncertainty_a ..:   4725
+! SUMMARY-  item_defined_transformation ................................:     19
+! SUMMARY-  length_unit_and_si_unit ....................................:   4725
+! SUMMARY-  line .......................................................:  21533
+! SUMMARY-  manifold_solid_brep ........................................:    108
+! SUMMARY-  next_assembly_usage_occurrence .............................:     19
+! SUMMARY-  oriented_edge ..............................................:  52666
+! SUMMARY-  plane ......................................................:   7144
+! SUMMARY-  plane_angle_unit_and_si_unit ...............................:   4725
+! SUMMARY-  product ....................................................:     38
+! SUMMARY-  product_context ............................................:     38
+! SUMMARY-  product_definition .........................................:     38
+! SUMMARY-  product_definition_context .................................:     38
+! SUMMARY-  product_definition_formation_with_specified_source .........:     38
+! SUMMARY-  product_definition_shape ...................................:     57
+! SUMMARY-  product_related_product_category ...........................:     38
+! SUMMARY-  representation_relationship_with_transformation_and_shape ..:     19
+! SUMMARY-  shape_representation .......................................:     19
+! SUMMARY-  si_unit_and_solid_angle_unit ...............................:   4725
+! SUMMARY-  toroidal_surface ...........................................:     10
+! SUMMARY-  uncertainty_measure_with_unit ..............................:   4725
+! SUMMARY-  vector .....................................................:  21533
+! SUMMARY-  vertex_point ...............................................:  17152
+! SUMMARY-                                                               -------
+! SUMMARY-  Total                                                         348544
+! STATUS-    
+! STATUS-   Converting to Output Form (Phase 2 of 3): 2-MAY-2025 7:48:56 PM
+! STATUS-    
+! INFO-     CV0305 The entities referenced by a context_dependant_shape_rep are
+! INFO-       not coded as to STEP Part 43 requirements.  The references to the
+! INFO-       component and assembly pieces is out of order.  We will attempt
+! INFO-       to correct this with the given data.  This problem should be
+! INFO-       reported to the translator vendor whose product generated this
+! INFO-       STEP file.  If we are unable to rectify this problem the
+! INFO-       components may be positioned incorrectly.
+! INFO-      
+! STATUS-    
+! STATUS-   Generating UG geometry and placing them in parts
+! STATUS-    
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:21 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\2X USB2.0 PORTS, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\MxL7704 Universal PMIC, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\PCB, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:22 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Female Micro HDMI Connector, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\91D77 D9WHV 778K, 4 GB LPDDR4 SDRAM, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Gigabit Ethernet Port, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Broadcom BCM2711B0 CPU, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     2
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              2
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:23 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\SD Card Slot, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:    10
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             10
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Display Connector, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:    17
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             17
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:24 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Camera Connector, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:    17
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             17
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:25 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\VIA VL805 PCIe USB 3.0 controller, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:25 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Broadcom BCM54213PE Gigabit Ethernet Transceiver, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:25 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Microphone Plug, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     5
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              5
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:26 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\2X USB3.0 PORTS, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:26 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Female USB Type C Connector, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:26 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\2.54 mm DUPONT MALE PIN HEADER, IO, 2X20, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:    41
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             41
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:27 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Cypress CYW43455 Wireless Module Cover, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     1
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              1
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:27 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\2.54 mm DUPONT MALE PIN HEADER, POE, 2X2, RPi4ModelB
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Solid/Sheet .................:     5
+! SUMMARY-                                 -----
+! SUMMARY-  Total                              5
+! STATUS-   Creating the UG part (Phase 3 of 3): 2-MAY-2025  7:49:27 PM
+! INFO-     Filing Part ..: C:\Users\kyle\Documents\GitHub\ME507\TERM PROJECT\CAD\Raspberry Pi 4 Model B.prt
+! SUMMARY-   
+! SUMMARY-  Summary of Unigraphics Part Entities
+! SUMMARY-   
+! SUMMARY-  Entities Processed             Count
+! SUMMARY-  ------------------             -----
+! SUMMARY-  Group .......................:    19
+! SUMMARY-                                 -----
+! SUMMARY-  Total                             19
+! INFO-      
+! INFO-     Total number of solids input for this translation       :       108
+! INFO-      
+! INFO-     Number of solids created without body validation faults :       108
+! INFO-      
+! INFO-     Number of solids created with body validation fault(s)  :         0
+! INFO-      
+! INFO-     Number of solids ending up as sheet bodies              :         0
+! INFO-      
+! INFO-     End of Translation: 2-MAY-2025  7:49:45 PM
+! INFO-      
