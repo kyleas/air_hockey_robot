@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # airhockey.py
 #
-# Complete updated script with:
-#  1) Frame calibration via clicking 2 points per side (fullscreen).
-#  2) HSV calibration with TWO fullscreen windows (live raw + masked preview), sampling continuously.
-#  3) Main detection loop with:
-#       - Exponential smoothing (EMA) on “handle” & “puck” positions for reduced jitter.
-#       - Drawing: handle → puck → first-wall bounce → second-wall bounce.
-#       - Scaling the final warped view to fill the fullscreen window.
-#       - Sending (x_handle, y_handle, vx_ref, vy_ref) over serial.
+# Complete Python script with:
+#  1) Frame calibration (windowed, not fullscreen)
+#  2) HSV calibration (windowed, not fullscreen; live raw + masked preview)
+#  3) Main detection loop (fullscreen, smoothed, scaled)
+#  4) Exponential smoothing on handle/puck to reduce jitter
+#  5) Drawing: handle → puck → first bounce → second bounce
+#  6) Serial output: "x_handle,y_handle,vx_ref,vy_ref\n"
 #
 # Usage:
 #   python3 airhockey.py --mode calibrate_frame
@@ -153,7 +152,7 @@ def mouse_callback_frame(event, x, y, flags, param):
 
 def calibrate_frame():
     """
-    Pops up a fullscreen window showing a live camera feed. 
+    Pops up a window (not fullscreen) showing a live camera feed. 
     User clicks:
       - 2 points on the TOP edge, then 'n'
       - 2 points on the RIGHT edge, then 'n'
@@ -170,7 +169,7 @@ def calibrate_frame():
 
     window_name = "Frame Calibration"
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.resizeWindow(window_name, 800, 600)
     cv2.setMouseCallback(window_name, mouse_callback_frame)
 
     side_names = ["TOP", "RIGHT", "BOTTOM", "LEFT"]
@@ -193,8 +192,8 @@ def calibrate_frame():
         for (x, y) in clicks:
             cv2.circle(vis, (x, y), 6, (0, 255, 0), -1)
 
-        cv2.putText(vis, f"Click 2 points on the {side_names[side_idx]} edge", (50,50),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0,255,255), 3)
+        cv2.putText(vis, f"Click 2 points on the {side_names[side_idx]} edge", (30,50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 2)
         cv2.imshow(window_name, vis)
 
         key = cv2.waitKey(30) & 0xFF
@@ -259,12 +258,12 @@ def calibrate_frame():
     print(f"     Warped table size = {maxWidth} × {maxHeight} px.\n")
 
 # ------------------------------------------------------------------------------
-# CALIBRATION: HSV RANGE
+# CALIBRATION: HSV RANGE (WINDOWED)
 # ------------------------------------------------------------------------------
 
 def calibrate_hsv():
     """
-    Continuously grabs frames from the camera and shows TWO fullscreen windows:
+    Continuously grabs frames from the camera and shows TWO windowed windows:
       1) "HSV Calibration - Raw"    -> live BGR feed for clicking
       2) "HSV Calibration - Masked" -> live masked preview of current HSV range
 
@@ -281,13 +280,13 @@ def calibrate_hsv():
         print("ERROR: Could not open camera for HSV calibration.")
         return
 
-    # 2) Create two fullscreen windows
+    # 2) Create two windowed windows
     win_raw    = "HSV Calibration - Raw"
     win_masked = "HSV Calibration - Masked"
     cv2.namedWindow(win_raw,    cv2.WINDOW_NORMAL)
     cv2.namedWindow(win_masked, cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty(win_raw,    cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-    cv2.setWindowProperty(win_masked, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.resizeWindow(win_raw, 800, 600)
+    cv2.resizeWindow(win_masked, 800, 600)
 
     # Mouse callback to sample HSV from the latest frame_hsv
     frame_hsv = None
@@ -342,17 +341,7 @@ def calibrate_hsv():
                     1.0,
                     (0, 255, 255),
                     2)
-
-        try:
-            _, _, winW, winH = cv2.getWindowImageRect(win_raw)
-            if winW > 0 and winH > 0:
-                vis_raw_disp = cv2.resize(vis_raw, (winW, winH), interpolation=cv2.INTER_LINEAR)
-            else:
-                vis_raw_disp = vis_raw
-        except:
-            vis_raw_disp = vis_raw
-
-        cv2.imshow(win_raw, vis_raw_disp)
+        cv2.imshow(win_raw, vis_raw)
 
         # 3b) SHOW MASKED (live masked preview)
         mask = cv2.inRange(frame_hsv, lower, upper)
@@ -364,17 +353,7 @@ def calibrate_hsv():
                     1.0,
                     (0, 0, 255),
                     2)
-
-        try:
-            _, _, winWM, winHM = cv2.getWindowImageRect(win_masked)
-            if winWM > 0 and winHM > 0:
-                masked_disp = cv2.resize(masked_vis, (winWM, winHM), interpolation=cv2.INTER_LINEAR)
-            else:
-                masked_disp = masked_vis
-        except:
-            masked_disp = masked_vis
-
-        cv2.imshow(win_masked, masked_disp)
+        cv2.imshow(win_masked, masked_vis)
 
         # 4) Break when 'q' pressed
         key = cv2.waitKey(30) & 0xFF
@@ -471,7 +450,7 @@ def compute_first_bounce(x0, y0, vx, vy, W, H):
     return (t_hit, xh, yh, wall)
 
 # ------------------------------------------------------------------------------
-# MAIN DETECTION + SERIAL SENDING (with smoothing & fullscreen scaling)
+# MAIN DETECTION + SERIAL SENDING (fullscreen scaling)
 # ------------------------------------------------------------------------------
 
 def main_loop():
@@ -678,7 +657,7 @@ def main_loop():
 # ------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Air Hockey Table Detection on Raspberry Pi (full-screen, smoothed, dual-HSV preview)")
+    parser = argparse.ArgumentParser(description="Air Hockey Table Detection on Raspberry Pi")
     parser.add_argument(
         "--mode",
         choices=["calibrate_frame", "calibrate_hsv", "run"],
