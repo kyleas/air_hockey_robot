@@ -4,9 +4,9 @@
 # Complete Python script with:
 #  1) Frame calibration (windowed, not fullscreen)
 #  2) HSV calibration (windowed; live raw + masked preview)
-#  3) Main detection loop (fullscreen; smoothed puck tracking; predicted puck path to y=30% of table with bounce logic)
+#  3) Main detection loop (fullscreen; dual‐circle logic below halfway, velocity logic above halfway)
 #  4) Exponential smoothing on puck to reduce jitter
-#  5) Drawing: handle & puck circles, predicted path (no-backwards), bounce points, etc.
+#  5) Drawing: handle & puck circles when below halfway, predicted path when above halfway
 #  6) Serial output: "x_target,time_until_impact\n"
 #
 # Usage:
@@ -460,11 +460,9 @@ def main_loop():
     """
     Loads warp matrix & HSV thresholds, opens serial port, and runs main detection loop:
       - Grab frame, warp, threshold for red, HoughCircles
-      - Identify handle & puck from two circles; smooth puck via EMA
-      - Compute predicted path to y = 0.3 * TABLE_H, including one bounce if necessary
-      - Draw handle & puck circles, predicted path (no-backwards), bounce points, etc.
-      - Scale and display fullscreen (1080×1440)
-      - Send (x_target, time_until_impact) over serial
+      - If puck is in upper half (y < H/2), do velocity‐based prediction
+      - If puck is in lower half (y >= H/2), do handle→puck vector + bounce logic
+      - Draw accordingly and send (x_target, time_until_impact) over serial
     """
     global smoothed_puck, prev_smoothed_puck
 
@@ -539,7 +537,10 @@ def main_loop():
 
         handle_present = False
         puck_present   = False
-        # D) Detect ≥2 circles, identify handle & puck; if only 1, treat it as puck
+        x_target = None
+        time_until_impact = None
+
+        # D) Detect circles
         if circles is not None and len(circles[0]) >= 1:
             detected = np.round(circles[0, :]).astype("int")
             # Filter by radius
@@ -567,6 +568,7 @@ def main_loop():
                     handle_raw = None
                     puck_raw   = (float(c[0]), float(c[1]))
                     r_puck     = c[2]
+
                 # Smooth puck via EMA
                 if smoothed_puck is None:
                     smoothed_puck = puck_raw
@@ -577,14 +579,14 @@ def main_loop():
                     )
                 puck_present = True
 
-                # Draw handle if present
-                if handle_present:
+                # Draw handle if present and puck is below halfway
+                xp, yp = int(round(smoothed_puck[0])), int(round(smoothed_puck[1]))
+                if handle_present and yp >= (TABLE_H / 2.0):
                     xh, yh = int(round(handle_raw[0])), int(round(handle_raw[1]))
                     cv2.circle(vis, (xh, yh), r_handle, (0, 255, 0), 2)   # handle = green
                     cv2.circle(vis, (xh, yh), 4, (0, 0, 255), -1)
 
                 # Draw puck
-                xp, yp = int(round(smoothed_puck[0])), int(round(smoothed_puck[1]))
                 cv2.circle(vis, (xp, yp), r_puck, (255, 255, 0), 2)  # puck = cyan
                 cv2.circle(vis, (xp, yp), 4, (0, 255, 255), -1)
 
@@ -594,85 +596,151 @@ def main_loop():
                     vy = smoothed_puck[1] - prev_smoothed_puck[1]
                 else:
                     vx, vy = 0.0, 0.0
-
                 prev_smoothed_puck = smoothed_puck
 
-                # Only predict if puck is moving toward top (vy < 0)
-                if abs(vx) + abs(vy) > 1e-3 and vy < 0:
-                    x0, y0 = smoothed_puck
-
-                    # Time in frames to reach y_target on unreflected path
-                    t_target = (y_target - y0) / vy  # vy < 0, y_target < y0 => t_target > 0
-                    if t_target > 0:
-                        # Compute first bounce
-                        fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
-
-                        if fb is None or t_target < fb[0]:
-                            # No bounce before reaching y_target
-                            x_target = x0 + vx * t_target
-                            # Draw line from puck to target (y_target)
-                            cv2.line(vis,
-                                     (xp, yp),
-                                     (int(round(x_target)), int(round(y_target))),
-                                     (0, 255, 255),
-                                     2)  # yellow
-                            # Mark target
-                            cv2.circle(vis,
-                                       (int(round(x_target)), int(round(y_target))),
-                                       6, (0, 0, 255), -1)  # red
-                            time_until_impact = t_target / FRAME_RATE
+                # Decide logic based on puck's y-position
+                if yp < (TABLE_H / 2.0):
+                    # ==== Upper half: velocity-based prediction ====
+                    if abs(vx) + abs(vy) > 1e-3 and vy < 0:  # moving toward top
+                        x0, y0 = smoothed_puck
+                        # Time in frames to reach y_target on unreflected path
+                        t_target = (y_target - y0) / vy  # vy<0 => y_target<y0, t_target>0
+                        if t_target > 0:
+                            fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
+                            if fb is None or t_target < fb[0]:
+                                # No bounce before y_target
+                                x_target = x0 + vx * t_target
+                                # Draw line puck→target
+                                cv2.line(vis,
+                                         (xp, yp),
+                                         (int(round(x_target)), int(round(y_target))),
+                                         (0, 255, 255),
+                                         2)  # yellow
+                                cv2.circle(vis,
+                                           (int(round(x_target)), int(round(y_target))),
+                                           6, (0, 0, 255), -1)  # red
+                                time_until_impact = t_target / FRAME_RATE
+                            else:
+                                # Bounce occurs first
+                                t1, xh1, yh1, w1 = fb
+                                # Draw puck→first bounce
+                                cv2.line(vis,
+                                         (xp, yp),
+                                         (int(round(xh1)), int(round(yh1))),
+                                         (0, 255, 255),
+                                         2)  # yellow
+                                cv2.circle(vis,
+                                           (int(round(xh1)), int(round(yh1))),
+                                           6, (255, 0, 0), -1)  # blue
+                                # Reflect
+                                vx2, vy2 = reflect_vector(vx, vy, w1)
+                                eps = 1e-3
+                                x1 = xh1 + vx2 * eps
+                                y1 = yh1 + vy2 * eps
+                                if vy2 < 0:
+                                    t2 = (y_target - y1) / vy2
+                                    if t2 > 0:
+                                        x_target = x1 + vx2 * t2
+                                        # Draw first bounce→target
+                                        cv2.line(vis,
+                                                 (int(round(xh1)), int(round(yh1))),
+                                                 (int(round(x_target)), int(round(y_target))),
+                                                 (255, 0, 255),
+                                                 2)  # magenta
+                                        cv2.circle(vis,
+                                                   (int(round(x_target)), int(round(y_target))),
+                                                   6, (0, 0, 255), -1)  # red
+                                        time_until_impact = (t1 + t2) / FRAME_RATE
+                                    else:
+                                        time_until_impact = None
+                                else:
+                                    time_until_impact = None
                         else:
-                            # Bounce occurs first
+                            time_until_impact = None
+                    else:
+                        time_until_impact = None
+
+                else:
+                    # ==== Lower half: handle→puck vector + bounce ====
+                    if handle_present:
+                        xh, yh = int(round(handle_raw[0])), int(round(handle_raw[1]))
+                        # Draw handle→puck line
+                        cv2.line(vis,
+                                 (xh, yh),
+                                 (xp, yp),
+                                 (0, 255, 255),
+                                 2)  # yellow
+                        # Compute vector
+                        vx_hp = smoothed_puck[0] - handle_raw[0]
+                        vy_hp = smoothed_puck[1] - handle_raw[1]
+                        x0, y0 = handle_raw
+                        # First bounce
+                        fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
+                        if fb is not None:
                             t1, xh1, yh1, w1 = fb
-                            # Draw line from puck to first bounce
-                            cv2.line(vis,
-                                     (xp, yp),
-                                     (int(round(xh1)), int(round(yh1))),
-                                     (0, 255, 255),
-                                     2)  # yellow
-                            # Mark first bounce
                             cv2.circle(vis,
                                        (int(round(xh1)), int(round(yh1))),
                                        6, (255, 0, 0), -1)  # blue
-
-                            # Reflect velocity
-                            vx2, vy2 = reflect_vector(vx, vy, w1)
-                            # New start just beyond bounce
+                            # Reflect
+                            vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
                             eps = 1e-3
                             x1 = xh1 + vx2 * eps
                             y1 = yh1 + vy2 * eps
-
-                            # Now predict if reflected path reaches y_target
+                            # Second bounce or draw short arrow
+                            fb2 = compute_first_bounce(x1, y1, vx2, vy2, TABLE_W, TABLE_H)
+                            if fb2 is not None:
+                                t2, xh2, yh2, w2 = fb2
+                                cv2.circle(vis,
+                                           (int(round(xh2)), int(round(yh2))),
+                                           6, (0, 0, 255), -1)  # red
+                                cv2.line(vis,
+                                         (int(round(xh1)), int(round(yh1))),
+                                         (int(round(xh2)), int(round(yh2))),
+                                         (255, 0, 255),
+                                         2)  # magenta
+                            else:
+                                end_pt = (
+                                    int(round(xh1 + vx2 * 100)),
+                                    int(round(yh1 + vy2 * 100))
+                                )
+                                cv2.line(vis,
+                                         (int(round(xh1)), int(round(yh1))),
+                                         end_pt,
+                                         (255, 0, 255),
+                                         2)
+                            # Now predict intersection with y_target along handle-based path
+                            # First find time to target if before bounce:
+                            # handle→puck vector likely points downward (vy_hp > 0), so need reflect first.
+                            # Compute time from x1,y1 with vx2,vy2 to y_target (vy2 <0?)
                             if vy2 < 0:
-                                t2 = (y_target - y1) / vy2
-                                if t2 > 0:
-                                    x_target = x1 + vx2 * t2
+                                t_target2 = (y_target - y1) / vy2
+                                if t_target2 > 0:
+                                    x_target = x1 + vx2 * t_target2
+                                    cv2.circle(vis,
+                                               (int(round(x_target)), int(round(y_target))),
+                                               6, (0, 0, 255), -1)  # red
                                     # Draw line from first bounce to target
                                     cv2.line(vis,
                                              (int(round(xh1)), int(round(yh1))),
                                              (int(round(x_target)), int(round(y_target))),
-                                             (255, 0, 255),
-                                             2)  # magenta
-                                    # Mark target
-                                    cv2.circle(vis,
-                                               (int(round(x_target)), int(round(y_target))),
-                                               6, (0, 0, 255), -1)  # red
-                                    time_until_impact = (t1 + t2) / FRAME_RATE
+                                             (255, 255, 0),
+                                             2)  # cyan
+                                    time_until_impact = (t1 + t_target2) / FRAME_RATE
                                 else:
-                                    # Reflected path does not reach y_target (line faces away)
                                     time_until_impact = None
                             else:
-                                # Reflected path goes downward, so ignore
                                 time_until_impact = None
+                    else:
+                        time_until_impact = None  # no handle, cannot do vector logic
 
-                        # Send to STM32 if we have a valid target
-                        try:
-                            if time_until_impact is not None:
-                                msg = f"{x_target:.2f},{time_until_impact:.2f}\n"
-                                if ser is not None:
-                                    ser.write(msg.encode('ascii'))
-                        except:
-                            pass
+                # Send to STM32 if valid
+                if (x_target is not None) and (time_until_impact is not None):
+                    try:
+                        msg = f"{x_target:.2f},{time_until_impact:.2f}\n"
+                        if ser is not None:
+                            ser.write(msg.encode('ascii'))
+                    except:
+                        pass
 
         # E) Scale vis to fill fullscreen window (1080×1440)
         vis_display = cv2.resize(vis, (1080, 1440), interpolation=cv2.INTER_LINEAR)
