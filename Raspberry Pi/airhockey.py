@@ -733,8 +733,15 @@ def main_loop():
                         table_width = float(TABLE_W)
                         adjusted_x_target = x_target
                         
-                        if time_until_impact < 0.4:
-                            # When impact is close, move 5% more (to hit at an angle)
+                        # Determine if we're in "Hit" mode based on time or position
+                        # Check if puck is within 5% of table height from impact point
+                        vertical_distance_threshold = TABLE_H * 0.05  # 5% of table height
+                        vertical_distance_from_impact = abs(smoothed_puck[1] - y_target)
+                        in_hit_mode = (time_until_impact < 0.4 or 
+                                      (puck_present and vertical_distance_from_impact < vertical_distance_threshold))
+                        
+                        if in_hit_mode:
+                            # When impact is close or puck is near impact point, move 5% more (to hit at an angle)
                             adjusted_x_target = x_target * 1.05
                             # Ensure we don't go beyond table width
                             adjusted_x_target = min(adjusted_x_target, table_width)
@@ -766,6 +773,24 @@ def main_loop():
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.8,
                     (0, 255, 0),
+                    2)
+        
+        # Add mode indicator text
+        mode_text = "Hit"
+        if time_until_impact is not None and puck_present and smoothed_puck:
+            vertical_distance_from_impact = abs(smoothed_puck[1] - y_target)
+            in_hit_mode = (time_until_impact < 0.4 or 
+                          vertical_distance_from_impact < TABLE_H * 0.05)
+            mode_text = "Hit" if in_hit_mode else "Predict"
+        else:
+            mode_text = "Predict"
+            
+        cv2.putText(vis,
+                    mode_text,
+                    (30, 70),  # Position under FPS counter
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 255, 0) if mode_text == "Predict" else (0, 0, 255),  # Green for Predict, Red for Hit
                     2)
 
         # Display fullscreen (1080×1440)
