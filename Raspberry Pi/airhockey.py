@@ -12,7 +12,7 @@
 #       • Single puck, else: puck→20% (direct or reflection)
 #       • Small dots at centroids instead of circles around objects
 #       • Live FPS counter overlay
-#  6) Serial output: “x_target,time_until_impact\n” (only for single‐puck velocity cases)
+#  6) Serial output: "x_target,time_until_impact\n" (only for single‐puck velocity cases)
 #
 # Usage:
 #   python3 airhockey.py --mode calibrate_frame
@@ -523,69 +523,133 @@ def main_loop():
                 # Draw handle → puck
                 cv2.line(vis, (xh, yh), (xp, yp), (0, 255, 255), 2)  # yellow
 
-                # Compute vector from puck along handle→puck
-                x0, y0 = smoothed_puck
-                vx_hp = x0 - handle_raw[0]
-                vy_hp = y0 - handle_raw[1]
+                # Check puck velocity
+                puck_vel_mag = math.hypot(vx, vy)
+                use_puck_velocity = puck_vel_mag > VEL_THRESHOLD
 
-                # Compute time parameter to reach y_target along that vector
-                if abs(vy_hp) > 1e-3:
-                    t_direct = (y_target - y0) / vy_hp
-                else:
-                    t_direct = None
-
-                fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
-                need_bounce = False
-                if fb is not None and t_direct is not None:
-                    t1, xh1, yh1, w1 = fb
-                    if t1 > 0 and t1 < t_direct:
-                        need_bounce = True
-
-                if need_bounce:
-                    t1, xh1, yh1, w1 = fb
-                    # Draw puck → first bounce
-                    cv2.line(vis,
-                             (xp, yp),
-                             (int(round(xh1)), int(round(yh1))),
-                             (0, 255, 255),
-                             2)
-                    cv2.circle(vis,
-                               (int(round(xh1)), int(round(yh1))),
-                               6, (255, 0, 0), -1)  # blue
-
-                    vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
-                    eps = 1e-3
-                    x1 = xh1 + vx2 * eps
-                    y1 = yh1 + vy2 * eps
-
-                    if abs(vy2) > 1e-3:
-                        t2 = (y_target - y1) / vy2
+                if use_puck_velocity:
+                    # Use puck velocity for prediction (like in single-puck mode)
+                    x0, y0 = smoothed_puck
+                    fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
+                    if abs(vy) > 1e-3:
+                        t_direct = (y_target - y0) / vy
                     else:
-                        t2 = None
+                        t_direct = None
 
-                    if t2 is not None and t2 > 0:
-                        x_target = x1 + vx2 * t2
+                    need_bounce = False
+                    if fb is not None and t_direct is not None:
+                        t1, xh1, yh1, w1 = fb
+                        if t1 > 0 and t1 < t_direct:
+                            need_bounce = True
+
+                    if need_bounce:
+                        t1, xh1, yh1, w1 = fb
                         cv2.line(vis,
+                                 (xp, yp),
                                  (int(round(xh1)), int(round(yh1))),
+                                 (0, 255, 255),
+                                 2)  # yellow
+                        cv2.circle(vis,
+                                   (int(round(xh1)), int(round(yh1))),
+                                   6, (255, 0, 0), -1)  # blue
+
+                        vx2, vy2 = reflect_vector(vx, vy, w1)
+                        eps = 1e-3
+                        x1 = xh1 + vx2 * eps
+                        y1 = yh1 + vy2 * eps
+                        if abs(vy2) > 1e-3:
+                            t2 = (y_target - y1) / vy2
+                        else:
+                            t2 = None
+
+                        if t2 is not None and t2 > 0:
+                            x_target = x1 + vx2 * t2
+                            cv2.line(vis,
+                                     (int(round(xh1)), int(round(yh1))),
+                                     (int(round(x_target)), int(round(y_target))),
+                                     (255, 0, 255),
+                                     2)  # magenta
+                            cv2.circle(vis,
+                                       (int(round(x_target)), int(round(y_target))),
+                                       6, (0, 0, 255), -1)  # red
+                            time_until_impact = (t1 + t2) / FRAME_RATE
+                    else:
+                        if t_direct is not None and t_direct > 0:
+                            x_target = x0 + vx * t_direct
+                            cv2.line(vis,
+                                     (xp, yp),
+                                     (int(round(x_target)), int(round(y_target))),
+                                     (0, 255, 255),
+                                     2)  # yellow
+                            cv2.circle(vis,
+                                       (int(round(x_target)), int(round(y_target))),
+                                       6, (0, 0, 255), -1)  # red
+                            time_until_impact = t_direct / FRAME_RATE
+                else:
+                    # Original handle→puck logic
+                    # Compute vector from puck along handle→puck
+                    x0, y0 = smoothed_puck
+                    vx_hp = x0 - handle_raw[0]
+                    vy_hp = y0 - handle_raw[1]
+
+                    # Compute time parameter to reach y_target along that vector
+                    if abs(vy_hp) > 1e-3:
+                        t_direct = (y_target - y0) / vy_hp
+                    else:
+                        t_direct = None
+
+                    fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
+                    need_bounce = False
+                    if fb is not None and t_direct is not None:
+                        t1, xh1, yh1, w1 = fb
+                        if t1 > 0 and t1 < t_direct:
+                            need_bounce = True
+
+                    if need_bounce:
+                        t1, xh1, yh1, w1 = fb
+                        # Draw puck → first bounce
+                        cv2.line(vis,
+                                 (xp, yp),
+                                 (int(round(xh1)), int(round(yh1))),
+                                 (0, 255, 255),
+                                 2)
+                        cv2.circle(vis,
+                                   (int(round(xh1)), int(round(yh1))),
+                                   6, (255, 0, 0), -1)  # blue
+
+                        vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
+                        eps = 1e-3
+                        x1 = xh1 + vx2 * eps
+                        y1 = yh1 + vy2 * eps
+
+                        if abs(vy2) > 1e-3:
+                            t2 = (y_target - y1) / vy2
+                        else:
+                            t2 = None
+
+                        if t2 is not None and t2 > 0:
+                            x_target = x1 + vx2 * t2
+                            cv2.line(vis,
+                                     (int(round(xh1)), int(round(yh1))),
+                                     (int(round(x_target)), int(round(y_target))),
+                                     (255, 0, 255),
+                                     2)  # magenta
+                            cv2.circle(vis,
+                                       (int(round(x_target)), int(round(y_target))),
+                                       6, (0, 0, 255), -1)  # red
+                    else:
+                        if t_direct is not None:
+                            x_target = x0 + vx_hp * t_direct
+                        else:
+                            x_target = x0
+                        cv2.line(vis,
+                                 (xp, yp),
                                  (int(round(x_target)), int(round(y_target))),
-                                 (255, 0, 255),
-                                 2)  # magenta
+                                 (0, 255, 255),
+                                 2)  # yellow
                         cv2.circle(vis,
                                    (int(round(x_target)), int(round(y_target))),
                                    6, (0, 0, 255), -1)  # red
-                else:
-                    if t_direct is not None:
-                        x_target = x0 + vx_hp * t_direct
-                    else:
-                        x_target = x0
-                    cv2.line(vis,
-                             (xp, yp),
-                             (int(round(x_target)), int(round(y_target))),
-                             (0, 255, 255),
-                             2)  # yellow
-                    cv2.circle(vis,
-                               (int(round(x_target)), int(round(y_target))),
-                               6, (0, 0, 255), -1)  # red
 
             else:
                 # Single-puck logic
