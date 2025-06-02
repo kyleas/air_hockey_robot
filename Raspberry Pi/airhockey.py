@@ -439,17 +439,17 @@ def main_loop():
         x_target = None
         time_until_impact = None
 
-        # Find contours on mask
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Find contours on mask (use returned tuple properly)
+        contours_data = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = contours_data[-2]  # works whether OpenCV returns 2 or 3 values
+
         valid = [c for c in contours if cv2.contourArea(c) >= AREA_THRESH]
         valid = sorted(valid, key=cv2.contourArea, reverse=True)
 
         if len(valid) >= 1:
-            # If two or more, take largest two
             if len(valid) >= 2:
                 c0 = valid[0]
                 c1 = valid[1]
-                # Compute centroids
                 M0 = cv2.moments(c0)
                 M1 = cv2.moments(c1)
                 if M0["m00"] > 0 and M1["m00"] > 0:
@@ -457,7 +457,6 @@ def main_loop():
                     cy0 = M0["m01"] / M0["m00"]
                     cx1 = M1["m10"] / M1["m00"]
                     cy1 = M1["m01"] / M1["m00"]
-                    # The one with smaller y is puck
                     if cy0 < cy1:
                         puck_raw   = (cx0, cy0)
                         handle_raw = (cx1, cy1)
@@ -467,7 +466,8 @@ def main_loop():
                     handle_present = True
                 else:
                     handle_raw = None
-                    puck_raw = (cx0, cy0) if M0["m00"] > 0 else (cx1, cy1)
+                    M = M0 if M0["m00"] > 0 else M1
+                    puck_raw = (M["m10"] / M["m00"], M["m01"] / M["m00"]) if M["m00"] > 0 else (0.0, 0.0)
                 puck_present = True
             else:
                 c = valid[0]
@@ -518,7 +518,6 @@ def main_loop():
                     t_direct = None
 
                 fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
-
                 need_bounce = False
                 if fb is not None and t_direct is not None:
                     t1, xh1, yh1, w1 = fb
@@ -528,14 +527,8 @@ def main_loop():
                 if need_bounce:
                     t1, xh1, yh1, w1 = fb
                     # Draw puck → first bounce
-                    cv2.line(vis,
-                             (xp, yp),
-                             (int(round(xh1)), int(round(yh1))),
-                             (0, 255, 255),
-                             2)
-                    cv2.circle(vis,
-                               (int(round(xh1)), int(round(yh1))),
-                               8, (255, 0, 0), -1)  # blue
+                    cv2.line(vis, (xp, yp), (int(round(xh1)), int(round(yh1))), (0, 255, 255), 2)
+                    cv2.circle(vis, (int(round(xh1)), int(round(yh1))), 8, (255, 0, 0), -1)  # blue
 
                     vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
                     eps = 1e-3
