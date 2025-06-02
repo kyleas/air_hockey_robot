@@ -729,7 +729,22 @@ def main_loop():
 
                 if (x_target is not None) and (time_until_impact is not None):
                     try:
-                        msg = f"{x_target:.2f},{time_until_impact:.2f}\n"
+                        # Adjust x_target based on time until impact
+                        table_width = float(TABLE_W)
+                        adjusted_x_target = x_target
+                        
+                        if time_until_impact < 0.4:
+                            # When impact is close, move 5% more (to hit at an angle)
+                            adjusted_x_target = x_target * 1.05
+                            # Ensure we don't go beyond table width
+                            adjusted_x_target = min(adjusted_x_target, table_width)
+                        else:
+                            # Initially position 10% less than impact point
+                            adjusted_x_target = x_target * 0.9
+                            # Ensure we don't go below 0
+                            adjusted_x_target = max(adjusted_x_target, 0.0)
+                            
+                        msg = f"{adjusted_x_target:.2f},{time_until_impact:.2f}\n"
                         if ser is not None:
                             ser.write(msg.encode('ascii'))
                     except:
