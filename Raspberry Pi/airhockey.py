@@ -7,12 +7,12 @@
 #  3) Main detection loop (fullscreen; centroid‐based detection, optimized)
 #  4) Exponential smoothing on puck to reduce jitter
 #  5) Drawing:
-#       • If puck velocity ≥ VEL_THRESHOLD: “velocity mode” (no handle→puck line)
-#       • Else if handle present: handle→puck vector, then puck→20% (direct/reflection)
-#       • Else (low velocity, no handle): vertical or velocity‐based logic
+#       • Two centroids: handle→puck vector, then puck→20% (direct or reflection)
+#       • Single puck, low velocity & puck below halfway: vertical line
+#       • Single puck, else: puck→20% (direct or reflection)
 #       • Small dots at centroids instead of circles around objects
 #       • Live FPS counter overlay
-#  6) Serial output: “x_target,time_until_impact\n” (only for velocity mode)
+#  6) Serial output: “x_target,time_until_impact\n” (only for single‐puck velocity cases)
 #
 # Usage:
 #   python3 airhockey.py --mode calibrate_frame
@@ -51,13 +51,13 @@ MIN_RADIUS = 15
 AREA_THRESH = math.pi * (MIN_RADIUS ** 2) * 0.5
 
 SMOOTHING_ALPHA = 0.3
-VEL_THRESHOLD   = 2.0  # pixels/frame
+VEL_THRESHOLD   = 2.0
 
 CLICKS_PER_SIDE = 2
 
 H_MARGIN = 10
-S_MARGIN = 40
-V_MARGIN = 40
+S_MARGIN = 10
+V_MARGIN = 10
 
 FRAME_RATE = 30.0
 
@@ -136,10 +136,6 @@ def calibrate_frame():
     if not cap.isOpened():
         print("ERROR: Could not open camera. Ensure Pi camera is enabled.")
         return
-
-    # Match resolution to main loop to keep warp consistent
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     window_name = "Frame Calibration"
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -244,10 +240,6 @@ def calibrate_hsv():
     if not cap.isOpened():
         print("ERROR: Could not open camera for HSV calibration.")
         return
-
-    # Match resolution to main loop
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     win_raw = "HSV Calibration - Raw"
     win_masked = "HSV Calibration - Masked"
@@ -425,10 +417,6 @@ def main_loop():
         print("ERROR: Cannot open camera for main loop.")
         return
 
-    # Set capture resolution lower for speed
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
     win = "AirHockey Detection"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
     cv2.setWindowProperty(win, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -444,21 +432,20 @@ def main_loop():
     fps_display = 0.0
 
     while True:
+        loop_start = time.time()
+
         ret, frame = cap.read()
         if not ret:
             continue
 
-        # Warp bird's-eye view at calibrated table size
+        # Warp bird's-eye view
         warped = cv2.warpPerspective(frame, warp_matrix, (TABLE_W, TABLE_H))
-
-        # Convert to HSV and threshold
+        # Convert to HSV and threshold once
         hsv = cv2.cvtColor(warped, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, hsv_lower, hsv_upper)
 
-        # Blur the mask to reduce noise (5×5 instead of 9×9)
+        # Blur the mask to reduce noise then find contours
         mask_blur = cv2.GaussianBlur(mask, (5, 5), 0)
-
-        # Find contours on blurred mask
         contours_data = cv2.findContours(mask_blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = contours_data[-2]  # works for both OpenCV 3.x and 4.x
 
@@ -529,78 +516,7 @@ def main_loop():
             xp, yp = int(round(smoothed_puck[0])), int(round(smoothed_puck[1]))
             cv2.circle(vis, (xp, yp), 6, (255, 255, 0), -1)  # puck dot = cyan
 
-            # If high velocity: velocity mode (ignore handle even if present)
-            if math.hypot(vx, vy) >= VEL_THRESHOLD:
-                # Draw puck→20% using puck velocity
-                x0, y0 = smoothed_puck
-                fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
-                if abs(vy) > 1e-3:
-                    t_direct = (y_target - y0) / vy
-                else:
-                    t_direct = None
-
-                need_bounce = False
-                if fb is not None and t_direct is not None:
-                    t1, xh1, yh1, w1 = fb
-                    if t1 > 0 and t1 < t_direct:
-                        need_bounce = True
-
-                if need_bounce:
-                    t1, xh1, yh1, w1 = fb
-                    cv2.line(vis,
-                             (xp, yp),
-                             (int(round(xh1)), int(round(yh1))),
-                             (0, 255, 255),
-                             2)  # yellow
-                    cv2.circle(vis,
-                               (int(round(xh1)), int(round(yh1))),
-                               6, (255, 0, 0), -1)  # blue
-
-                    vx2, vy2 = reflect_vector(vx, vy, w1)
-                    eps = 1e-3
-                    x1 = xh1 + vx2 * eps
-                    y1 = yh1 + vy2 * eps
-                    if abs(vy2) > 1e-3:
-                        t2 = (y_target - y1) / vy2
-                    else:
-                        t2 = None
-
-                    if t2 is not None and t2 > 0:
-                        x_target = x1 + vx2 * t2
-                        cv2.line(vis,
-                                 (int(round(xh1)), int(round(yh1))),
-                                 (int(round(x_target)), int(round(y_target))),
-                                 (255, 0, 255),
-                                 2)  # magenta
-                        cv2.circle(vis,
-                                   (int(round(x_target)), int(round(y_target))),
-                                   6, (0, 0, 255), -1)  # red
-                        time_until_impact = (t1 + t2) / FRAME_RATE
-                else:
-                    if t_direct is not None and t_direct > 0:
-                        x_target = x0 + vx * t_direct
-                        cv2.line(vis,
-                                 (xp, yp),
-                                 (int(round(x_target)), int(round(y_target))),
-                                 (0, 255, 255),
-                                 2)  # yellow
-                        cv2.circle(vis,
-                                   (int(round(x_target)), int(round(y_target))),
-                                   6, (0, 0, 255), -1)  # red
-                        time_until_impact = t_direct / FRAME_RATE
-
-                # Draw velocity arrow only (no handle→puck line)
-                # Send serial if velocity mode produced valid time
-                if (x_target is not None) and (time_until_impact is not None):
-                    try:
-                        msg = f"{x_target:.2f},{time_until_impact:.2f}\n"
-                        if ser is not None:
-                            ser.write(msg.encode('ascii'))
-                    except:
-                        pass
-
-            elif handle_present:
-                # Low velocity: do handle→puck then puck→20% (as before)
+            if handle_present:
                 xh, yh = int(round(handle_raw[0])), int(round(handle_raw[1]))
                 cv2.circle(vis, (xh, yh), 6, (0, 255, 0), -1)  # handle dot = green
 
@@ -612,6 +528,7 @@ def main_loop():
                 vx_hp = x0 - handle_raw[0]
                 vy_hp = y0 - handle_raw[1]
 
+                # Compute time parameter to reach y_target along that vector
                 if abs(vy_hp) > 1e-3:
                     t_direct = (y_target - y0) / vy_hp
                 else:
@@ -626,6 +543,7 @@ def main_loop():
 
                 if need_bounce:
                     t1, xh1, yh1, w1 = fb
+                    # Draw puck → first bounce
                     cv2.line(vis,
                              (xp, yp),
                              (int(round(xh1)), int(round(yh1))),
@@ -639,6 +557,7 @@ def main_loop():
                     eps = 1e-3
                     x1 = xh1 + vx2 * eps
                     y1 = yh1 + vy2 * eps
+
                     if abs(vy2) > 1e-3:
                         t2 = (y_target - y1) / vy2
                     else:
@@ -669,9 +588,10 @@ def main_loop():
                                6, (0, 0, 255), -1)  # red
 
             else:
-                # Low velocity & no handle: vertical up or velocity‐based if moving up
+                # Single-puck logic
                 mag = math.hypot(vx, vy)
                 if (mag < VEL_THRESHOLD) and (yp > (TABLE_H / 2.0)):
+                    # Vertical up
                     cv2.line(vis,
                              (xp, yp),
                              (xp, int(round(y_target))),
@@ -685,12 +605,14 @@ def main_loop():
                         t_frames = (smoothed_puck[1] - y_target) / (-vy)
                         time_until_impact = t_frames / FRAME_RATE
                 else:
-                    # Even if no handle, but velocity ≥ threshold (caught above), or low velocity & above halfway: treat as velocity
+                    # Predict using puck velocity
+                    x0, y0 = smoothed_puck
+                    fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
                     if abs(vy) > 1e-3:
-                        t_direct = (y_target - smoothed_puck[1]) / vy
+                        t_direct = (y_target - y0) / vy
                     else:
                         t_direct = None
-                    fb = compute_first_bounce(smoothed_puck[0], smoothed_puck[1], vx, vy, TABLE_W, TABLE_H)
+
                     need_bounce = False
                     if fb is not None and t_direct is not None:
                         t1, xh1, yh1, w1 = fb
@@ -730,7 +652,7 @@ def main_loop():
                             time_until_impact = (t1 + t2) / FRAME_RATE
                     else:
                         if t_direct is not None and t_direct > 0:
-                            x_target = smoothed_puck[0] + vx * t_direct
+                            x_target = x0 + vx * t_direct
                             cv2.line(vis,
                                      (xp, yp),
                                      (int(round(x_target)), int(round(y_target))),
