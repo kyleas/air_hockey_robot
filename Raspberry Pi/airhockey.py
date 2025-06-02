@@ -4,12 +4,13 @@
 # Complete Python script with:
 #  1) Frame calibration (windowed, not fullscreen)
 #  2) HSV calibration (windowed; live raw + masked preview)
-#  3) Main detection loop (fullscreen; dual‐circle logic vs. single‐puck logic)
+#  3) Main detection loop (fullscreen; centroid‐based detection)
 #  4) Exponential smoothing on puck to reduce jitter
 #  5) Drawing:
-#       • Two circles: handle→puck vector, then puck→20% (direct or reflection)
+#       • Two centroids: handle→puck vector, then puck→20% (direct or reflection)
 #       • Single puck, low velocity & puck below halfway: vertical line
 #       • Single puck, else: puck→20% (direct or reflection)
+#       • Draw small dots at centroids instead of circles around objects
 #  6) Serial output: “x_target,time_until_impact\n” (only for single‐puck velocity cases)
 #
 # Usage:
@@ -41,37 +42,29 @@ import time
 FRAME_CALIB_FILE = "warp_matrix.json"
 HSV_CALIB_FILE   = "hsv_ranges.json"
 
-# Serial port to STM32 (adjust if needed; e.g., '/dev/ttyACM0' or '/dev/ttyUSB0')
 SERIAL_PORT = "/dev/ttyUSB0"
 BAUD_RATE   = 115200
 
-# Minimum circle radius (in warped pixels) to accept as “red circle”
 MIN_RADIUS = 15
+AREA_THRESH = math.pi * (MIN_RADIUS ** 2) * 0.5  # ~ half the area of minimum circle
 
-# Exponential smoothing factor (α) for puck position (0 < α < 1). Larger α = less smoothing.
 SMOOTHING_ALPHA = 0.3
+VEL_THRESHOLD   = 2.0
 
-# Velocity threshold (pixels/frame) for distinguishing “fast” vs “slow”
-VEL_THRESHOLD = 2.0
-
-# How many clicks per side during frame calibration
 CLICKS_PER_SIDE = 2
 
-# Tolerances to expand from sampled HSV values
-H_MARGIN = 10    # hue ±10 (0–180)
-S_MARGIN = 40    # sat ±40 (0–255)
-V_MARGIN = 40    # val ±40 (0–255)
+H_MARGIN = 10
+S_MARGIN = 40
+V_MARGIN = 40
 
-# Frame rate (fps) assumption for time‐to‐impact calculation
 FRAME_RATE = 30.0
 
 # ------------------------------------------------------------------------------
 # GLOBALS FOR MOUSE CALLBACKS & SMOOTHING STATE
 # ------------------------------------------------------------------------------
-clicks        = []      # raw pixel coords during frame calibration
-hsv_samples   = []      # list of (h,s,v) tuples during HSV calibration
+clicks        = []      # pixel coords during frame calibration
+hsv_samples   = []      # list of (h,s,v) during HSV calibration
 
-# Smoothed puck positions
 smoothed_puck       = None   # (x, y)
 prev_smoothed_puck  = None   # (x, y)
 
@@ -80,10 +73,6 @@ prev_smoothed_puck  = None   # (x, y)
 # ------------------------------------------------------------------------------
 
 def line_from_two_points(pt1, pt2):
-    """
-    Returns line coefficients (a, b, c) for line equation: a*x + b*y + c = 0
-    passing through pt1 and pt2.
-    """
     x1, y1 = pt1
     x2, y2 = pt2
     a = float(y1 - y2)
@@ -92,12 +81,6 @@ def line_from_two_points(pt1, pt2):
     return (a, b, c)
 
 def intersect_lines(l1, l2):
-    """
-    Given l1=(a1,b1,c1) and l2=(a2,b2,c2), solve intersection:
-      a1*x + b1*y + c1 = 0
-      a2*x + b2*y + c2 = 0
-    Returns (x, y). If nearly parallel, returns (0.0, 0.0).
-    """
     a1, b1, c1 = l1
     a2, b2, c2 = l2
     denom = (a1 * b2 - a2 * b1)
@@ -108,9 +91,6 @@ def intersect_lines(l1, l2):
     return (x, y)
 
 def save_warp_matrix(filename, matrix, width, height):
-    """
-    Store the warp matrix (3×3), width, height into a JSON file.
-    """
     data = {
         "matrix": matrix.tolist(),
         "width": float(width),
@@ -120,9 +100,6 @@ def save_warp_matrix(filename, matrix, width, height):
         json.dump(data, f)
 
 def load_warp_matrix(filename):
-    """
-    Load warp matrix (np.float32 3×3), width, height from JSON.
-    """
     with open(filename, "r") as f:
         data = json.load(f)
     mat = np.array(data["matrix"], dtype=np.float32)
@@ -131,16 +108,10 @@ def load_warp_matrix(filename):
     return mat, w, h
 
 def save_hsv_ranges(filename, hsv_dict):
-    """
-    hsv_dict = { "h_min":…, "h_max":…, "s_min":…, "s_max":…, "v_min":…, "v_max":… }
-    """
     with open(filename, "w") as f:
         json.dump(hsv_dict, f)
 
 def load_hsv_ranges(filename):
-    """
-    Returns: (lower_bound, upper_bound) as np.array([H,S,V], dtype=np.uint8).
-    """
     with open(filename, "r") as f:
         data = json.load(f)
     lower = np.array([data["h_min"], data["s_min"], data["v_min"]], dtype=np.uint8)
@@ -148,9 +119,6 @@ def load_hsv_ranges(filename):
     return lower, upper
 
 def mouse_callback_frame(event, x, y, flags, param):
-    """
-    Callback for collecting clicks during frame calibration.
-    """
     global clicks
     if event == cv2.EVENT_LBUTTONDOWN:
         clicks.append((x, y))
@@ -160,20 +128,11 @@ def mouse_callback_frame(event, x, y, flags, param):
 # ------------------------------------------------------------------------------
 
 def calibrate_frame():
-    """
-    Pops up an 800×600 window with live camera feed.
-    User clicks:
-      • 2 points on TOP edge → press 'n'
-      • 2 points on RIGHT edge → press 'n'
-      • 2 points on BOTTOM edge → press 'n'
-      • 2 points on LEFT edge → press 'n'
-    Computes perspective warp from those 8 points and saves to warp_matrix.json.
-    """
     global clicks
     clicks = []
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        print("ERROR: Could not open camera. Ensure the Pi camera is enabled.")
+        print("ERROR: Could not open camera. Ensure Pi camera is enabled.")
         return
 
     window_name = "Frame Calibration"
@@ -185,12 +144,12 @@ def calibrate_frame():
     side_idx = 0
 
     print("== FRAME CALIBRATION ==")
-    print("Click 2 points on each side of the table frame in order:")
-    print("  1) TOP edge → press 'n'")
-    print("  2) RIGHT edge → press 'n'")
-    print("  3) BOTTOM edge → press 'n'")
-    print("  4) LEFT edge → press 'n'")
-    print("Press 'q' to abort at any time.")
+    print("Click 2 points on each side:")
+    print("  1) TOP edge → 'n'")
+    print("  2) RIGHT edge → 'n'")
+    print("  3) BOTTOM edge → 'n'")
+    print("  4) LEFT edge → 'n'")
+    print("Press 'q' to abort.")
 
     while True:
         ret, frame = cap.read()
@@ -213,7 +172,7 @@ def calibrate_frame():
         key = cv2.waitKey(30) & 0xFF
         if key == ord('n'):
             if len(clicks) < (side_idx + 1) * CLICKS_PER_SIDE:
-                print(f"  >> Must click {CLICKS_PER_SIDE} points on {side_names[side_idx]} first.")
+                print(f"  >> Need {CLICKS_PER_SIDE} points on {side_names[side_idx]}.")
                 continue
             side_idx += 1
             if side_idx >= 4:
@@ -229,7 +188,7 @@ def calibrate_frame():
     cv2.destroyAllWindows()
 
     if len(clicks) != 8:
-        print(f"ERROR: Expected 8 points, got {len(clicks)}. Aborting.")
+        print(f"ERROR: Got {len(clicks)} points, expected 8. Aborting.")
         return
 
     top_pts    = clicks[0:2]
@@ -258,9 +217,9 @@ def calibrate_frame():
     src_pts = np.array([tl, tr, br, bl], dtype=np.float32)
     dst_pts = np.array([
         [0, 0],
-        [maxWidth-1, 0],
-        [maxWidth-1, maxHeight-1],
-        [0, maxHeight-1]
+        [maxWidth - 1, 0],
+        [maxWidth - 1, maxHeight - 1],
+        [0, maxHeight - 1]
     ], dtype=np.float32)
 
     M = cv2.getPerspectiveTransform(src_pts, dst_pts)
@@ -272,13 +231,6 @@ def calibrate_frame():
 # ------------------------------------------------------------------------------
 
 def calibrate_hsv():
-    """
-    Opens two 800×600 windows:
-      • "HSV Calibration - Raw": live BGR feed for clicking
-      • "HSV Calibration - Masked": live masked preview
-    Click on each visible red circle in RAW. MASKED updates in real time.
-    Press 'q' when done; saves final HSV bounds to hsv_ranges.json.
-    """
     global hsv_samples
     hsv_samples = []
 
@@ -319,11 +271,11 @@ def calibrate_hsv():
             hs = [h for (h,s,v) in hsv_samples]
             ss = [s for (h,s,v) in hsv_samples]
             vs = [v for (h,s,v) in hsv_samples]
-            h_min = max(0, min(hs) - H_MARGIN)
+            h_min = max(0,   min(hs) - H_MARGIN)
             h_max = min(180, max(hs) + H_MARGIN)
-            s_min = max(0, min(ss) - S_MARGIN)
+            s_min = max(0,   min(ss) - S_MARGIN)
             s_max = min(255, max(ss) + S_MARGIN)
-            v_min = max(0, min(vs) - V_MARGIN)
+            v_min = max(0,   min(vs) - V_MARGIN)
             v_max = min(255, max(vs) + V_MARGIN)
         else:
             h_min = h_max = 0
@@ -368,11 +320,11 @@ def calibrate_hsv():
     hs = [h for (h,s,v) in hsv_samples]
     ss = [s for (h,s,v) in hsv_samples]
     vs = [v for (h,s,v) in hsv_samples]
-    h_min = max(0, min(hs) - H_MARGIN)
+    h_min = max(0,   min(hs) - H_MARGIN)
     h_max = min(180, max(hs) + H_MARGIN)
-    s_min = max(0, min(ss) - S_MARGIN)
+    s_min = max(0,   min(ss) - S_MARGIN)
     s_max = min(255, max(ss) + S_MARGIN)
-    v_min = max(0, min(vs) - V_MARGIN)
+    v_min = max(0,   min(vs) - V_MARGIN)
     v_max = min(255, max(vs) + V_MARGIN)
 
     hsv_dict = {
@@ -392,9 +344,6 @@ def calibrate_hsv():
 # ------------------------------------------------------------------------------
 
 def reflect_vector(vx, vy, hit_wall):
-    """
-    Reflect (vx, vy) across the specified wall.
-    """
     if hit_wall in ("left", "right"):
         return (-vx, vy)
     elif hit_wall in ("top", "bottom"):
@@ -403,35 +352,25 @@ def reflect_vector(vx, vy, hit_wall):
         return (vx, vy)
 
 def compute_first_bounce(x0, y0, vx, vy, W, H):
-    """
-    Given ray from (x0,y0) in direction (vx,vy),
-    compute first intersection with table walls.
-    Walls: x=0 'left', x=W 'right', y=0 'top', y=H 'bottom'.
-    Returns (t_hit, x_hit, y_hit, wall_name) or None.
-    """
     candidates = []
-    # LEFT
     if vx < 0:
         t = (0 - x0) / vx
         if t > 1e-6:
             y_hit = y0 + t * vy
             if 0 <= y_hit <= H:
                 candidates.append((t, 0.0, y_hit, "left"))
-    # RIGHT
     if vx > 0:
         t = (W - x0) / vx
         if t > 1e-6:
             y_hit = y0 + t * vy
             if 0 <= y_hit <= H:
                 candidates.append((t, float(W), y_hit, "right"))
-    # TOP
     if vy < 0:
         t = (0 - y0) / vy
         if t > 1e-6:
             x_hit = x0 + t * vx
             if 0 <= x_hit <= W:
                 candidates.append((t, x_hit, 0.0, "top"))
-    # BOTTOM
     if vy > 0:
         t = (H - y0) / vy
         if t > 1e-6:
@@ -441,7 +380,6 @@ def compute_first_bounce(x0, y0, vx, vy, W, H):
 
     if not candidates:
         return None
-
     return min(candidates, key=lambda e: e[0])
 
 # ------------------------------------------------------------------------------
@@ -449,14 +387,6 @@ def compute_first_bounce(x0, y0, vx, vy, W, H):
 # ------------------------------------------------------------------------------
 
 def main_loop():
-    """
-    Runs detection:
-      • Warp each frame
-      • Threshold red, find HoughCircles
-      • If 2 circles: handle vs puck → draw handle→puck → draw puck→20% (direct or reflection)
-      • If 1 circle: compute velocity; if slow & below halfway, vertical; else draw puck→20%
-      • Send x_target,time_until_impact (only for single-puck velocity cases)
-    """
     global smoothed_puck, prev_smoothed_puck
 
     if not os.path.exists(FRAME_CALIB_FILE):
@@ -469,10 +399,8 @@ def main_loop():
     warp_matrix, TABLE_W, TABLE_H = load_warp_matrix(FRAME_CALIB_FILE)
     hsv_lower, hsv_upper         = load_hsv_ranges(HSV_CALIB_FILE)
 
-    # y coordinate at 20% from top
     y_target = 0.2 * TABLE_H
 
-    # Open serial if possible
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
         time.sleep(2.0)
@@ -504,21 +432,6 @@ def main_loop():
         hsv = cv2.cvtColor(warped, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, hsv_lower, hsv_upper)
 
-        masked_color = cv2.bitwise_and(warped, warped, mask=mask)
-        gray = cv2.cvtColor(masked_color, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (9,9), 2)
-
-        circles = cv2.HoughCircles(
-            gray,
-            cv2.HOUGH_GRADIENT,
-            dp=1.2,
-            minDist=MIN_RADIUS*2,
-            param1=50,
-            param2=30,
-            minRadius=MIN_RADIUS,
-            maxRadius=0
-        )
-
         vis = warped.copy()
 
         handle_present = False
@@ -526,81 +439,165 @@ def main_loop():
         x_target = None
         time_until_impact = None
 
-        if circles is not None and len(circles[0]) >= 1:
-            detected = np.round(circles[0, :]).astype("int")
-            detected = [c for c in detected if c[2] >= MIN_RADIUS]
-            if len(detected) >= 1:
-                if len(detected) >= 2:
-                    pair = sorted(detected, key=lambda x: x[2], reverse=True)[:2]
-                    c0, c1 = pair[0], pair[1]
-                    # The one with smaller y is puck (higher on table)
-                    if c0[1] < c1[1]:
-                        puck_raw   = (float(c0[0]), float(c0[1]))
-                        handle_raw = (float(c1[0]), float(c1[1]))
-                        r_puck     = c0[2]
-                        r_handle   = c1[2]
+        # Find contours on mask
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        valid = [c for c in contours if cv2.contourArea(c) >= AREA_THRESH]
+        valid = sorted(valid, key=cv2.contourArea, reverse=True)
+
+        if len(valid) >= 1:
+            # If two or more, take largest two
+            if len(valid) >= 2:
+                c0 = valid[0]
+                c1 = valid[1]
+                # Compute centroids
+                M0 = cv2.moments(c0)
+                M1 = cv2.moments(c1)
+                if M0["m00"] > 0 and M1["m00"] > 0:
+                    cx0 = M0["m10"] / M0["m00"]
+                    cy0 = M0["m01"] / M0["m00"]
+                    cx1 = M1["m10"] / M1["m00"]
+                    cy1 = M1["m01"] / M1["m00"]
+                    # The one with smaller y is puck
+                    if cy0 < cy1:
+                        puck_raw   = (cx0, cy0)
+                        handle_raw = (cx1, cy1)
                     else:
-                        puck_raw   = (float(c1[0]), float(c1[1]))
-                        handle_raw = (float(c0[0]), float(c0[1]))
-                        r_puck     = c1[2]
-                        r_handle   = c0[2]
+                        puck_raw   = (cx1, cy1)
+                        handle_raw = (cx0, cy0)
                     handle_present = True
                 else:
-                    c = detected[0]
                     handle_raw = None
-                    puck_raw   = (float(c[0]), float(c[1]))
-                    r_puck     = c[2]
-
-                # Smooth puck
-                if smoothed_puck is None:
-                    smoothed_puck = puck_raw
+                    puck_raw = (cx0, cy0) if M0["m00"] > 0 else (cx1, cy1)
+                puck_present = True
+            else:
+                c = valid[0]
+                M = cv2.moments(c)
+                if M["m00"] > 0:
+                    puck_raw = (M["m10"] / M["m00"], M["m01"] / M["m00"])
                 else:
-                    smoothed_puck = (
-                        SMOOTHING_ALPHA * puck_raw[0] + (1 - SMOOTHING_ALPHA) * smoothed_puck[0],
-                        SMOOTHING_ALPHA * puck_raw[1] + (1 - SMOOTHING_ALPHA) * smoothed_puck[1]
-                    )
+                    puck_raw = (0.0, 0.0)
+                handle_raw = None
                 puck_present = True
 
-                # Compute velocity
-                if prev_smoothed_puck is not None:
-                    vx = smoothed_puck[0] - prev_smoothed_puck[0]
-                    vy = smoothed_puck[1] - prev_smoothed_puck[1]
+            # Smooth puck
+            if smoothed_puck is None:
+                smoothed_puck = puck_raw
+            else:
+                smoothed_puck = (
+                    SMOOTHING_ALPHA * puck_raw[0] + (1 - SMOOTHING_ALPHA) * smoothed_puck[0],
+                    SMOOTHING_ALPHA * puck_raw[1] + (1 - SMOOTHING_ALPHA) * smoothed_puck[1]
+                )
+
+            # Compute velocity
+            if prev_smoothed_puck is not None:
+                vx = smoothed_puck[0] - prev_smoothed_puck[0]
+                vy = smoothed_puck[1] - prev_smoothed_puck[1]
+            else:
+                vx, vy = 0.0, 0.0
+            prev_smoothed_puck = smoothed_puck
+
+            xp, yp = int(round(smoothed_puck[0])), int(round(smoothed_puck[1]))
+            cv2.circle(vis, (xp, yp), 8, (255, 255, 0), -1)  # puck dot = cyan
+
+            if handle_present:
+                xh, yh = int(round(handle_raw[0])), int(round(handle_raw[1]))
+                cv2.circle(vis, (xh, yh), 8, (0, 255, 0), -1)  # handle dot = green
+
+                # Draw handle → puck vector
+                cv2.line(vis, (xh, yh), (xp, yp), (0, 255, 255), 2)  # yellow
+
+                # Compute vector from puck along handle→puck
+                x0, y0 = smoothed_puck
+                vx_hp = x0 - handle_raw[0]
+                vy_hp = y0 - handle_raw[1]
+
+                # Compute direct param to reach y_target
+                if abs(vy_hp) > 1e-3:
+                    t_direct = (y_target - y0) / vy_hp
                 else:
-                    vx, vy = 0.0, 0.0
-                prev_smoothed_puck = smoothed_puck
+                    t_direct = None
 
-                xp, yp = int(round(smoothed_puck[0])), int(round(smoothed_puck[1]))
-                cv2.circle(vis, (xp, yp), r_puck, (255, 255, 0), 2)  # puck = cyan
-                cv2.circle(vis, (xp, yp), 4, (0, 255, 255), -1)
+                fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
 
-                if handle_present:
-                    xh, yh = int(round(handle_raw[0])), int(round(handle_raw[1]))
-                    cv2.circle(vis, (xh, yh), r_handle, (0, 255, 0), 2)  # handle = green
-                    cv2.circle(vis, (xh, yh), 4, (0, 0, 255), -1)
+                need_bounce = False
+                if fb is not None and t_direct is not None:
+                    t1, xh1, yh1, w1 = fb
+                    if t1 > 0 and t1 < t_direct:
+                        need_bounce = True
 
-                    # Draw handle → puck
+                if need_bounce:
+                    t1, xh1, yh1, w1 = fb
+                    # Draw puck → first bounce
                     cv2.line(vis,
-                             (xh, yh),
                              (xp, yp),
+                             (int(round(xh1)), int(round(yh1))),
+                             (0, 255, 255),
+                             2)
+                    cv2.circle(vis,
+                               (int(round(xh1)), int(round(yh1))),
+                               8, (255, 0, 0), -1)  # blue
+
+                    vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
+                    eps = 1e-3
+                    x1 = xh1 + vx2 * eps
+                    y1 = yh1 + vy2 * eps
+
+                    if abs(vy2) > 1e-3:
+                        t2 = (y_target - y1) / vy2
+                    else:
+                        t2 = None
+
+                    if t2 is not None and t2 > 0:
+                        x_target = x1 + vx2 * t2
+                        cv2.line(vis,
+                                 (int(round(xh1)), int(round(yh1))),
+                                 (int(round(x_target)), int(round(y_target))),
+                                 (255, 0, 255),
+                                 2)  # magenta
+                        cv2.circle(vis,
+                                   (int(round(x_target)), int(round(y_target))),
+                                   8, (0, 0, 255), -1)  # red
+                else:
+                    # Direct: puck → target
+                    if t_direct is not None:
+                        x_target = x0 + vx_hp * t_direct
+                    else:
+                        x_target = x0
+                    cv2.line(vis,
+                             (xp, yp),
+                             (int(round(x_target)), int(round(y_target))),
                              (0, 255, 255),
                              2)  # yellow
+                    cv2.circle(vis,
+                               (int(round(x_target)), int(round(y_target))),
+                               8, (0, 0, 255), -1)  # red
 
-                    # Now draw puck → 20% using handle→puck vector
+            else:
+                # Single-puck logic
+                mag = math.hypot(vx, vy)
+                if (mag < VEL_THRESHOLD) and (yp > (TABLE_H / 2.0)):
+                    # Vertical up
+                    cv2.line(vis,
+                             (xp, yp),
+                             (xp, int(round(y_target))),
+                             (0, 255, 255),
+                             2)  # yellow
+                    cv2.circle(vis,
+                               (xp, int(round(y_target))),
+                               8, (0, 0, 255), -1)  # red
+                    x_target = float(xp)
+                    if vy < -1e-3:
+                        t_frames = (smoothed_puck[1] - y_target) / (-vy)
+                        time_until_impact = t_frames / FRAME_RATE
+                else:
+                    # Predict using puck velocity
                     x0, y0 = smoothed_puck
-                    vx_hp = x0 - handle_raw[0]
-                    vy_hp = y0 - handle_raw[1]
-
-                    # Direct path parameters: from puck along (vx_hp, vy_hp)
-                    fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
-
-                    # Time (in frames) for direct to reach y_target:
-                    # Solve y0 + t * vy_hp = y_target → t_d = (y_target - y0)/vy_hp
-                    if abs(vy_hp) > 1e-3:
-                        t_direct = (y_target - y0) / vy_hp
+                    fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
+                    if abs(vy) > 1e-3:
+                        t_direct = (y_target - y0) / vy
                     else:
                         t_direct = None
 
-                    # Decide if bounce is needed before target
                     need_bounce = False
                     if fb is not None and t_direct is not None:
                         t1, xh1, yh1, w1 = fb
@@ -608,22 +605,20 @@ def main_loop():
                             need_bounce = True
 
                     if need_bounce:
-                        # Draw puck → first bounce in yellow
+                        t1, xh1, yh1, w1 = fb
                         cv2.line(vis,
                                  (xp, yp),
                                  (int(round(xh1)), int(round(yh1))),
                                  (0, 255, 255),
-                                 2)
+                                 2)  # yellow
                         cv2.circle(vis,
                                    (int(round(xh1)), int(round(yh1))),
-                                   6, (255, 0, 0), -1)  # blue
+                                   8, (255, 0, 0), -1)  # blue
 
-                        # Reflect and draw from bounce → target
-                        vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
+                        vx2, vy2 = reflect_vector(vx, vy, w1)
                         eps = 1e-3
                         x1 = xh1 + vx2 * eps
                         y1 = yh1 + vy2 * eps
-
                         if abs(vy2) > 1e-3:
                             t2 = (y_target - y1) / vy2
                         else:
@@ -638,97 +633,23 @@ def main_loop():
                                      2)  # magenta
                             cv2.circle(vis,
                                        (int(round(x_target)), int(round(y_target))),
-                                       6, (0, 0, 255), -1)  # red
+                                       8, (0, 0, 255), -1)  # red
+                            time_until_impact = (t1 + t2) / FRAME_RATE
                     else:
-                        # Direct path: draw puck → target
-                        x_target = x0 + ((t_direct if t_direct else 0) * vx_hp) if t_direct else x0
-                        cv2.line(vis,
-                                 (xp, yp),
-                                 (int(round(x_target)), int(round(y_target))),
-                                 (0, 255, 255),
-                                 2)  # yellow
-                        cv2.circle(vis,
-                                   (int(round(x_target)), int(round(y_target))),
-                                   6, (0, 0, 255), -1)  # red
-
-                else:
-                    # Single-puck logic
-                    mag = math.hypot(vx, vy)
-                    # Vertical if low velocity AND puck below halfway (yp > H/2)
-                    if (mag < VEL_THRESHOLD) and (yp > (TABLE_H / 2.0)):
-                        cv2.line(vis,
-                                 (xp, yp),
-                                 (xp, int(round(y_target))),
-                                 (0, 255, 255),
-                                 2)  # yellow
-                        cv2.circle(vis,
-                                   (xp, int(round(y_target))),
-                                   6, (0, 0, 255), -1)  # red
-                        x_target = float(xp)
-                        if vy < -1e-3:
-                            t_frames = (smoothed_puck[1] - y_target) / (-vy)
-                            time_until_impact = t_frames / FRAME_RATE
-                    else:
-                        # Predict using puck velocity vector
-                        x0, y0 = smoothed_puck
-                        # Direct: (vx, vy)
-                        fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
-                        if abs(vy) > 1e-3:
-                            t_direct = (y_target - y0) / vy
-                        else:
-                            t_direct = None
-
-                        need_bounce = False
-                        if fb is not None and t_direct is not None:
-                            t1, xh1, yh1, w1 = fb
-                            if t1 > 0 and t1 < t_direct:
-                                need_bounce = True
-
-                        if need_bounce:
+                        if t_direct is not None and t_direct > 0:
+                            x_target = x0 + vx * t_direct
                             cv2.line(vis,
                                      (xp, yp),
-                                     (int(round(xh1)), int(round(yh1))),
+                                     (int(round(x_target)), int(round(y_target))),
                                      (0, 255, 255),
                                      2)  # yellow
                             cv2.circle(vis,
-                                       (int(round(xh1)), int(round(yh1))),
-                                       6, (255, 0, 0), -1)  # blue
-                            vx2, vy2 = reflect_vector(vx, vy, w1)
-                            eps = 1e-3
-                            x1 = xh1 + vx2 * eps
-                            y1 = yh1 + vy2 * eps
-                            if abs(vy2) > 1e-3:
-                                t2 = (y_target - y1) / vy2
-                            else:
-                                t2 = None
-                            if t2 is not None and t2 > 0:
-                                x_target = x1 + vx2 * t2
-                                cv2.line(vis,
-                                         (int(round(xh1)), int(round(yh1))),
-                                         (int(round(x_target)), int(round(y_target))),
-                                         (255, 0, 255),
-                                         2)  # magenta
-                                cv2.circle(vis,
-                                           (int(round(x_target)), int(round(y_target))),
-                                           6, (0, 0, 255), -1)  # red
-                                # Compute time
-                                time_until_impact = (t1 + t2) / FRAME_RATE
-                        else:
-                            # Direct
-                            if t_direct is not None and t_direct > 0:
-                                x_target = x0 + vx * t_direct
-                                cv2.line(vis,
-                                         (xp, yp),
-                                         (int(round(x_target)), int(round(y_target))),
-                                         (0, 255, 255),
-                                         2)  # yellow
-                                cv2.circle(vis,
-                                           (int(round(x_target)), int(round(y_target))),
-                                           6, (0, 0, 255), -1)  # red
-                                time_until_impact = t_direct / FRAME_RATE
+                                       (int(round(x_target)), int(round(y_target))),
+                                       8, (0, 0, 255), -1)  # red
+                            time_until_impact = t_direct / FRAME_RATE
 
-                # Send serial only for single-puck velocity cases
-                if handle_present is False and (x_target is not None) and (time_until_impact is not None):
+                # Send only for single-puck velocity cases
+                if (x_target is not None) and (time_until_impact is not None):
                     try:
                         msg = f"{x_target:.2f},{time_until_impact:.2f}\n"
                         if ser is not None:
