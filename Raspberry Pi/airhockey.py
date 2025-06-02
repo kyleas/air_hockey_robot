@@ -56,8 +56,8 @@ VEL_THRESHOLD   = 2.0  # pixels/frame
 CLICKS_PER_SIDE = 2
 
 H_MARGIN = 10
-S_MARGIN = 10
-V_MARGIN = 10
+S_MARGIN = 40
+V_MARGIN = 40
 
 FRAME_RATE = 30.0
 
@@ -136,6 +136,10 @@ def calibrate_frame():
     if not cap.isOpened():
         print("ERROR: Could not open camera. Ensure Pi camera is enabled.")
         return
+
+    # Match resolution to main loop to keep warp consistent
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     window_name = "Frame Calibration"
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -240,6 +244,10 @@ def calibrate_hsv():
     if not cap.isOpened():
         print("ERROR: Could not open camera for HSV calibration.")
         return
+
+    # Match resolution to main loop
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     win_raw = "HSV Calibration - Raw"
     win_masked = "HSV Calibration - Masked"
