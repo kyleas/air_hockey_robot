@@ -176,7 +176,7 @@ int main(void)
 						uart_rx_buffer[2],
 						uart_rx_buffer[3],
 						'\0'
-					};
+					};1213
 					int8_t value = (int8_t)strtoul(hex_str, NULL, 16);
 
 

@@ -1,0 +1,112 @@
+/*
+ * stepper_driver.h
+ *
+ *  Created on: Jun 2, 2025
+ *      Author: kyle
+ */
+
+#ifndef INC_STEPPER_DRIVER_H_
+#define INC_STEPPER_DRIVER_H_
+
+#include "stm32f4xx_hal.h"
+#include <stdbool.h>
+#include <stdint.h>
+
+/**
+ * @brief  Timer tick frequency (Hz).
+ *         The application must configure a hardware timer (e.g. TIM2) so that
+ *         it generates an update interrupt exactly at this rate.
+ *         In that ISR, you must call StepperMotor_Update() for each motor.
+ */
+#define TIMER_FREQUENCY_HZ  10000U
+
+/**
+ * @brief  A single‐axis stepper motor “object.”
+ *         Drives DIR and STEP via GPIOs, reads a single limit switch, and
+ *         generates a simple trapezoidal speed profile (acceleration → cruise → deceleration).
+ */
+typedef struct {
+    /* GPIOs */
+    GPIO_TypeDef *dir_port;
+    uint16_t      dir_pin;
+    GPIO_TypeDef *step_port;
+    uint16_t      step_pin;
+    GPIO_TypeDef *limit_port;   // Limit switch GPIO (pressed = GPIO_PIN_RESET)
+    uint16_t      limit_pin;
+
+    /* Position & motion planning (all in “steps”). */
+    int32_t current_position;   // Current position in steps
+    int32_t target_position;    // Target position in steps
+    bool    moving;             // True if currently executing a motion
+    int8_t  direction;          // +1 or –1
+
+    /* Trapezoidal profile parameters */
+    uint32_t step_timer;        // “Ticks until next step” (counts down each ISR tick)
+    uint32_t step_period;       // “Ticks between steps” at current speed
+    int32_t  total_steps;       // Total # of steps to move in this motion
+    int32_t  step_count;        // How many steps have been issued so far
+    int32_t  accel_steps;       // # of steps in the acceleration phase
+    int32_t  decel_steps;       // # of steps in the deceleration phase
+
+    float current_speed;        // Current speed in steps/sec
+    float max_speed;            // Configured max speed in steps/sec
+    float accel;                // Configured acceleration in steps/sec^2
+
+    bool pulse_high;            // If true, STEP pin is currently high (so next tick will pull it low)
+} StepperMotor;
+
+/**
+ * @brief  Initialize one StepperMotor struct. Must be called once per motor.
+ * @param  motor:         Pointer to StepperMotor object
+ * @param  dir_port/dir_pin:   GPIO port+pin used for DIR
+ * @param  step_port/step_pin: GPIO port+pin used for STEP
+ * @param  limit_port/limit_pin: GPIO port+pin used for that axis’s limit switch
+ * @param  max_speed:     Maximum speed (steps/sec) for normal moves
+ * @param  accel:         Acceleration (steps/sec²)
+ * @note   This function will set DIR→LOW, STEP→LOW, and assumes limit switch pin
+ *         has already been configured as an input with pull‐up.
+ */
+void StepperMotor_Init(
+    StepperMotor *motor,
+    GPIO_TypeDef *dir_port, uint16_t dir_pin,
+    GPIO_TypeDef *step_port, uint16_t step_pin,
+    GPIO_TypeDef *limit_port, uint16_t limit_pin,
+    float max_speed,
+    float accel
+);
+
+/**
+ * @brief  Start a nonblocking move to a given absolute step count.
+ * @param  motor:            Pointer to StepperMotor object
+ * @param  target_position:  Desired absolute position in **steps**.
+ *                           (current_position is immediately read, delta computed)
+ * @note   This computes a trapezoidal profile (acceleration, cruise, deceleration)
+ *         and begins toggling STEP in the timer ISR.
+ *         To stop mid‐motion, call StepperMotor_Stop().
+ */
+void StepperMotor_MoveTo(StepperMotor *motor, int32_t target_position);
+
+/**
+ * @brief  Immediately halt any in‐progress motion and pull STEP→LOW.
+ * @param  motor: Pointer to StepperMotor object
+ */
+void StepperMotor_Stop(StepperMotor *motor);
+
+/**
+ * @brief  Returns true if the motor is currently in motion (MoveTo not yet finished).
+ */
+bool StepperMotor_IsMoving(StepperMotor *motor);
+
+/**
+ * @brief  Must be called on each timer tick (at exactly TIMER_FREQUENCY_HZ) from your
+ *         timer ISR (e.g. HAL_TIM_PeriodElapsedCallback).
+ *         Handles:
+ *           - Checking limit switch (stop if pressed)
+ *           - Generating step pulses (pulse width = exactly one tick)
+ *           - Computing “next step interval” for trapezoidal profile
+ *
+ * @param  motor: Pointer to StepperMotor object
+ */
+void StepperMotor_Update(StepperMotor *motor);
+
+#endif /* INC_STEPPER_DRIVER_H_ */

@@ -1,0 +1,6 @@
+../Core/Src/stepper_driver.c:16:13:StepperMotor_PlanMotion	24	static
+../Core/Src/stepper_driver.c:56:6:StepperMotor_Init	32	static
+../Core/Src/stepper_driver.c:91:6:StepperMotor_MoveTo	16	static
+../Core/Src/stepper_driver.c:100:6:StepperMotor_Stop	16	static
+../Core/Src/stepper_driver.c:111:6:StepperMotor_IsMoving	16	static
+../Core/Src/stepper_driver.c:119:6:StepperMotor_Update	32	static

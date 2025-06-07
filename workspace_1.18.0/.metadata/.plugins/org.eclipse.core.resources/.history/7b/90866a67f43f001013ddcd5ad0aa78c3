@@ -1,0 +1,189 @@
+/*
+ * stepper_manager.c
+ *
+ *  Created on: Jun 2, 2025
+ *      Author: kyle
+ */
+
+#include "stepper_manager.h"
+#include <math.h>
+
+/**
+ * @brief  Initialize the manager with two StepperMotor pointers and all limit/soft‐limit parameters.
+ */
+void StepperManager_Init(
+    StepperManager *mgr,
+    StepperMotor   *motor_x,
+    StepperMotor   *motor_y,
+    GPIO_TypeDef   *limit_x_port,
+    uint16_t        limit_x_pin,
+    GPIO_TypeDef   *limit_y_port,
+    uint16_t        limit_y_pin,
+    float           steps_per_mm,
+    float           soft_limit_x_min_mm,
+    float           soft_limit_x_max_mm,
+    float           soft_limit_y_min_mm,
+    float           soft_limit_y_max_mm,
+    float           calib_backoff_mm
+) {
+    mgr->motor_x          = motor_x;
+    mgr->motor_y          = motor_y;
+    mgr->limit_x_port     = limit_x_port;
+    mgr->limit_x_pin      = limit_x_pin;
+    mgr->limit_y_port     = limit_y_port;
+    mgr->limit_y_pin      = limit_y_pin;
+    mgr->steps_per_mm     = steps_per_mm;
+    mgr->soft_limit_x_min_mm = soft_limit_x_min_mm;
+    mgr->soft_limit_x_max_mm = soft_limit_x_max_mm;
+    mgr->soft_limit_y_min_mm = soft_limit_y_min_mm;
+    mgr->soft_limit_y_max_mm = soft_limit_y_max_mm;
+    mgr->calib_backoff_mm = calib_backoff_mm;
+
+    mgr->position_x_mm = 0.0f;
+    mgr->position_y_mm = 0.0f;
+    mgr->calib_x_homed = false;
+    mgr->calib_y_homed = false;
+    mgr->state         = MANAGER_IDLE;
+}
+
+/**
+ * @brief  Begin homing: drives both axes “negatively” until each limit switch is pressed.
+ *         When X’s switch is pressed, we stop X, back off by calib_backoff_mm (positive),
+ *         then immediately set current_position=0.  Same for Y.
+ * @note   Must call StepperManager_Update() in your main loop to progress this sequence.
+ */
+void StepperManager_StartCalibration(StepperManager *mgr)
+{
+    // 1) Clear any previous flags
+    mgr->calib_x_homed = false;
+    mgr->calib_y_homed = false;
+
+    // 2) Pick a slow “calibration” speed/accel
+    float calib_speed = 100.0f;   // steps/sec
+    float calib_accel = 200.0f;   // steps/sec²
+
+    // Override the low‐level motors’ speed/accel
+    mgr->motor_x->max_speed = calib_speed;
+    mgr->motor_x->accel     = calib_accel;
+    mgr->motor_y->max_speed = calib_speed;
+    mgr->motor_y->accel     = calib_accel;
+
+    // 3) Home X (negative‐X direction on CoreXY).
+    //    That means ΔX = –∞, ΔY = 0, so ΔA = –∞, ΔB = –∞.
+    //    We simply pick a large negative integer so both motors step backward in lock‐step.
+    int32_t big_neg = -1000000000;
+    StepperMotor_MoveTo(mgr->motor_x, mgr->motor_x->current_position + big_neg);
+    StepperMotor_MoveTo(mgr->motor_y, mgr->motor_y->current_position + big_neg);
+
+    mgr->state = MANAGER_CALIBRATING;
+}
+
+
+/**
+ * @brief  Request a normal move to (x_mm, y_mm).  If a calibration or previous move
+ *         is still running, this call is silently ignored.
+ */
+void StepperManager_MoveTo(StepperManager *mgr, float x_mm, float y_mm)
+{
+    if (mgr->state != MANAGER_IDLE) {
+        // Busy: ignore new command
+        return;
+    }
+
+    // Clamp to soft limits
+    if (x_mm < mgr->soft_limit_x_min_mm) x_mm = mgr->soft_limit_x_min_mm;
+    if (x_mm > mgr->soft_limit_x_max_mm) x_mm = mgr->soft_limit_x_max_mm;
+    if (y_mm < mgr->soft_limit_y_min_mm) y_mm = mgr->soft_limit_y_min_mm;
+    if (y_mm > mgr->soft_limit_y_max_mm) y_mm = mgr->soft_limit_y_max_mm;
+
+    // Convert mm → steps
+    int32_t target_x_steps = (int32_t)lrintf(x_mm * mgr->steps_per_mm);
+    int32_t target_y_steps = (int32_t)lrintf(y_mm * mgr->steps_per_mm);
+
+    // Start each axis’s move (each StepperMotor has its own trapezoid plan)
+    StepperMotor_MoveTo(mgr->motor_x, target_x_steps);
+    StepperMotor_MoveTo(mgr->motor_y, target_y_steps);
+
+    mgr->position_x_mm = x_mm;
+    mgr->position_y_mm = y_mm;
+    mgr->state = MANAGER_MOVING;
+}
+
+/**
+ * @brief  Called continuously from your main loop.
+ *         - If state==CALIBRATING:
+ *             • Check each axis’s limit switch.
+ *             • When X’s switch is pressed, immediately stop X, back off by calib_backoff_mm, then set X→0.
+ *             • Similarly for Y.
+ *             • When both back‐off moves complete, state→IDLE.
+ *         - If state==MOVING:
+ *             • Check if both motors are no longer moving → state→IDLE.
+ *             • Also watch for “unexpected” limit hits: if a switch is pressed during a normal move, that axis is stopped immediately.
+ */
+void StepperManager_Update(StepperManager *mgr)
+{
+    if (mgr->state == MANAGER_CALIBRATING) {
+        // ─── Homing X ────────────────────────────────────────────────────────────
+        if (!mgr->calib_x_homed) {
+            // If X limit switch pressed (GPIO_PIN_RESET), we’ve hit home
+            if (HAL_GPIO_ReadPin(mgr->limit_x_port, mgr->limit_x_pin) == GPIO_PIN_RESET) {
+                // Stop X
+                StepperMotor_Stop(mgr->motor_x);
+                mgr->calib_x_homed = true;
+
+                // Back off by calib_backoff_mm (positive direction), then zero
+                int32_t backoff_steps = (int32_t)lrintf(mgr->calib_backoff_mm * mgr->steps_per_mm);
+                StepperMotor_MoveTo(mgr->motor_x, backoff_steps);
+            }
+        }
+        else {
+            // Once back‐off move finishes, set X position=0
+            if (!StepperMotor_IsMoving(mgr->motor_x)) {
+                mgr->motor_x->current_position = 0;
+            }
+        }
+
+        // ─── Homing Y ────────────────────────────────────────────────────────────
+        if (!mgr->calib_y_homed) {
+            if (HAL_GPIO_ReadPin(mgr->limit_y_port, mgr->limit_y_pin) == GPIO_PIN_RESET) {
+                StepperMotor_Stop(mgr->motor_y);
+                mgr->calib_y_homed = true;
+
+                int32_t backoff_steps = (int32_t)lrintf(mgr->calib_backoff_mm * mgr->steps_per_mm);
+                StepperMotor_MoveTo(mgr->motor_y, backoff_steps);
+            }
+        }
+        else {
+            if (!StepperMotor_IsMoving(mgr->motor_y)) {
+                mgr->motor_y->current_position = 0;
+            }
+        }
+
+        // If both axes are homed *and* both back‐off moves are complete → done
+        if (mgr->calib_x_homed && mgr->calib_y_homed
+            && !StepperMotor_IsMoving(mgr->motor_x)
+            && !StepperMotor_IsMoving(mgr->motor_y))
+        {
+            mgr->position_x_mm = 0.0f;
+            mgr->position_y_mm = 0.0f;
+            mgr->state = MANAGER_IDLE;
+        }
+    }
+    else if (mgr->state == MANAGER_MOVING) {
+        // If either axis’s limit switch is pressed unexpectedly, force‐stop that axis
+        if (HAL_GPIO_ReadPin(mgr->limit_x_port, mgr->limit_x_pin) == GPIO_PIN_RESET) {
+            StepperMotor_Stop(mgr->motor_x);
+        }
+        if (HAL_GPIO_ReadPin(mgr->limit_y_port, mgr->limit_y_pin) == GPIO_PIN_RESET) {
+            StepperMotor_Stop(mgr->motor_y);
+        }
+
+        // If both motors have finished their planned trapezoidal move → IDLE
+        if (!StepperMotor_IsMoving(mgr->motor_x) && !StepperMotor_IsMoving(mgr->motor_y)) {
+            mgr->state = MANAGER_IDLE;
+        }
+    }
+    // else if (mgr->state == MANAGER_IDLE): nothing to do
+}
+
+
