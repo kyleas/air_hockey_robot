@@ -61,7 +61,7 @@ uint32_t board_dim_x = 285.75; // mm
 uint32_t board_dim_y = 487.3; // mm
 
 #define RX_BUFFER_SIZE 64
-uint8_t uart_rx_data, uart2_rx_data;
+uint8_t uart_rx_data;
 HAL_StatusTypeDef uart_status;
 uint8_t uart_rx_buffer[RX_BUFFER_SIZE];
 uint8_t uart_rx_index = 0;

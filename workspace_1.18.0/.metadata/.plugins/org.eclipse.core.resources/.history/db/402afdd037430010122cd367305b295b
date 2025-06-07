@@ -44,11 +44,6 @@ void StepperManager_Init(
     mgr->calib_x_homed = false;
     mgr->calib_y_homed = false;
     mgr->state         = MANAGER_IDLE;
-
-    mgr->default_speed_a = motor_x->max_speed;
-    mgr->default_accel_a = motor_x->accel;
-    mgr->default_speed_b = motor_y->max_speed;
-    mgr->default_accel_b = motor_y->accel;
 }
 
 /**
@@ -119,35 +114,6 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
     int32_t targetB = mgr->motor_y->current_position + deltaB;  //       motor_y ↔ motor B
 
     // 7) Kick off both motors (non‐blocking trapezoid each)
-    float distA = fabsf((float)deltaA);
-    float distB = fabsf((float)deltaB);
-
-    // pick the limiting axis
-    float vA, vB;
-    if (distA >= distB) {
-        // A is limiting: run A at its default max, scale B
-        vA = mgr->default_speed_a;
-        vB = (distB / distA) * mgr->default_speed_a;
-        // clamp B to its own max if needed
-        if (vB > mgr->default_speed_b) vB = mgr->default_speed_b;
-    } else {
-        // B is limiting
-        vB = mgr->default_speed_b;
-        vA = (distA / distB) * mgr->default_speed_b;
-        if (vA > mgr->default_speed_a) vA = mgr->default_speed_a;
-    }
-
-    // scale accelerations proportionally (keeps same motion profile shape)
-    float aA = (vA / mgr->default_speed_a) * mgr->default_accel_a;
-    float aB = (vB / mgr->default_speed_b) * mgr->default_accel_b;
-
-    // override the motors’ settings just for this move
-    mgr->motor_x->max_speed = vA;
-    mgr->motor_x->accel     = aA;
-    mgr->motor_y->max_speed = vB;
-    mgr->motor_y->accel     = aB;
-
-    // now kick off both moves
     StepperMotor_MoveTo(mgr->motor_x, targetA);
     StepperMotor_MoveTo(mgr->motor_y, targetB);
 

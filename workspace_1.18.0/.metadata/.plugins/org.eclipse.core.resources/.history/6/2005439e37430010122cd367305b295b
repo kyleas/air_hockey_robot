@@ -61,8 +61,6 @@ typedef struct {
     bool calib_y_homed;    // True once Y‐axis limit was hit & backed off
 
     float calib_backoff_mm; // After hitting switch, move forward by this many mm, then zero
-    float default_speed_a, default_speed_b;
-    float default_accel_a, default_accel_b;
 } StepperManager;
 
 /**

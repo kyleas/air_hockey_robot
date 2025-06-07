@@ -43,7 +43,7 @@ import time
 FRAME_CALIB_FILE = "warp_matrix.json"
 HSV_CALIB_FILE   = "hsv_ranges.json"
 
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "/dev/serial0"
 BAUD_RATE   = 115200
 
 MIN_RADIUS = 15
@@ -751,7 +751,16 @@ def main_loop():
                             # Ensure we don't go below 0
                             adjusted_x_target = max(adjusted_x_target, 0.0)
                             
-                        msg = f"{adjusted_x_target:.2f},{time_until_impact:.2f}\n"
+                        # Scale x_target from (0-TABLE_W) to (0-2857)
+                        scaled_x = int((adjusted_x_target / table_width) * 2857)
+                        # Scale y_target from (0-TABLE_H) to (0-4873)
+                        # We use a fixed y position (y_target) since that's our target line
+                        scaled_y = int((y_target / TABLE_H) * 4873)
+                        
+                        # Format as MXXXXYYYY
+                        # Ensure exactly 4 digits for each coordinate with leading zeros
+                        msg = f"M{scaled_x:04d}{scaled_y:04d}"
+                        
                         if ser is not None:
                             ser.write(msg.encode('ascii'))
                     except:
