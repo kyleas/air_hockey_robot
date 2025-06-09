@@ -43,7 +43,7 @@ import time
 FRAME_CALIB_FILE = "warp_matrix.json"
 HSV_CALIB_FILE   = "hsv_ranges.json"
 
-SERIAL_PORT = "/dev/ttyAMA0"
+SERIAL_PORT = "/dev/serial0"
 BAUD_RATE   = 115200
 
 MIN_RADIUS = 15
