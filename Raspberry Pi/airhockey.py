@@ -430,6 +430,11 @@ def main_loop():
     fps_count = 0
     fps_start = time.time()
     fps_display = 0.0
+    
+    # Hit mode tracking
+    hit_mode_active = False
+    hit_mode_start_time = 0
+    HIT_MODE_DURATION = 1.0  # seconds
 
     while True:
         loop_start = time.time()
@@ -739,9 +744,23 @@ def main_loop():
         # Send command over serial on every frame if we have a valid target
         if x_target is not None and ser is not None:
             try:
-                # Determine if we're in hit mode
-                in_hit_mode = (time_until_impact is not None and time_until_impact < 0.4) or \
+                # Determine if hit mode should be activated
+                hit_mode_trigger = (time_until_impact is not None and time_until_impact < 0.4) or \
                             (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.05)
+                
+                current_time = time.time()
+                
+                # If hit mode triggered, start/extend the timer
+                if hit_mode_trigger:
+                    hit_mode_active = True
+                    hit_mode_start_time = current_time
+                
+                # Check if we should exit hit mode
+                if hit_mode_active and (current_time - hit_mode_start_time) > HIT_MODE_DURATION:
+                    hit_mode_active = False
+                
+                # Use hit mode state for position adjustment
+                in_hit_mode = hit_mode_active
                 
                 # Apply adjustment logic
                 table_width = float(TABLE_W)
@@ -767,9 +786,8 @@ def main_loop():
         # Print status to terminal once per second when we have a valid target
         current_time = time.time()
         if x_target is not None and (not hasattr(main_loop, "last_print_time") or (current_time - main_loop.last_print_time) >= 1.0):
-            mode_str = "HIT" if (time_until_impact is not None and time_until_impact < 0.4) or \
-                              (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.05) \
-                           else "PREDICT"
+            # Use the persistent hit mode state for status display
+            mode_str = "HIT" if hit_mode_active else "PREDICT"
             status_msg = f"{mode_str}: Target={x_target:.1f},{y_target:.1f}"
             if time_until_impact is not None:
                 status_msg += f" Time={time_until_impact:.2f}s"
@@ -793,21 +811,19 @@ def main_loop():
                     2)
         
         # Add mode indicator text
-        mode_text = "Hit"
-        if time_until_impact is not None and puck_present and smoothed_puck:
-            vertical_distance_from_impact = abs(smoothed_puck[1] - y_target)
-            in_hit_mode = (time_until_impact < 0.4 or 
-                          vertical_distance_from_impact < TABLE_H * 0.05)
-            mode_text = "Hit" if in_hit_mode else "Predict"
+        if hit_mode_active:
+            mode_text = "Hit"
+            mode_color = (0, 0, 255)  # Red for Hit
         else:
             mode_text = "Predict"
+            mode_color = (0, 255, 0)  # Green for Predict
             
         cv2.putText(vis,
                     mode_text,
                     (30, 70),  # Position under FPS counter
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.8,
-                    (0, 255, 0) if mode_text == "Predict" else (0, 0, 255),  # Green for Predict, Red for Hit
+                    mode_color,
                     2)
 
         # Display in a regular window with more reasonable size
