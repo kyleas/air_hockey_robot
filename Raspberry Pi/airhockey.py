@@ -654,7 +654,7 @@ def main_loop():
             else:
                 # Single-puck logic
                 mag = math.hypot(vx, vy)
-                if (mag < VEL_THRESHOLD) and (yp > (TABLE_H / 2.0)):
+                if (mag < VEL_THRESHOLD):
                     # Vertical up
                     cv2.line(vis,
                              (xp, yp),
@@ -758,13 +758,9 @@ def main_loop():
                 scaled_x = int((adjusted_x_target / table_width) * 2857)
                 scaled_y = int((y_target / TABLE_H) * 4873)
                 
-                # Format command
+                # Format and send command
                 msg = f"M{scaled_x:04d}{scaled_y:04d}\r\n"
-                
-                # Send each byte individually with a small delay between them
-                for byte in msg.encode('ascii'):
-                    ser.write(bytes([byte]))  # Send single byte
-                    time.sleep(0.001)  # 1ms delay between bytes
+                ser.write(msg.encode('ascii'))
             except Exception as e:
                 print(f"Error sending command: {e}")
             

@@ -52,8 +52,8 @@ void StepperManager_Init(
 }
 
 /**
- * @brief  Begin homing: drives both axes “negatively” until each limit switch is pressed.
- *         When X’s switch is pressed, we stop X, back off by calib_backoff_mm (positive),
+ * @brief  Begin homing: drives both axes "negatively" until each limit switch is pressed.
+ *         When X's switch is pressed, we stop X, back off by calib_backoff_mm (positive),
  *         then immediately set current_position=0.  Same for Y.
  * @note   Must call StepperManager_Update() in your main loop to progress this sequence.
  */
@@ -63,11 +63,11 @@ void StepperManager_StartCalibration(StepperManager *mgr)
     mgr->calib_x_homed = false;
     mgr->calib_y_homed = false;
 
-    // 2) Pick a slow “calibration” speed/accel
+    // 2) Pick a slow "calibration" speed/accel
     float calib_speed = 100.0f;   // steps/sec
     float calib_accel = 200.0f;   // steps/sec²
 
-    // Override the low‐level motors’ speed/accel
+    // Override the low‐level motors' speed/accel
     mgr->motor_x->max_speed = calib_speed;
     mgr->motor_x->accel     = calib_accel;
     mgr->motor_y->max_speed = calib_speed;
@@ -89,8 +89,8 @@ void StepperManager_StartCalibration(StepperManager *mgr)
  */
 void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
 {
-    // 1) If we’re already homing or already moving, ignore the new request
-    if (mgr->state != MANAGER_IDLE) {
+    // 1) If we're calibrating, ignore the new request
+    if (mgr->state == MANAGER_CALIBRATING) {
         return;
     }
 
@@ -104,6 +104,11 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
     float dx_mm = new_x_mm - mgr->position_x_mm;
     float dy_mm = new_y_mm - mgr->position_y_mm;
 
+    // Skip trivial moves - prevents unnecessary motor recalculation
+    if (fabsf(dx_mm) < 0.05f && fabsf(dy_mm) < 0.05f) {
+        return;
+    }
+
     // 4) Convert each delta to integer steps
     int32_t steps_dx = (int32_t)lrintf(dx_mm * mgr->steps_per_mm);
     int32_t steps_dy = (int32_t)lrintf(dy_mm * mgr->steps_per_mm);
@@ -114,7 +119,7 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
     int32_t deltaA = steps_dx + steps_dy;
     int32_t deltaB = steps_dx - steps_dy;
 
-    // 6) Compute each motor’s absolute target steps
+    // 6) Compute each motor's absolute target steps
     int32_t targetA = mgr->motor_x->current_position + deltaA;  // note: motor_x ↔ motor A
     int32_t targetB = mgr->motor_y->current_position + deltaB;  //       motor_y ↔ motor B
 
@@ -122,36 +127,59 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
     float distA = fabsf((float)deltaA);
     float distB = fabsf((float)deltaB);
 
+    // Calculate the total distance - used for speed scaling
+    float total_dist_mm = sqrtf(dx_mm*dx_mm + dy_mm*dy_mm);
+    
+    // For short moves, use higher acceleration but lower max speed
+    float speed_scale = 1.0f;
+    float accel_scale = 1.0f;
+    
+    if (total_dist_mm < 10.0f) {
+        // For very short moves, we want quick acceleration but limited top speed
+        speed_scale = 0.7f;
+        accel_scale = 1.5f;
+    } else if (total_dist_mm > 50.0f) {
+        // For long moves, allow higher top speed
+        speed_scale = 1.2f;
+        accel_scale = 1.0f;
+    }
+
     // pick the limiting axis
     float vA, vB;
     if (distA >= distB) {
         // A is limiting: run A at its default max, scale B
-        vA = mgr->default_speed_a;
-        vB = (distB / distA) * mgr->default_speed_a;
+        vA = mgr->default_speed_a * speed_scale;
+        vB = (distB / distA) * mgr->default_speed_a * speed_scale;
         // clamp B to its own max if needed
-        if (vB > mgr->default_speed_b) vB = mgr->default_speed_b;
+        if (vB > mgr->default_speed_b * speed_scale) vB = mgr->default_speed_b * speed_scale;
     } else {
         // B is limiting
-        vB = mgr->default_speed_b;
-        vA = (distA / distB) * mgr->default_speed_b;
-        if (vA > mgr->default_speed_a) vA = mgr->default_speed_a;
+        vB = mgr->default_speed_b * speed_scale;
+        vA = (distA / distB) * mgr->default_speed_b * speed_scale;
+        if (vA > mgr->default_speed_a * speed_scale) vA = mgr->default_speed_a * speed_scale;
     }
 
     // scale accelerations proportionally (keeps same motion profile shape)
-    float aA = (vA / mgr->default_speed_a) * mgr->default_accel_a;
-    float aB = (vB / mgr->default_speed_b) * mgr->default_accel_b;
+    float aA = (vA / (mgr->default_speed_a * speed_scale)) * mgr->default_accel_a * accel_scale;
+    float aB = (vB / (mgr->default_speed_b * speed_scale)) * mgr->default_accel_b * accel_scale;
 
-    // override the motors’ settings just for this move
+    // override the motors' settings just for this move
     mgr->motor_x->max_speed = vA;
     mgr->motor_x->accel     = aA;
     mgr->motor_y->max_speed = vB;
     mgr->motor_y->accel     = aB;
 
+    // If we're already moving, stop immediately to start the new move
+    if (mgr->state == MANAGER_MOVING) {
+        StepperMotor_Stop(mgr->motor_x);
+        StepperMotor_Stop(mgr->motor_y);
+    }
+
     // now kick off both moves
     StepperMotor_MoveTo(mgr->motor_x, targetA);
     StepperMotor_MoveTo(mgr->motor_y, targetB);
 
-    // 8) Update the manager’s “commanded” position so we know where the carriage will be when this finishes
+    // 8) Update the manager's "commanded" position so we know where the carriage will be when this finishes
     mgr->position_x_mm = new_x_mm;
     mgr->position_y_mm = new_y_mm;
 
@@ -162,13 +190,13 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
 /**
  * @brief  Called continuously from your main loop.
  *         - If state==CALIBRATING:
- *             • Check each axis’s limit switch.
- *             • When X’s switch is pressed, immediately stop X, back off by calib_backoff_mm, then set X→0.
+ *             • Check each axis's limit switch.
+ *             • When X's switch is pressed, immediately stop X, back off by calib_backoff_mm, then set X→0.
  *             • Similarly for Y.
  *             • When both back‐off moves complete, state→IDLE.
  *         - If state==MOVING:
  *             • Check if both motors are no longer moving → state→IDLE.
- *             • Also watch for “unexpected” limit hits: if a switch is pressed during a normal move, that axis is stopped immediately.
+ *             • Also watch for "unexpected" limit hits: if a switch is pressed during a normal move, that axis is stopped immediately.
  */
 void StepperManager_Update(StepperManager *mgr)
 {
@@ -220,7 +248,7 @@ void StepperManager_Update(StepperManager *mgr)
                 StepperMotor_Stop(mgr->motor_y);
                 mgr->calib_y_homed = true;
 
-                // Back off in +Y (which, in CoreXY, is “A_forward & B_forward”)
+                // Back off in +Y (which, in CoreXY, is "A_forward & B_forward")
                 int32_t backoff_steps = (int32_t) lrintf(mgr->calib_backoff_mm * mgr->steps_per_mm);
                 // ΔX=0, ΔY=+backoff ⇒ ΔA=+backoff, ΔB=+backoff
                 int32_t targetA = mgr->motor_x->current_position + backoff_steps;

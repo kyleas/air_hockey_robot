@@ -1,4 +1,4 @@
 ../Core/Src/stepper_manager.c:14:6:StepperManager_Init	48	static
 ../Core/Src/stepper_manager.c:60:6:StepperManager_StartCalibration	32	static
-../Core/Src/stepper_manager.c:90:6:StepperManager_MoveTo	80	static
-../Core/Src/stepper_manager.c:173:6:StepperManager_Update	48	static
+../Core/Src/stepper_manager.c:90:6:StepperManager_MoveTo	96	static
+../Core/Src/stepper_manager.c:201:6:StepperManager_Update	48	static
