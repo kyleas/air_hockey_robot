@@ -758,9 +758,13 @@ def main_loop():
                 scaled_x = int((adjusted_x_target / table_width) * 2857)
                 scaled_y = int((y_target / TABLE_H) * 4873)
                 
-                # Format and send command
+                # Format command
                 msg = f"M{scaled_x:04d}{scaled_y:04d}\r\n"
-                ser.write(msg.encode('ascii'))
+                
+                # Send each byte individually with a small delay between them
+                for byte in msg.encode('ascii'):
+                    ser.write(bytes([byte]))  # Send single byte
+                    time.sleep(0.001)  # 1ms delay between bytes
             except Exception as e:
                 print(f"Error sending command: {e}")
             

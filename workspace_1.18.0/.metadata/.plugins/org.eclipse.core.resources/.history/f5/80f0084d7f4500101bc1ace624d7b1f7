@@ -503,14 +503,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		// Data from UART2 (Raspberry Pi)
 		new_data = true;
 		uart_rx_data = uart2_rx_data;
-		HAL_UART_Transmit(&huart1, (uint8_t*)&uart2_rx_data, 1, 1000); // Echo to UART1 for debugging
-		
-		// Critical: Start a new receive operation BEFORE processing the data
-		// This prevents missing bytes when they come in rapid succession
+		// No echo for Raspberry Pi communications
 		HAL_UART_Receive_IT(&huart2, &uart2_rx_data, 1); // Re-enable UART2 interrupt
-		
-		// Debug marker to know UART2 is active
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); // Toggle LED to show UART2 activity
+		HAL_UART_Transmit(&huart1, (uint8_t*)&uart2_rx_data, 1, 1000); // Echo back to UART1
+		HAL_UART_Receive_IT(&huart1, &uart2_rx_data, 1); // Re-enable UART1 interrupt
 	}
 }
 
