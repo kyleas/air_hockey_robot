@@ -729,49 +729,28 @@ def main_loop():
 
                 if (x_target is not None) and (time_until_impact is not None):
                     try:
-                        # Adjust x_target based on time until impact
+                        # Determine if we're in hit mode
+                        in_hit_mode = (time_until_impact is not None and time_until_impact < 0.4) or \
+                                    (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.05)
+                        
+                        # Apply adjustment logic
                         table_width = float(TABLE_W)
                         adjusted_x_target = x_target
                         
-                        # Determine if we're in "Hit" mode based on time or position
-                        # Check if puck is within 5% of table height from impact point
-                        vertical_distance_threshold = TABLE_H * 0.05  # 5% of table height
-                        vertical_distance_from_impact = abs(smoothed_puck[1] - y_target)
-                        in_hit_mode = (time_until_impact < 0.4 or 
-                                      (puck_present and vertical_distance_from_impact < vertical_distance_threshold))
-                        
                         if in_hit_mode:
-                            # When impact is close or puck is near impact point, move 5% more (to hit at an angle)
                             adjusted_x_target = x_target * 1.05
-                            # Ensure we don't go beyond table width
                             adjusted_x_target = min(adjusted_x_target, table_width)
                         else:
-                            # Initially position 10% less than impact point
                             adjusted_x_target = x_target * 0.9
-                            # Ensure we don't go below 0
                             adjusted_x_target = max(adjusted_x_target, 0.0)
                             
-                        # Scale x_target from (0-TABLE_W) to (0-2857)
+                        # Scale coordinates
                         scaled_x = int((adjusted_x_target / table_width) * 2857)
-                        # Scale y_target from (0-TABLE_H) to (0-4873)
-                        # We use a fixed y position (y_target) since that's our target line
                         scaled_y = int((y_target / TABLE_H) * 4873)
                         
-                        # Format as MXXXXYYYY
-                        # Ensure exactly 4 digits for each coordinate with leading zeros
+                        # Format and send command
                         msg = f"M{scaled_x:04d}{scaled_y:04d}"
-                        
-                        # Always send the command when we have a valid prediction
-                        if ser is not None:
-                            ser.write(msg.encode('ascii'))
-                        
-                        # Print prediction info to terminal once per second
-                        current_time = time.time()
-                        if not hasattr(main_loop, "last_print_time") or (current_time - main_loop.last_print_time) >= 1.0:
-                            mode_str = "HIT" if in_hit_mode else "PREDICT"
-                            print(f"{mode_str}: Target={adjusted_x_target:.1f},{y_target:.1f} Time={time_until_impact:.2f}s Command={msg}")
-                            main_loop.last_print_time = current_time
-                            
+                        ser.write(msg.encode('ascii'))
                     except Exception as e:
                         print(f"Error sending command: {e}")
 
@@ -783,6 +762,53 @@ def main_loop():
             fps_display = fps_count / elapsed
             fps_count = 0
             fps_start = now
+            
+        # Send command over serial on every frame if we have a valid target
+        if x_target is not None and ser is not None:
+            try:
+                # Determine if we're in hit mode
+                in_hit_mode = (time_until_impact is not None and time_until_impact < 0.4) or \
+                            (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.05)
+                
+                # Apply adjustment logic
+                table_width = float(TABLE_W)
+                adjusted_x_target = x_target
+                
+                if in_hit_mode:
+                    adjusted_x_target = x_target * 1.05
+                    adjusted_x_target = min(adjusted_x_target, table_width)
+                else:
+                    adjusted_x_target = x_target * 0.9
+                    adjusted_x_target = max(adjusted_x_target, 0.0)
+                    
+                # Scale coordinates
+                scaled_x = int((adjusted_x_target / table_width) * 2857)
+                scaled_y = int((y_target / TABLE_H) * 4873)
+                
+                # Format and send command
+                msg = f"M{scaled_x:04d}{scaled_y:04d}"
+                ser.write(msg.encode('ascii'))
+            except Exception as e:
+                print(f"Error sending command: {e}")
+            
+        # Print status to terminal once per second when we have a valid target
+        current_time = time.time()
+        if x_target is not None and (not hasattr(main_loop, "last_print_time") or (current_time - main_loop.last_print_time) >= 1.0):
+            mode_str = "HIT" if (time_until_impact is not None and time_until_impact < 0.4) or \
+                              (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.05) \
+                           else "PREDICT"
+            status_msg = f"{mode_str}: Target={x_target:.1f},{y_target:.1f}"
+            if time_until_impact is not None:
+                status_msg += f" Time={time_until_impact:.2f}s"
+            else:
+                status_msg += " Time=unknown"
+                
+            # Add serial command details if available
+            if ser is not None:
+                status_msg += f" Command=M{scaled_x:04d}{scaled_y:04d}"
+                
+            print(status_msg)
+            main_loop.last_print_time = current_time
 
         # Overlay FPS
         cv2.putText(vis,
