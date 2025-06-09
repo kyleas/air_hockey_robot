@@ -34,7 +34,7 @@ import json
 import argparse
 import os
 import math
-import serial
+import pyserial
 import time
 
 # ------------------------------------------------------------------------------
@@ -405,7 +405,7 @@ def main_loop():
     y_target = 0.2 * TABLE_H
 
     try:
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
+        ser = pyserial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
         time.sleep(2.0)
         print(f"[OK] Serial opened on {SERIAL_PORT} @ {BAUD_RATE}")
     except Exception as e:
