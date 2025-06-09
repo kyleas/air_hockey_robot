@@ -43,7 +43,7 @@ import time
 FRAME_CALIB_FILE = "warp_matrix.json"
 HSV_CALIB_FILE   = "hsv_ranges.json"
 
-SERIAL_PORT = "/dev/ttyS0"
+SERIAL_PORT = "/dev/serial0"
 BAUD_RATE   = 115200
 
 MIN_RADIUS = 15
@@ -761,10 +761,19 @@ def main_loop():
                         # Ensure exactly 4 digits for each coordinate with leading zeros
                         msg = f"M{scaled_x:04d}{scaled_y:04d}"
                         
+                        # Always send the command when we have a valid prediction
                         if ser is not None:
                             ser.write(msg.encode('ascii'))
-                    except:
-                        pass
+                        
+                        # Print prediction info to terminal once per second
+                        current_time = time.time()
+                        if not hasattr(main_loop, "last_print_time") or (current_time - main_loop.last_print_time) >= 1.0:
+                            mode_str = "HIT" if in_hit_mode else "PREDICT"
+                            print(f"{mode_str}: Target={adjusted_x_target:.1f},{y_target:.1f} Time={time_until_impact:.2f}s Command={msg}")
+                            main_loop.last_print_time = current_time
+                            
+                    except Exception as e:
+                        print(f"Error sending command: {e}")
 
         # FPS counter update
         fps_count += 1

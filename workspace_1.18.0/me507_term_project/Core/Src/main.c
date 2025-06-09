@@ -61,7 +61,8 @@ uint32_t board_dim_x = 285.75; // mm
 uint32_t board_dim_y = 487.3; // mm
 
 #define RX_BUFFER_SIZE 64
-uint8_t uart_rx_data, uart2_rx_data;
+uint8_t uart1_rx_data, uart2_rx_data;
+uint8_t uart_rx_data;  // Common variable for processing
 HAL_StatusTypeDef uart_status;
 uint8_t uart_rx_buffer[RX_BUFFER_SIZE];
 uint8_t uart_rx_index = 0;
@@ -154,7 +155,7 @@ int main(void)
 
   // TEST
   // Assumes PB6 is already GPIO_Output (no timer ISR involved here).
-  // We’ll manually pulse STEP at a slow rate so you can see the waveform.
+  // We'll manually pulse STEP at a slow rate so you can see the waveform.
 
 //  {
 //      int32_t start_pos_1 = motor1.current_position;
@@ -206,8 +207,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_UART_Receive_IT(&huart1, &uart_rx_data, 1);
-  HAL_UART_Receive_IT(&huart2, &uart_rx_data, 1);
+  HAL_UART_Receive_IT(&huart1, &uart1_rx_data, 1);
+  HAL_UART_Receive_IT(&huart2, &uart2_rx_data, 1);
   StepperManager_StartCalibration(&mgr);
   char msg[] = "Hello from STM32!\r\n";
   HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
@@ -491,9 +492,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	new_data = true;
-	HAL_UART_Transmit(&huart1, (uint8_t*)&uart_rx_data, 1, 1000);
-	HAL_UART_Receive_IT(&huart1, &uart_rx_data, 1);
+	if (huart->Instance == USART1) {
+		// Data from UART1 (PC/PuTTY)
+		new_data = true;
+		uart_rx_data = uart1_rx_data;
+		HAL_UART_Transmit(&huart1, (uint8_t*)&uart1_rx_data, 1, 1000); // Echo back to UART1
+		HAL_UART_Receive_IT(&huart1, &uart1_rx_data, 1); // Re-enable UART1 interrupt
+	}
+	else if (huart->Instance == USART2) {
+		// Data from UART2 (Raspberry Pi)
+		new_data = true;
+		uart_rx_data = uart2_rx_data;
+		// No echo for Raspberry Pi communications
+		HAL_UART_Receive_IT(&huart2, &uart2_rx_data, 1); // Re-enable UART2 interrupt
+	}
 }
 
 //}
