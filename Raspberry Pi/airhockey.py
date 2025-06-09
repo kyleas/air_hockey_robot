@@ -419,7 +419,7 @@ def main_loop():
 
     win = "AirHockey Detection"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty(win, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.resizeWindow(win, 800, 600)
 
     print("\n== RUNNING DETECTION: press 'q' to quit ==\n")
 
@@ -837,8 +837,8 @@ def main_loop():
                     (0, 255, 0) if mode_text == "Predict" else (0, 0, 255),  # Green for Predict, Red for Hit
                     2)
 
-        # Display fullscreen (1080×1440)
-        vis_display = cv2.resize(vis, (1080, 1440), interpolation=cv2.INTER_LINEAR)
+        # Display in a regular window with more reasonable size
+        vis_display = cv2.resize(vis, (800, 600), interpolation=cv2.INTER_LINEAR)
         cv2.imshow(win, vis_display)
 
         key = cv2.waitKey(1) & 0xFF
