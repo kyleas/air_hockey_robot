@@ -505,8 +505,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		uart_rx_data = uart2_rx_data;
 		// No echo for Raspberry Pi communications
 		HAL_UART_Receive_IT(&huart2, &uart2_rx_data, 1); // Re-enable UART2 interrupt
-		HAL_UART_Transmit(&huart1, (uint8_t*)&uart2_rx_data, 1, 1000); // Echo back to UART1
-		HAL_UART_Receive_IT(&huart1, &uart2_rx_data, 1); // Re-enable UART1 interrupt
 	}
 }
 

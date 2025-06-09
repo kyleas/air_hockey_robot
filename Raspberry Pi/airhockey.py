@@ -727,33 +727,6 @@ def main_loop():
                                        6, (0, 0, 255), -1)  # red
                             time_until_impact = t_direct / FRAME_RATE
 
-                if (x_target is not None) and (time_until_impact is not None):
-                    try:
-                        # Determine if we're in hit mode
-                        in_hit_mode = (time_until_impact is not None and time_until_impact < 0.4) or \
-                                    (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.05)
-                        
-                        # Apply adjustment logic
-                        table_width = float(TABLE_W)
-                        adjusted_x_target = x_target
-                        
-                        if in_hit_mode:
-                            adjusted_x_target = x_target * 1.05
-                            adjusted_x_target = min(adjusted_x_target, table_width)
-                        else:
-                            adjusted_x_target = x_target * 0.9
-                            adjusted_x_target = max(adjusted_x_target, 0.0)
-                            
-                        # Scale coordinates
-                        scaled_x = int((adjusted_x_target / table_width) * 2857)
-                        scaled_y = int((y_target / TABLE_H) * 4873)
-                        
-                        # Format and send command
-                        msg = f"M{scaled_x:04d}{scaled_y:04d}"
-                        ser.write(msg.encode('ascii'))
-                    except Exception as e:
-                        print(f"Error sending command: {e}")
-
         # FPS counter update
         fps_count += 1
         now = time.time()
@@ -786,7 +759,7 @@ def main_loop():
                 scaled_y = int((y_target / TABLE_H) * 4873)
                 
                 # Format and send command
-                msg = f"M{scaled_x:04d}{scaled_y:04d}"
+                msg = f"M{scaled_x:04d}{scaled_y:04d}\r\n"
                 ser.write(msg.encode('ascii'))
             except Exception as e:
                 print(f"Error sending command: {e}")
