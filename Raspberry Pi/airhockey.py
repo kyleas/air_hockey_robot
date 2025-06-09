@@ -746,7 +746,7 @@ def main_loop():
             try:
                 # Determine if hit mode should be activated
                 hit_mode_trigger = (time_until_impact is not None and time_until_impact < 0.4) or \
-                            (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.05)
+                            (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.3)
                 
                 current_time = time.time()
                 
@@ -766,16 +766,13 @@ def main_loop():
                 table_width = float(TABLE_W)
                 adjusted_x_target = x_target
                 
+                y_target_adder = 0.0
                 if in_hit_mode:
-                    adjusted_x_target = x_target * 1.05
-                    adjusted_x_target = min(adjusted_x_target, table_width)
-                else:
-                    adjusted_x_target = x_target * 0.9
-                    adjusted_x_target = max(adjusted_x_target, 0.0)
-                    
+                    y_target_adder = 0.05 * y_target
+   
                 # Scale coordinates
                 scaled_x = int((adjusted_x_target / table_width) * 2857)
-                scaled_y = int((y_target / TABLE_H) * 4873)
+                scaled_y = int(((y_target + y_target_adder) / TABLE_H) * 4873)
                 
                 # Format and send command
                 msg = f"M{scaled_x:04d}{scaled_y:04d}\r\n"
