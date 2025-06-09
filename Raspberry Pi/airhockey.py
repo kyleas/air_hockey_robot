@@ -746,7 +746,7 @@ def main_loop():
             try:
                 # Determine if hit mode should be activated
                 hit_mode_trigger = (time_until_impact is not None and time_until_impact < 0.4) or \
-                            (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.1)
+                            (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.15)
                 
                 current_time = time.time()
                 
