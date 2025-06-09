@@ -746,7 +746,7 @@ def main_loop():
             try:
                 # Determine if hit mode should be activated
                 hit_mode_trigger = (time_until_impact is not None and time_until_impact < 0.4) or \
-                            (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.3)
+                            (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.1)
                 
                 current_time = time.time()
                 
@@ -768,7 +768,7 @@ def main_loop():
                 
                 y_target_adder = 0.0
                 if in_hit_mode:
-                    y_target_adder = 0.05 * y_target
+                    y_target_adder = 0.05 * TABLE_H
    
                 # Scale coordinates
                 scaled_x = int((adjusted_x_target / table_width) * 2857)
