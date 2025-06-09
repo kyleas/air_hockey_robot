@@ -779,7 +779,11 @@ def main_loop():
                 
                 # Format and send command
                 msg = f"M{scaled_x:04d}{scaled_y:04d}\r\n"
-                ser.write(msg.encode('ascii'))
+                
+                # Send each byte individually with a small delay between them
+                for byte in msg.encode('ascii'):
+                    ser.write(bytes([byte]))  # Send single byte
+                    time.sleep(0.001)  # 1ms delay between bytes
             except Exception as e:
                 print(f"Error sending command: {e}")
             
