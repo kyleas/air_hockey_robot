@@ -2,7 +2,12 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
+  * @brief          : Main program body for CoreXY stepper motor control system
+  * @details        : Implements dual UART communication (PC and Raspberry Pi)
+  *                   with CoreXY motion control, position commands processing,
+  *                   and stepper motor coordination with limit switches.
+  * @author         : Kyle Schumacher
+  * @date           : Jun 9, 2025
   ******************************************************************************
   * @attention
   *
@@ -38,9 +43,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-StepperMotor motor1;
-StepperMotor motor2;
-StepperManager mgr;
+StepperMotor motor1;    ///< Motor A for CoreXY system (X+Y movement)
+StepperMotor motor2;    ///< Motor B for CoreXY system (X-Y movement)
+StepperManager mgr;     ///< High-level motion controller for coordinated moves
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,18 +60,18 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint32_t PWM_duty_cycle = 4800;
-uint32_t counterValue = 0;
-uint32_t board_dim_x = 285.75; // mm
-uint32_t board_dim_y = 487.3; // mm
+uint32_t PWM_duty_cycle = 4800;    ///< PWM duty cycle (not currently used)
+uint32_t counterValue = 0;         ///< General purpose counter
+uint32_t board_dim_x = 285.75;     ///< Physical board dimension X in mm
+uint32_t board_dim_y = 487.3;      ///< Physical board dimension Y in mm
 
-#define RX_BUFFER_SIZE 64
-uint8_t uart1_rx_data, uart2_rx_data;
-uint8_t uart_rx_data;  // Common variable for processing
-HAL_StatusTypeDef uart_status;
-uint8_t uart_rx_buffer[RX_BUFFER_SIZE];
-uint8_t uart_rx_index = 0;
-bool new_data = false;
+#define RX_BUFFER_SIZE 64          ///< UART receive buffer size in bytes
+uint8_t uart1_rx_data, uart2_rx_data;  ///< Single byte buffers for UART interrupts
+uint8_t uart_rx_data;              ///< Common variable for processing received data
+HAL_StatusTypeDef uart_status;     ///< UART operation status
+uint8_t uart_rx_buffer[RX_BUFFER_SIZE];  ///< Command assembly buffer
+uint8_t uart_rx_index = 0;         ///< Current position in receive buffer
+bool new_data = false;             ///< Flag indicating new UART data received
 
 /* USER CODE END PV */
 
@@ -82,9 +87,9 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-char tx_buff[64];
-float max_speed = 4000.0f;
-float max_accel = 20000.0f;
+char tx_buff[64];           ///< Transmit buffer for UART responses
+float max_speed = 4000.0f;  ///< Maximum motor speed in steps/second
+float max_accel = 20000.0f; ///< Maximum motor acceleration in steps/second²
 /* USER CODE END 0 */
 
 /**
@@ -481,6 +486,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * @brief Timer interrupt callback for stepper motor updates
+ * @param htim Pointer to timer handle that triggered the interrupt
+ * @details Called automatically by HAL when TIM2 period elapses.
+ *          Updates both stepper motors to generate step pulses and
+ *          maintain motion profiles. This function runs at high frequency
+ *          and should be kept minimal.
+ * @note Timer frequency determines maximum step rate and motion smoothness
+ */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM2)
@@ -490,6 +504,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 }
 
+/**
+ * @brief UART receive complete interrupt callback
+ * @param huart Pointer to UART handle that received data
+ * @details Handles incoming data from both UART1 (PC/PuTTY) and UART2 (Raspberry Pi).
+ *          Provides echo functionality for PC connection and visual feedback for
+ *          Raspberry Pi communication via LED toggle. Automatically re-enables
+ *          UART interrupts for continuous reception.
+ * @note UART1 data is echoed back to sender for debugging
+ * @note UART2 data toggles onboard LED to indicate activity
+ * @note Both UARTs share the same processing pipeline via uart_rx_data
+ */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if (huart->Instance == USART1) {
@@ -514,7 +539,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 }
 
-//}
+/**
+ * @brief Convert single hexadecimal character to integer
+ * @param c Hexadecimal character ('0'-'9', 'A'-'F', 'a'-'f')
+ * @return Integer value (0-15) or undefined for invalid input
+ * @note This function doesn't validate input - ensure valid hex chars
+ * @warning No bounds checking performed on input
+ */
 int hex_to_int(uint8_t c) {
 	if (c >= 97)
 		c = c - 32;
@@ -525,6 +556,16 @@ int hex_to_int(uint8_t c) {
 	return result;
 }
 
+/**
+ * @brief Convert four hexadecimal characters to integer
+ * @param num1 First hex digit (most significant)
+ * @param num2 Second hex digit
+ * @param num3 Third hex digit  
+ * @param num4 Fourth hex digit (least significant)
+ * @return Combined integer value from four hex digits
+ * @note Uses hex_to_int() internally for each digit conversion
+ * @warning No validation performed on input characters
+ */
 int four_hex_to_int(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4) {
 	uint8_t int1 = hex_to_int(num1);
 	uint8_t int2 = hex_to_int(num2);
@@ -535,6 +576,18 @@ int four_hex_to_int(uint8_t num1, uint8_t num2, uint8_t num3, uint8_t num4) {
 	return combined;
 }
 
+/**
+ * @brief Convert four ASCII decimal characters to integer
+ * @param d1 First decimal digit (thousands place)
+ * @param d2 Second decimal digit (hundreds place)
+ * @param d3 Third decimal digit (tens place)
+ * @param d4 Fourth decimal digit (ones place)
+ * @return Combined integer value (0-9999) or -1 for invalid input
+ * @details Validates each character is a valid decimal digit ('0'-'9')
+ *          before performing conversion. Used for parsing position commands.
+ * @note Returns -1 if any character is not a valid decimal digit
+ * @note Result range is 0-9999 for valid inputs
+ */
 int four_ascii_to_int(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4) {
 	if (d1 < '0' || d1 > '9') return -1;
 	if (d2 < '0' || d2 > '9') return -1;

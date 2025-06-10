@@ -1,15 +1,31 @@
-/*
- * stepper_manager.c
- *
- *  Created on: Jun 2, 2025
- *      Author: kyle
+/**
+ * @file stepper_manager.c
+ * @brief CoreXY stepper motor manager implementation
+ * @details Provides high-level motion control for CoreXY kinematics, including
+ *          calibration, soft limits, position tracking, and coordinated moves.
+ * @author Kyle Schumacher
+ * @date Jun 9, 2025
  */
 
 #include "stepper_manager.h"
 #include <math.h>
 
 /**
- * @brief  Initialize the manager with two StepperMotor pointers and all limit/soft‐limit parameters.
+ * @brief Initialize the stepper manager with motor configuration and limits
+ * @param mgr Pointer to the StepperManager structure
+ * @param motor_x Pointer to motor A (X+Y axis motor in CoreXY)
+ * @param motor_y Pointer to motor B (X-Y axis motor in CoreXY)
+ * @param limit_x_port GPIO port for X-axis limit switch
+ * @param limit_x_pin GPIO pin for X-axis limit switch
+ * @param limit_y_port GPIO port for Y-axis limit switch
+ * @param limit_y_pin GPIO pin for Y-axis limit switch
+ * @param steps_per_mm Motor steps per millimeter conversion factor
+ * @param soft_limit_x_min_mm Minimum X position in mm (soft limit)
+ * @param soft_limit_x_max_mm Maximum X position in mm (soft limit)
+ * @param soft_limit_y_min_mm Minimum Y position in mm (soft limit)
+ * @param soft_limit_y_max_mm Maximum Y position in mm (soft limit)
+ * @param calib_backoff_mm Distance to back off from limit switches after homing
+ * @note All position limits are in millimeters relative to home position
  */
 void StepperManager_Init(
     StepperManager *mgr,
@@ -52,10 +68,14 @@ void StepperManager_Init(
 }
 
 /**
- * @brief  Begin homing: drives both axes "negatively" until each limit switch is pressed.
- *         When X's switch is pressed, we stop X, back off by calib_backoff_mm (positive),
- *         then immediately set current_position=0.  Same for Y.
- * @note   Must call StepperManager_Update() in your main loop to progress this sequence.
+ * @brief Start the homing calibration sequence
+ * @param mgr Pointer to the StepperManager structure
+ * @details Initiates a two-phase homing sequence:
+ *          1. Move towards X limit switch, back off, and zero X position
+ *          2. Move towards Y limit switch, back off, and zero Y position
+ *          The sequence runs in slow calibration speed for accuracy.
+ * @note Call StepperManager_Update() repeatedly to progress the calibration
+ * @warning Do not send move commands during calibration
  */
 void StepperManager_StartCalibration(StepperManager *mgr)
 {
@@ -82,10 +102,20 @@ void StepperManager_StartCalibration(StepperManager *mgr)
     mgr->state = MANAGER_CALIBRATING;
 }
 
-
 /**
- * @brief  Request a normal move to (x_mm, y_mm).  If a calibration or previous move
- *         is still running, this call is silently ignored.
+ * @brief Request a coordinated move to the specified position
+ * @param mgr Pointer to the StepperManager structure
+ * @param new_x_mm Target X position in millimeters
+ * @param new_y_mm Target Y position in millimeters
+ * @details Performs intelligent motion planning with the following features:
+ *          - Automatic soft limit enforcement
+ *          - Motion interruption for new commands
+ *          - Position tracking during interruption
+ *          - Minimum movement threshold (1mm) filtering
+ *          - Speed scaling based on move distance
+ *          - CoreXY kinematic transformation
+ * @note Movements less than 1mm total distance are ignored
+ * @note Calibration commands take priority and will ignore move requests
  */
 void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
 {
@@ -114,10 +144,6 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
         // Update our position tracking to match actual motor positions
         mgr->position_x_mm = steps_x / mgr->steps_per_mm;
         mgr->position_y_mm = steps_y / mgr->steps_per_mm;
-//
-//        // Now stop the motors to prepare for new movement
-//        StepperMotor_Stop(mgr->motor_x);
-//        StepperMotor_Stop(mgr->motor_y);
     }
 
     // Recompute delta from current position (which may have just been updated)
@@ -140,16 +166,14 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
     int32_t steps_dy = (int32_t)lrintf(dy_mm * mgr->steps_per_mm);
 
     // 5) CoreXY formulas for motor A & B
-    //    motorA_delta = +ΔX + ΔY
-    //    motorB_delta = +ΔX – ΔY
     int32_t deltaA = steps_dx + steps_dy;
     int32_t deltaB = steps_dx - steps_dy;
 
     // 6) Compute each motor's absolute target steps
-    int32_t targetA = mgr->motor_x->current_position + deltaA;  // note: motor_x ↔ motor A
-    int32_t targetB = mgr->motor_y->current_position + deltaB;  //       motor_y ↔ motor B
+    int32_t targetA = mgr->motor_x->current_position + deltaA; 
+    int32_t targetB = mgr->motor_y->current_position + deltaB;  
 
-    // 7) Kick off both motors (non‐blocking trapezoid each)
+    // 7) Kick off both motors 
     float distA = fabsf((float)deltaA);
     float distB = fabsf((float)deltaB);
 
@@ -185,7 +209,7 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
         if (vA > mgr->default_speed_a * speed_scale) vA = mgr->default_speed_a * speed_scale;
     }
 
-    // scale accelerations proportionally (keeps same motion profile shape)
+    // scale accelerations proportionally
     float aA = (vA / (mgr->default_speed_a * speed_scale)) * mgr->default_accel_a * accel_scale;
     float aB = (vB / (mgr->default_speed_b * speed_scale)) * mgr->default_accel_b * accel_scale;
 
@@ -208,15 +232,21 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
 }
 
 /**
- * @brief  Called continuously from your main loop.
- *         - If state==CALIBRATING:
- *             • Check each axis's limit switch.
- *             • When X's switch is pressed, immediately stop X, back off by calib_backoff_mm, then set X→0.
- *             • Similarly for Y.
- *             • When both back‐off moves complete, state→IDLE.
- *         - If state==MOVING:
- *             • Check if both motors are no longer moving → state→IDLE.
- *             • Also watch for "unexpected" limit hits: if a switch is pressed during a normal move, that axis is stopped immediately.
+ * @brief Update the stepper manager state machine
+ * @param mgr Pointer to the StepperManager structure
+ * @details This function must be called continuously from the main loop.
+ *          Handles state transitions for:
+ *          - CALIBRATING: Manages the two-phase homing sequence
+ *          - MOVING: Monitors move completion and limit switch safety
+ *          - IDLE: No action required
+ * @note In CALIBRATING state:
+ *       - Monitors limit switches for homing detection
+ *       - Handles backoff moves after limit contact
+ *       - Sets final position coordinates after calibration
+ * @note In MOVING state:
+ *       - Checks for unexpected limit switch activation
+ *       - Transitions to IDLE when both motors complete their moves
+ * @warning Limit switch activation during normal moves will immediately stop all motion
  */
 void StepperManager_Update(StepperManager *mgr)
 {
@@ -251,7 +281,6 @@ void StepperManager_Update(StepperManager *mgr)
 
         // ─── COREXY HOMING: Y‐axis second ───────────────────────────────────
         if (mgr->calib_x_homed && !mgr->calib_y_homed) {
-            // Drive toward negative Y: ΔX=0, ΔY<0 ⇒ ΔA negative, ΔB positive
             // We only need to start that move once when we detect X is done. So:
             if (!StepperMotor_IsMoving(mgr->motor_x) &&
                 !StepperMotor_IsMoving(mgr->motor_y))
@@ -270,7 +299,6 @@ void StepperManager_Update(StepperManager *mgr)
 
                 // Back off in +Y (which, in CoreXY, is "A_forward & B_forward")
                 int32_t backoff_steps = (int32_t) lrintf(mgr->calib_backoff_mm * mgr->steps_per_mm);
-                // ΔX=0, ΔY=+backoff ⇒ ΔA=+backoff, ΔB=+backoff
                 int32_t targetA = mgr->motor_x->current_position + backoff_steps;
                 int32_t targetB = mgr->motor_y->current_position - backoff_steps;
                 StepperMotor_MoveTo(mgr->motor_x, targetA);
@@ -318,7 +346,6 @@ void StepperManager_Update(StepperManager *mgr)
             mgr->state = MANAGER_IDLE;
         }
     }
-    // else (mgr->state == MANAGER_IDLE) → nothing to do
 }
 
 

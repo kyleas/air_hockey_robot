@@ -1,8 +1,11 @@
-/*
- * stepper_driver.h
- *
- *  Created on: Jun 2, 2025
- *      Author: kyle
+/**
+ * @file stepper_driver.h
+ * @brief Low-level stepper motor driver interface
+ * @details Provides direct control interface for individual stepper motors with
+ *          constant speed operation. Includes step pulse generation, direction
+ *          control, position tracking, and timer interrupt integration.
+ * @author Kyle Schumacher
+ * @date Jun 9, 2025
  */
 
 #ifndef INC_STEPPER_DRIVER_H_
@@ -13,58 +16,70 @@
 #include <stdint.h>
 
 /**
- * @brief  Timer tick frequency (Hz).
- *         The application must configure a hardware timer (e.g. TIM2) so that
- *         it generates an update interrupt exactly at this rate.
- *         In that ISR, you must call StepperMotor_Update() for each motor.
+ * @brief Timer interrupt frequency in Hz
+ * @details The application must configure a hardware timer (e.g. TIM2) to
+ *          generate update interrupts at exactly this rate. In the ISR,
+ *          call StepperMotor_Update() for each motor instance.
+ * @note Higher frequencies allow faster step rates but increase CPU overhead
+ * @note Must match your actual timer configuration
  */
 #define TIMER_FREQUENCY_HZ  10000U
 
 /**
- * @brief  A single‐axis stepper motor “object.”
- *         Drives DIR and STEP via GPIOs, reads a single limit switch, and
- *         generates a simple trapezoidal speed profile (acceleration → cruise → deceleration).
+ * @brief Stepper motor control structure
+ * @details Contains all state and configuration data for a single stepper motor.
+ *          Manages GPIO pins for direction and step control, maintains position
+ *          tracking, and handles constant-speed motion profiles.
+ * @note Initialize with StepperMotor_Init() before use
+ * @note All position values are in steps relative to initialization point
  */
 typedef struct {
-    /* GPIOs */
-    GPIO_TypeDef *dir_port;
-    uint16_t      dir_pin;
-    GPIO_TypeDef *step_port;
-    uint16_t      step_pin;
-    GPIO_TypeDef *limit_port;   // Limit switch GPIO (pressed = GPIO_PIN_RESET)
-    uint16_t      limit_pin;
+    /* GPIO pin assignments */
+    GPIO_TypeDef *dir_port;     ///< GPIO port for direction control pin
+    uint16_t      dir_pin;      ///< GPIO pin number for direction control
+    GPIO_TypeDef *step_port;    ///< GPIO port for step pulse pin
+    uint16_t      step_pin;     ///< GPIO pin number for step pulse generation
+    GPIO_TypeDef *limit_port;   ///< GPIO port for limit switch (not used in current implementation)
+    uint16_t      limit_pin;    ///< GPIO pin number for limit switch (not used in current implementation)
 
-    /* Position & motion planning (all in “steps”). */
-    int32_t current_position;   // Current position in steps
-    int32_t target_position;    // Target position in steps
-    bool    moving;             // True if currently executing a motion
-    int8_t  direction;          // +1 or –1
+    /* Position and motion state */
+    int32_t current_position;   ///< Current position in steps (signed, relative to init)
+    int32_t target_position;    ///< Target position in steps for current move
+    bool    moving;             ///< True if motor is currently executing a move
+    int8_t  direction;          ///< Movement direction: +1 (forward) or -1 (reverse)
 
-    /* Trapezoidal profile parameters */
-    uint32_t step_timer;        // “Ticks until next step” (counts down each ISR tick)
-    uint32_t step_period;       // “Ticks between steps” at current speed
-    int32_t  total_steps;       // Total # of steps to move in this motion
-    int32_t  step_count;        // How many steps have been issued so far
-    int32_t  accel_steps;       // # of steps in the acceleration phase
-    int32_t  decel_steps;       // # of steps in the deceleration phase
+    /* Timing and step generation */
+    uint32_t step_timer;        ///< Countdown timer for next step pulse (in timer ticks)
+    uint32_t step_period;       ///< Timer ticks between step pulses (determines speed)
+    int32_t  total_steps;       ///< Total number of steps required for current move
+    int32_t  step_count;        ///< Number of steps completed in current move
+    int32_t  accel_steps;       ///< Number of acceleration steps (unused in constant speed mode)
+    int32_t  decel_steps;       ///< Number of deceleration steps (unused in constant speed mode)
 
-    float current_speed;        // Current speed in steps/sec
-    float max_speed;            // Configured max speed in steps/sec
-    float accel;                // Configured acceleration in steps/sec^2
+    /* Speed configuration */
+    float current_speed;        ///< Current operating speed in steps per second
+    float max_speed;            ///< Maximum configured speed in steps per second
+    float accel;                ///< Acceleration value (unused in constant speed mode)
 
-    bool pulse_high;            // If true, STEP pin is currently high (so next tick will pull it low)
+    /* Step pulse state */
+    bool pulse_high;            ///< True when STEP pin is currently HIGH (pulse active)
 } StepperMotor;
 
 /**
- * @brief  Initialize one StepperMotor struct. Must be called once per motor.
- * @param  motor:         Pointer to StepperMotor object
- * @param  dir_port/dir_pin:   GPIO port+pin used for DIR
- * @param  step_port/step_pin: GPIO port+pin used for STEP
- * @param  limit_port/limit_pin: GPIO port+pin used for that axis’s limit switch
- * @param  max_speed:     Maximum speed (steps/sec) for normal moves
- * @param  accel:         Acceleration (steps/sec²)
- * @note   This function will set DIR→LOW, STEP→LOW, and assumes limit switch pin
- *         has already been configured as an input with pull‐up.
+ * @brief Initialize a stepper motor instance
+ * @param motor Pointer to StepperMotor structure to initialize
+ * @param dir_port GPIO port for direction control pin
+ * @param dir_pin GPIO pin number for direction control
+ * @param step_port GPIO port for step pulse generation pin
+ * @param step_pin GPIO pin number for step pulse generation
+ * @param max_speed Maximum operating speed in steps per second
+ * @param accel Acceleration parameter (retained for compatibility, unused in constant speed mode)
+ * @details Configures the motor structure with hardware pin assignments and
+ *          motion parameters. Sets initial safe states for all variables and
+ *          initializes GPIO pins to LOW state.
+ * @note GPIO pins must be configured as outputs before calling this function
+ * @note The accel parameter is retained for API compatibility but not used
+ * @warning Ensure proper GPIO configuration in your hardware initialization
  */
 void StepperMotor_Init(
     StepperMotor *motor,
@@ -75,36 +90,56 @@ void StepperMotor_Init(
 );
 
 /**
- * @brief  Start a nonblocking move to a given absolute step count.
- * @param  motor:            Pointer to StepperMotor object
- * @param  target_position:  Desired absolute position in **steps**.
- *                           (current_position is immediately read, delta computed)
- * @note   This computes a trapezoidal profile (acceleration, cruise, deceleration)
- *         and begins toggling STEP in the timer ISR.
- *         To stop mid‐motion, call StepperMotor_Stop().
+ * @brief Start a non-blocking move to absolute position
+ * @param motor Pointer to StepperMotor structure
+ * @param target_position Target position in steps (absolute coordinate)
+ * @details Initiates constant-speed motion to the specified absolute position.
+ *          Movement starts immediately and runs at the configured max_speed.
+ *          Function returns immediately; use StepperMotor_IsMoving() to monitor
+ *          completion status.
+ * @note Position is absolute, not relative to current position
+ * @note Multiple calls will override previous target (no move queuing)
+ * @note No acceleration/deceleration - motor runs at constant speed
  */
 void StepperMotor_MoveTo(StepperMotor *motor, int32_t target_position);
 
 /**
- * @brief  Immediately halt any in‐progress motion and pull STEP→LOW.
- * @param  motor: Pointer to StepperMotor object
+ * @brief Immediately stop motor motion
+ * @param motor Pointer to StepperMotor structure
+ * @details Performs emergency stop of motor motion without deceleration.
+ *          Clears motion state and ensures STEP pin is in safe LOW state.
+ *          Position tracking remains accurate up to the point of stopping.
+ * @note This is an immediate stop - no deceleration ramp
+ * @note Current position tracking is preserved
+ * @warning Abrupt stopping may cause mechanical stress at high speeds
  */
 void StepperMotor_Stop(StepperMotor *motor);
 
 /**
- * @brief  Returns true if the motor is currently in motion (MoveTo not yet finished).
+ * @brief Check if motor is currently moving
+ * @param motor Pointer to StepperMotor structure
+ * @return true if motor is executing a move, false if stopped or idle
+ * @details Returns current motion status for coordination with other motors
+ *          or determining when moves have completed.
+ * @note Fast and safe to call frequently from main loop
+ * @note Useful for multi-motor synchronization
  */
 bool StepperMotor_IsMoving(StepperMotor *motor);
 
 /**
- * @brief  Must be called on each timer tick (at exactly TIMER_FREQUENCY_HZ) from your
- *         timer ISR (e.g. HAL_TIM_PeriodElapsedCallback).
- *         Handles:
- *           - Checking limit switch (stop if pressed)
- *           - Generating step pulses (pulse width = exactly one tick)
- *           - Computing “next step interval” for trapezoidal profile
- *
- * @param  motor: Pointer to StepperMotor object
+ * @brief Update motor state and generate step pulses (ISR function)
+ * @param motor Pointer to StepperMotor structure
+ * @details Core motor update function that must be called from timer ISR
+ *          at TIMER_FREQUENCY_HZ rate. Handles step pulse timing, GPIO
+ *          control, position tracking, and move completion detection.
+ *          
+ *          Step pulse generation uses two-phase approach:
+ *          - Phase 1: Set STEP pin HIGH, start pulse
+ *          - Phase 2: Set STEP pin LOW, complete pulse
+ * @note MUST be called from timer interrupt at TIMER_FREQUENCY_HZ rate
+ * @note Timer frequency must exactly match TIMER_FREQUENCY_HZ definition
+ * @note Keep ISR processing minimal for consistent timing
+ * @warning Incorrect timer frequency will cause speed errors
  */
 void StepperMotor_Update(StepperMotor *motor);
 

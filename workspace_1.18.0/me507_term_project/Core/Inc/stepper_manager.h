@@ -1,8 +1,11 @@
-/*
- * stepper_manager.h
- *
- *  Created on: Jun 2, 2025
- *      Author: kyle
+/**
+ * @file stepper_manager.h
+ * @brief High-level CoreXY stepper motor management interface
+ * @details Provides coordinated control of dual stepper motors in CoreXY configuration
+ *          with features including automatic calibration, soft limits, position tracking,
+ *          and intelligent motion planning with interruption capabilities.
+ * @author Kyle Schumacher
+ * @date Jun 9, 2025
  */
 
 #ifndef INC_STEPPER_MANAGER_H_
@@ -14,69 +17,87 @@
 #include <stdint.h>
 
 /**
- * @brief  Manager states for the XY pair.
+ * @brief Stepper manager state machine states
+ * @details Defines the operational states of the stepper manager for proper
+ *          sequencing of calibration, movement, and idle operations.
  */
 typedef enum {
-    MANAGER_IDLE,
-    MANAGER_CALIBRATING,
-    MANAGER_MOVING
+    MANAGER_IDLE,        ///< Ready for new commands, no active operations
+    MANAGER_CALIBRATING, ///< Performing automatic homing calibration sequence
+    MANAGER_MOVING       ///< Executing coordinated motor movements
 } ManagerState;
 
 /**
- * @brief  A simple XY‐stage manager.
- *         - Takes in two StepperMotor pointers (motor_x, motor_y).
- *         - Takes in exactly two limit switch pins: one for X, one for Y.
- *         - Exposes: StartCalibration(), MoveTo(x_mm, y_mm), and Update().
- *         - Conversion from mm ↔ steps uses a single `steps_per_mm`.
- *         - Enforces soft limits in mm.
- *         - Calibration: drives both axes toward their *negative* limit switches until each is pressed,
- *           then backs off by `calib_backoff_mm` and sets that axis’s current_steps = 0.
- *         - During a normal MoveTo, clamps targets to soft limits and moves both axes simultaneously
- *           with each axis’s own trapezoidal profile (computed by its own StepperMotor).
- *         - Non‐blocking: you must call StepperManager_Update() periodically in your main loop
- *           to finish homing and detect when both axes have stopped.
+ * @brief CoreXY stepper motor management structure
+ * @details Manages dual stepper motors in CoreXY configuration with automatic
+ *          calibration, soft limits, position tracking, and coordinated movement.
+ *          Provides millimeter-based positioning with automatic step conversion.
+ * 
+ * @note CoreXY Kinematics:
+ *       - Motor A (motor_x): Controls X+Y movement (A = X + Y)
+ *       - Motor B (motor_y): Controls X-Y movement (B = X - Y)
+ *       - Forward: X = (A + B)/2, Y = (A - B)/2
+ *       - Inverse: A = X + Y, B = X - Y
  */
 typedef struct {
-    StepperMotor *motor_x;
-    StepperMotor *motor_y;
+    /* Motor references */
+    StepperMotor *motor_x;  ///< Motor A in CoreXY system (handles X+Y movement)
+    StepperMotor *motor_y;  ///< Motor B in CoreXY system (handles X-Y movement)
 
-    GPIO_TypeDef *limit_x_port;
-    uint16_t      limit_x_pin;
-    GPIO_TypeDef *limit_y_port;
-    uint16_t      limit_y_pin;
+    /* Limit switch configuration */
+    GPIO_TypeDef *limit_x_port;  ///< GPIO port for X-axis limit switch
+    uint16_t      limit_x_pin;   ///< GPIO pin for X-axis limit switch
+    GPIO_TypeDef *limit_y_port;  ///< GPIO port for Y-axis limit switch
+    uint16_t      limit_y_pin;   ///< GPIO pin for Y-axis limit switch
 
-    float position_x_mm;   // “Commanded” X position in mm (only valid when state==IDLE)
-    float position_y_mm;   // “Commanded” Y position in mm
+    /* Position tracking (in millimeters) */
+    float position_x_mm;    ///< Current commanded X position in millimeters
+    float position_y_mm;    ///< Current commanded Y position in millimeters
 
-    float soft_limit_x_min_mm;
-    float soft_limit_x_max_mm;
-    float soft_limit_y_min_mm;
-    float soft_limit_y_max_mm;
+    /* Soft limit boundaries (in millimeters) */
+    float soft_limit_x_min_mm;  ///< Minimum allowed X position
+    float soft_limit_x_max_mm;  ///< Maximum allowed X position
+    float soft_limit_y_min_mm;  ///< Minimum allowed Y position
+    float soft_limit_y_max_mm;  ///< Maximum allowed Y position
 
-    float steps_per_mm;    // Conversion factor: [steps] = steps_per_mm * [mm]
+    /* Conversion and calibration */
+    float steps_per_mm;         ///< Conversion factor: steps = mm × steps_per_mm
+    float calib_backoff_mm;     ///< Distance to back off after hitting limit switch
 
-    ManagerState state;
+    /* State management */
+    ManagerState state;         ///< Current operational state
 
-    bool calib_x_homed;    // True once X‐axis limit was hit & backed off
-    bool calib_y_homed;    // True once Y‐axis limit was hit & backed off
+    /* Calibration status */
+    bool calib_x_homed;         ///< True when X-axis homing is complete
+    bool calib_y_homed;         ///< True when Y-axis homing is complete
 
-    float calib_backoff_mm; // After hitting switch, move forward by this many mm, then zero
-    float default_speed_a, default_speed_b;
-    float default_accel_a, default_accel_b;
+    /* Default motion parameters */
+    float default_speed_a;      ///< Default speed for motor A (steps/second)
+    float default_speed_b;      ///< Default speed for motor B (steps/second)
+    float default_accel_a;      ///< Default acceleration for motor A (steps/second²)
+    float default_accel_b;      ///< Default acceleration for motor B (steps/second²)
 } StepperManager;
 
 /**
- * @brief  Initialize the XY manager.
- * @param  mgr                   Pointer to StepperManager
- * @param  motor_x, motor_y      Two StepperMotor pointers (already initialized with Init())
- * @param  limit_x_port, limit_x_pin:   GPIO for X‐axis “home” switch (pressed=LOW)
- * @param  limit_y_port, limit_y_pin:   GPIO for Y‐axis “home” switch (pressed=LOW)
- * @param  steps_per_mm          How many steps correspond to 1 mm
- * @param  soft_limit_x_min_mm   Minimum X (mm) that we allow (e.g. 0.0f)
- * @param  soft_limit_x_max_mm   Maximum X (mm) that we allow
- * @param  soft_limit_y_min_mm   Minimum Y (mm)
- * @param  soft_limit_y_max_mm   Maximum Y (mm)
- * @param  calib_backoff_mm      After hitting a limit switch, back off by this many mm, then set pos=0
+ * @brief Initialize the CoreXY stepper motor manager
+ * @param mgr Pointer to StepperManager structure
+ * @param motor_x Pointer to motor A (already initialized with StepperMotor_Init)
+ * @param motor_y Pointer to motor B (already initialized with StepperMotor_Init)
+ * @param limit_x_port GPIO port for X-axis limit switch
+ * @param limit_x_pin GPIO pin for X-axis limit switch (active LOW)
+ * @param limit_y_port GPIO port for Y-axis limit switch
+ * @param limit_y_pin GPIO pin for Y-axis limit switch (active LOW)
+ * @param steps_per_mm Conversion factor from millimeters to motor steps
+ * @param soft_limit_x_min_mm Minimum allowed X position in millimeters
+ * @param soft_limit_x_max_mm Maximum allowed X position in millimeters
+ * @param soft_limit_y_min_mm Minimum allowed Y position in millimeters
+ * @param soft_limit_y_max_mm Maximum allowed Y position in millimeters
+ * @param calib_backoff_mm Distance to back away from limit switches after contact
+ * @details Configures the manager with motor references, limit switches, coordinate
+ *          system parameters, and soft limits. Motors must be pre-initialized.
+ * @note Limit switches are expected to be active LOW (pressed = GPIO_PIN_RESET)
+ * @note Soft limits are enforced during all normal movements
+ * @warning Motors must be initialized with StepperMotor_Init() before calling this
  */
 void StepperManager_Init(
     StepperManager *mgr,
@@ -95,27 +116,65 @@ void StepperManager_Init(
 );
 
 /**
- * @brief  Begin a homing‐calibration sequence.
- *         This drives both axes toward their respective limit switches (negative direction) at a slow, fixed speed,
- *         waits for each to be pressed, then backs off by `calib_backoff_mm` and sets that axis’s step‐count=0.
- * @note   While homing is in progress, calls to MoveTo() are ignored.
+ * @brief Start automatic homing calibration sequence
+ * @param mgr Pointer to StepperManager structure
+ * @details Initiates a two-phase automatic calibration sequence:
+ *          1. X-axis homing: Move toward X limit switch, back off, zero position
+ *          2. Y-axis homing: Move toward Y limit switch, back off, zero position
+ *          
+ *          The sequence uses slow, controlled speeds for accuracy and sets the
+ *          final position to the configured limit boundaries.
+ * @note Call StepperManager_Update() continuously to advance the calibration
+ * @note Movement commands are ignored during calibration
+ * @note Motors operate at reduced speed during calibration for safety
+ * @warning Ensure limit switches are properly configured and functional
  */
 void StepperManager_StartCalibration(StepperManager *mgr);
 
 /**
- * @brief  Request a simultaneous move of X→x_mm, Y→y_mm (both in mm).
- *         Clamps them individually to their soft limits.
- *         Does nothing if a calibration or a previous move is still in progress.
+ * @brief Request coordinated move to specified position
+ * @param mgr Pointer to StepperManager structure
+ * @param x_mm Target X position in millimeters
+ * @param y_mm Target Y position in millimeters
+ * @details Executes intelligent coordinated movement with advanced features:
+ *          - Automatic soft limit clamping
+ *          - Motion interruption for responsive control
+ *          - Real-time position tracking during interruption
+ *          - Distance-based speed optimization
+ *          - CoreXY kinematic transformation
+ *          - Minimum movement filtering (1mm threshold)
+ * @note Movements less than 1mm total distance are automatically ignored
+ * @note New commands interrupt current movements seamlessly
+ * @note Calibration commands take priority over movement requests
+ * @note Position coordinates are absolute, not relative
  */
 void StepperManager_MoveTo(StepperManager *mgr, float x_mm, float y_mm);
 
 /**
- * @brief  Must be called periodically in the main loop (non‐blocking).
- *         - If state==CALIBRATING, polls limit switches, backs off, then closes out homing.
- *         - If state==MOVING, polls to see if both StepperMotor_IsMoving()==false to declare IDLE.
- *         - Also watches for “unexpected” limit hits during a normal move (and immediately stops that axis).
+ * @brief Update manager state machine (call from main loop)
+ * @param mgr Pointer to StepperManager structure
+ * @details Core state machine update function that must be called continuously
+ *          from the main application loop. Handles:
+ *          
+ *          **CALIBRATING State:**
+ *          - Monitors limit switch activation during homing
+ *          - Controls backoff movements after limit contact
+ *          - Sets final calibrated position coordinates
+ *          - Transitions to IDLE when complete
+ *          
+ *          **MOVING State:**
+ *          - Monitors for unexpected limit switch activation
+ *          - Detects movement completion
+ *          - Provides emergency stop on limit contact
+ *          - Transitions to IDLE when both motors stop
+ *          
+ *          **IDLE State:**
+ *          - Ready to accept new commands
+ *          - No active processing required
+ * @note This function is non-blocking and must be called frequently
+ * @note Limit switch contact during normal moves triggers immediate stop
+ * @warning Continuous calling is required for proper operation
  */
 void StepperManager_Update(StepperManager *mgr);
-
 
 #endif /* INC_STEPPER_MANAGER_H_ */
