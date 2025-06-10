@@ -4,7 +4,7 @@ This project implements a 2-axis CoreXY air hockey robot designed as part of the
 
 The documentation pages are at https://kyleas.github.io/air_hockey_robot/
 
-![Air Hockey Table](images/overall.jpg)
+![Air Hockey Table](https://raw.githubusercontent.com/kyleas/air_hockey_robot/main/Images/overall.jpg)
 
 ## Overview
 
