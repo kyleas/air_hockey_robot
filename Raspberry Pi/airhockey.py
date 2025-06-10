@@ -442,7 +442,10 @@ def main_loop():
     PUCK_IN_ROBOT_HALF_THRESHOLD = 1.0  # seconds
     aggressive_mode_active = False
     aggressive_mode_start_time = 0
-    AGGRESSIVE_MODE_DURATION = 1.0  # seconds
+    AGGRESSIVE_MODE_DURATION = 3.0  # seconds - increased to account for all 3 phases
+    aggressive_phase = 0  # 0=inactive, 1=positioning, 2=striking, 3=follow-through
+    aggressive_phase_start_time = 0
+    last_strike_x_target = None  # Store last strike position for follow-through
 
     while True:
         loop_start = time.time()
@@ -745,7 +748,9 @@ def main_loop():
                     # Puck has been in robot's half for over the threshold time, activate aggressive mode
                     aggressive_mode_active = True
                     aggressive_mode_start_time = current_time
-                    print("AGGRESSIVE MODE ACTIVATED - Puck stuck in robot's half")
+                    aggressive_phase = 1  # Start with positioning phase
+                    aggressive_phase_start_time = current_time
+                    print("AGGRESSIVE MODE ACTIVATED - POSITIONING PHASE")
             else:
                 # Puck is on human's side, reset the timer
                 puck_in_robot_half = False
@@ -753,49 +758,119 @@ def main_loop():
             # Check if we should exit aggressive mode
             if aggressive_mode_active and (current_time - aggressive_mode_start_time) > AGGRESSIVE_MODE_DURATION:
                 aggressive_mode_active = False
+                aggressive_phase = 0
                 print("Aggressive mode deactivated")
+            
+            # Check if we should transition between aggressive phases
+            if aggressive_mode_active:
+                # From positioning to striking
+                if aggressive_phase == 1 and (current_time - aggressive_phase_start_time) > 1.0:
+                    aggressive_phase = 2
+                    aggressive_phase_start_time = current_time
+                    print("AGGRESSIVE MODE - STRIKING PHASE")
+                # From striking to follow-through
+                elif aggressive_phase == 2 and (current_time - aggressive_phase_start_time) > 0.2:
+                    aggressive_phase = 3
+                    aggressive_phase_start_time = current_time
+                    print("AGGRESSIVE MODE - FOLLOW-THROUGH PHASE")
+                # From follow-through back to normal
+                elif aggressive_phase == 3 and (current_time - aggressive_phase_start_time) > 1.0:
+                    aggressive_mode_active = False
+                    aggressive_phase = 0
+                    print("Aggressive mode complete - returning to normal")
                 
             # If aggressive mode is active, override the normal target with aggressive behavior
             if aggressive_mode_active and puck_present:
-                # Define robot's striking position (aim for the puck)
-                # Calculate vector from striker position to puck
-                striker_y = y_target  # Default striking position
-                striker_x = TABLE_W / 2.0  # Center of table width
+                # Define human's goal at the bottom center of table
+                goal_x = TABLE_W / 2.0
+                goal_y = TABLE_H  # Bottom of table
                 
-                # Calculate vector from striker to puck
+                # Calculate vector from puck to goal
                 puck_x, puck_y = smoothed_puck
-                strike_vector_x = puck_x - striker_x
-                strike_vector_y = puck_y - striker_y
+                goal_vector_x = goal_x - puck_x
+                goal_vector_y = goal_y - puck_y
                 
                 # Normalize vector
-                vector_length = math.hypot(strike_vector_x, strike_vector_y)
+                vector_length = math.hypot(goal_vector_x, goal_vector_y)
                 if vector_length > 1e-3:
-                    norm_vector_x = strike_vector_x / vector_length
-                    norm_vector_y = strike_vector_y / vector_length
+                    norm_vector_x = goal_vector_x / vector_length
+                    norm_vector_y = goal_vector_y / vector_length
                     
-                    # Calculate target point (go 10% past the puck)
-                    extra_distance = TABLE_H * 0.1  # 10% of table height
-                    x_target = striker_x + norm_vector_x * (vector_length + extra_distance)
-                    # Keep y target at the standard height for consistency
-                    time_until_impact = 0.2  # Set a short time to trigger hit mode
+                    # Phase 1: Position at intercept point along vector, at normal Y height
+                    if aggressive_phase == 1:
+                        # Find where the vector crosses the striker's y position
+                        if abs(norm_vector_y) > 1e-3:  # Avoid division by zero
+                            t = (y_target - puck_y) / norm_vector_y
+                            x_target = puck_x + norm_vector_x * t
+                            # Ensure x_target stays within bounds
+                            x_target = max(0, min(x_target, TABLE_W))
+                            time_until_impact = None  # Not hitting yet
+                        else:
+                            # Vector is horizontal, just position at puck's x
+                            x_target = puck_x
+                            time_until_impact = None
                     
-                    # Ensure x_target stays within bounds
-                    x_target = max(0, min(x_target, TABLE_W))
+                    # Phase 2: Strike position - go 10% past the puck
+                    elif aggressive_phase == 2:
+                        # Distance to travel along vector
+                        extra_distance = TABLE_H * 0.1  # 10% of table height
+                        
+                        # Calculate strike point - we need to hit the puck and go 10% further
+                        # First find where the vector crosses the striker's y position
+                        if abs(norm_vector_y) > 1e-3:  # Avoid division by zero
+                            t = (y_target - puck_y) / norm_vector_y
+                            intercept_x = puck_x + norm_vector_x * t
+                            
+                            # Calculate additional distance vector component
+                            dx = norm_vector_x * extra_distance
+                            
+                            # Set target beyond the intercept point
+                            x_target = intercept_x + dx
+                            # Ensure x_target stays within bounds
+                            x_target = max(0, min(x_target, TABLE_W))
+                            time_until_impact = 0.2  # Short time to trigger immediate movement
+                            
+                            # Store position for follow-through
+                            last_strike_x_target = x_target
+                        else:
+                            # Vector is horizontal, strike from side with extra distance
+                            x_target = puck_x + (1.0 if puck_x < TABLE_W/2.0 else -1.0) * extra_distance
+                            time_until_impact = 0.2
+                            last_strike_x_target = x_target
                     
-                    # Force hit mode for aggressive behavior
-                    hit_mode_active = True
-                    hit_mode_start_time = current_time
+                    # Phase 3: Follow through - stay in extended position
+                    elif aggressive_phase == 3 and last_strike_x_target is not None:
+                        # Hold the same strike position
+                        x_target = last_strike_x_target
+                        time_until_impact = None  # No need for impact timing in follow-through
                     
-                    # Draw the aggressive target on visualization
-                    if puck_present:
-                        cv2.line(vis,
-                                (int(round(striker_x)), int(round(striker_y))),
-                                (int(round(x_target)), int(round(y_target))),
-                                (0, 0, 255),  # Red line for aggressive mode
-                                3)  # Thicker line
-                        cv2.circle(vis,
-                                (int(round(x_target)), int(round(y_target))),
-                                8, (0, 0, 255), -1)  # Red, larger dot
+                    # Draw the aggressive target and vector on visualization
+                    if aggressive_phase == 1:
+                        mode_text = "POSITION"
+                    elif aggressive_phase == 2:
+                        mode_text = "STRIKE"
+                    else:
+                        mode_text = "FOLLOW"
+                    
+                    # Draw vector from puck to goal
+                    cv2.line(vis,
+                            (int(round(puck_x)), int(round(puck_y))),
+                            (int(round(goal_x)), int(round(goal_y))),
+                            (255, 0, 255),  # Magenta for goal vector
+                            1)  # Thin line
+                    
+                    # Draw target position
+                    cv2.line(vis,
+                            (int(round(puck_x)), int(round(puck_y))),
+                            (int(round(x_target)), int(round(y_target))),
+                            (0, 0, 255),  # Red line for aggressive mode
+                            3)  # Thicker line
+                    cv2.circle(vis,
+                            (int(round(x_target)), int(round(y_target))),
+                            8, (0, 0, 255), -1)  # Red, larger dot
+                    
+                    # Override hit mode - explicitly NOT using hit mode for aggressive behavior
+                    hit_mode_active = False
 
         # FPS counter update
         fps_count += 1
@@ -887,7 +962,17 @@ def main_loop():
                     2)
         
         # Add mode indicator text
-        if hit_mode_active:
+        if aggressive_mode_active:
+            if aggressive_phase == 1:
+                mode_text = "Aggressive-Position"
+                mode_color = (255, 0, 255)  # Magenta for positioning
+            elif aggressive_phase == 2:
+                mode_text = "Aggressive-Strike"
+                mode_color = (0, 0, 255)  # Red for striking
+            else:
+                mode_text = "Aggressive-Follow"
+                mode_color = (255, 165, 0)  # Orange for follow-through
+        elif hit_mode_active:
             mode_text = "Hit"
             mode_color = (0, 0, 255)  # Red for Hit
         else:
