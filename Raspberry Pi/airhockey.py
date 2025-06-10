@@ -659,21 +659,7 @@ def main_loop():
             else:
                 # Single-puck logic
                 mag = math.hypot(vx, vy)
-                if (mag < VEL_THRESHOLD):
-                    # Vertical up
-                    cv2.line(vis,
-                             (xp, yp),
-                             (xp, int(round(y_target))),
-                             (0, 255, 255),
-                             2)  # yellow
-                    cv2.circle(vis,
-                               (xp, int(round(y_target))),
-                               6, (0, 0, 255), -1)  # red
-                    x_target = float(xp)
-                    if vy < -1e-3:
-                        t_frames = (smoothed_puck[1] - y_target) / (-vy)
-                        time_until_impact = t_frames / FRAME_RATE
-                else:
+                if (mag > VEL_THRESHOLD):
                     # Predict using puck velocity
                     x0, y0 = smoothed_puck
                     fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
@@ -731,6 +717,10 @@ def main_loop():
                                        (int(round(x_target)), int(round(y_target))),
                                        6, (0, 0, 255), -1)  # red
                             time_until_impact = t_direct / FRAME_RATE
+                else:
+                    # Not enough velocity for prediction
+                    x_target = None
+                    time_until_impact = None
 
         # FPS counter update
         fps_count += 1
@@ -769,10 +759,20 @@ def main_loop():
                 y_target_adder = 0.0
                 if in_hit_mode:
                     y_target_adder = 0.05 * TABLE_H
+
+                # Percent X and Y
+                percent_x = x_target / TABLE_W
+                percent_y = (y_target + y_target_adder) / TABLE_H
+
+                # min and max values
+                percent_x = max(percent_x, 0.0)
+                percent_x = min(percent_x, 1.0)
+                percent_y = max(percent_y, 0.0)
+                percent_y = min(percent_y, 1.0)
    
                 # Scale coordinates
-                scaled_x = int((adjusted_x_target / table_width) * 2857)
-                scaled_y = int(((y_target + y_target_adder) / TABLE_H) * 4873)
+                scaled_x = int((percent_x) * 2857)
+                scaled_y = int((percent_y) * 4873)             
                 
                 # Format and send command
                 msg = f"M{scaled_x:04d}{scaled_y:04d}\r\n"

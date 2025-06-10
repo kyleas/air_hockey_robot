@@ -83,7 +83,7 @@ static void MX_TIM2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 char tx_buff[64];
-float max_speed = 5000.0f;
+float max_speed = 4500.0f;
 float max_accel = 20000.0f;
 /* USER CODE END 0 */
 
