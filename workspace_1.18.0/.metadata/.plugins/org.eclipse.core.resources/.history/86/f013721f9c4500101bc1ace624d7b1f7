@@ -114,20 +114,18 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
         // Update our position tracking to match actual motor positions
         mgr->position_x_mm = steps_x / mgr->steps_per_mm;
         mgr->position_y_mm = steps_y / mgr->steps_per_mm;
-//
-//        // Now stop the motors to prepare for new movement
-//        StepperMotor_Stop(mgr->motor_x);
-//        StepperMotor_Stop(mgr->motor_y);
+        
+        // Now stop the motors to prepare for new movement
+        StepperMotor_Stop(mgr->motor_x);
+        StepperMotor_Stop(mgr->motor_y);
     }
 
     // Recompute delta from current position (which may have just been updated)
     float dx_mm = new_x_mm - mgr->position_x_mm;
     float dy_mm = new_y_mm - mgr->position_y_mm;
 
-    // Skip small moves - prevents unnecessary motor recalculation
-    // Increased threshold to 1.0mm to ignore minor movements
-    float total_dist_mm = sqrtf(dx_mm*dx_mm + dy_mm*dy_mm);
-    if (total_dist_mm < 1.0f) {
+    // Skip trivial moves - prevents unnecessary motor recalculation
+    if (fabsf(dx_mm) < 0.05f && fabsf(dy_mm) < 0.05f) {
         // If we were moving and stopped for a trivial move, go back to IDLE
         if (mgr->state == MANAGER_MOVING) {
             mgr->state = MANAGER_IDLE;
@@ -154,7 +152,7 @@ void StepperManager_MoveTo(StepperManager *mgr, float new_x_mm, float new_y_mm)
     float distB = fabsf((float)deltaB);
 
     // Calculate the total distance - used for speed scaling
-    total_dist_mm = sqrtf(dx_mm*dx_mm + dy_mm*dy_mm);
+    float total_dist_mm = sqrtf(dx_mm*dx_mm + dy_mm*dy_mm);
     
     // For short moves, use higher acceleration but lower max speed
     float speed_scale = 1.0f;
@@ -284,8 +282,8 @@ void StepperManager_Update(StepperManager *mgr)
             {
             	float x_mm = mgr->soft_limit_x_max_mm;
             	float y_mm = mgr->soft_limit_y_min_mm;
-            	float x_steps = (int32_t)lrintf(x_mm * mgr->steps_per_mm);
-            	float y_steps = (int32_t)lrintf(y_mm * mgr->steps_per_mm);
+            	float x_steps = (int32_t)lrintf(x_mm * mgr->steps_per_mm));
+            	float y_steps = (int32_t)lrintf(y_mm * mgr->steps_per_mm));
             	int32_t A = x_steps + y_steps;
             	int32_t B = x_steps - y_steps;
 

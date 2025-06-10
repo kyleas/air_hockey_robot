@@ -83,7 +83,7 @@ static void MX_TIM2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 char tx_buff[64];
-float max_speed = 4000.0f;
+float max_speed = 4500.0f;
 float max_accel = 20000.0f;
 /* USER CODE END 0 */
 
@@ -217,57 +217,57 @@ int main(void)
   {
 	  StepperManager_Update(&mgr);
 
-	  if (new_data == true) {
-		  new_data = false;
-		  if (uart_rx_data == '\r' || uart_rx_data == '\n') {
-			  uart_rx_buffer[uart_rx_index] = '\0';
+//	  if (mgr.state == MANAGER_IDLE) {
+//		  StepperManager_MoveTo(&mgr, 200.0f, 95.0f);
+//	  }
 
-			  char reply[64];
-			  int len = 0;
-			  if (uart_rx_buffer[0] == 'M' && uart_rx_index >= 3) {
-				  int raw_pos_x = four_ascii_to_int(uart_rx_buffer[1], uart_rx_buffer[2], uart_rx_buffer[3], uart_rx_buffer[4]);
-				  int raw_pos_y = four_ascii_to_int(uart_rx_buffer[5], uart_rx_buffer[6], uart_rx_buffer[7], uart_rx_buffer[8]);
-				  float pos_x = raw_pos_x / 10.0f;
-				  float pos_y = raw_pos_y / 10.0f;
+	if (new_data == true) {
+		new_data = false;
+		if (uart_rx_data == '\r' || uart_rx_data == '\n') {
+			uart_rx_buffer[uart_rx_index] = '\0';
 
-				  // Process movement command - no need to check if IDLE now
-				  StepperManager_MoveTo(&mgr, pos_x, pos_y);
-				  
-				  // Include current state and position in response for debugging
-				  char* state_str = "UNKNOWN";
-				  if (mgr.state == MANAGER_IDLE) state_str = "IDLE";
-				  else if (mgr.state == MANAGER_MOVING) state_str = "MOVING";
-				  else if (mgr.state == MANAGER_CALIBRATING) state_str = "CALIBRATING";
-				  
-				  len = snprintf(reply, sizeof(reply), "MoveTo: X=%0.1f Y=%0.1f State=%s\r\n", 
-								pos_x, pos_y, state_str);
-			  } else {
-				  len = snprintf(reply, sizeof(reply), "Invalid cmd format\r\n");
-			  }
+			char reply[32];
+			int len = 0;
+			if (uart_rx_buffer[0] == 'M' && uart_rx_index >= 3) {
+				int raw_pos_x = four_ascii_to_int(uart_rx_buffer[1], uart_rx_buffer[2], uart_rx_buffer[3], uart_rx_buffer[4]);
+				int raw_pos_y = four_ascii_to_int(uart_rx_buffer[5], uart_rx_buffer[6], uart_rx_buffer[7], uart_rx_buffer[8]);
+				float pos_x = raw_pos_x / 10.0f;
+				float pos_y = raw_pos_y / 10.0f;
 
-			  HAL_UART_Transmit(&huart1, (uint8_t*)reply, len, 1000);
+				len = snprintf(reply, sizeof(reply), "Got M cmd: xpos=%d  ypos=%d\r\n", raw_pos_x, raw_pos_y);
 
-			  // Echo input for debugging
-			  for (uint16_t i = 0; i < uart_rx_index; ++i) {
-				  HAL_UART_Transmit(&huart1,
-									(uint8_t*)&uart_rx_buffer[i],
-									1,
-									1000);
-			  }
-			  const char *nl = "\r\n";
-			  HAL_UART_Transmit(&huart1,
-								(uint8_t*)nl,
-								2,
-								100);
+				if (mgr.state == MANAGER_IDLE) {
+					StepperManager_MoveTo(&mgr, pos_x, pos_y);
+				}
+			} else {
+				len = snprintf(reply, sizeof(reply), "Hm, not quite right\r\n");
+			}
 
-			  uart_rx_index = 0;
-		  }
-		  else {
-			  if (uart_rx_index < RX_BUFFER_SIZE - 1) {
-				  uart_rx_buffer[uart_rx_index++] = uart_rx_data;
-			  }
-		  }
-	  }
+			HAL_UART_Transmit(&huart1, (uint8_t*)reply, len, 1000);
+
+
+
+			// Spit out what I put in, then add a new line
+			for (uint16_t i = 0; i < uart_rx_index; ++i) {
+				HAL_UART_Transmit(&huart1,
+								  (uint8_t*)&uart_rx_buffer[i],
+								  1,
+								  1000);
+			}
+			const char *nl = "\r\n";
+			HAL_UART_Transmit(&huart1,
+							  (uint8_t*)nl,
+							  2,
+							  100);
+
+			uart_rx_index = 0;
+		}
+		else {
+			if (uart_rx_index < RX_BUFFER_SIZE - 1) {
+				uart_rx_buffer[uart_rx_index++] = uart_rx_data;
+			}
+		}
+	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

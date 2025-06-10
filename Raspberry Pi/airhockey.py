@@ -435,6 +435,14 @@ def main_loop():
     hit_mode_active = False
     hit_mode_start_time = 0
     HIT_MODE_DURATION = 1.0  # seconds
+    
+    # Aggressive mode tracking
+    puck_below_halfway = False
+    puck_below_halfway_start_time = 0
+    PUCK_BELOW_THRESHOLD = 1.0  # seconds
+    aggressive_mode_active = False
+    aggressive_mode_start_time = 0
+    AGGRESSIVE_MODE_DURATION = 1.0  # seconds
 
     while True:
         loop_start = time.time()
@@ -722,6 +730,62 @@ def main_loop():
                     x_target = None
                     time_until_impact = None
 
+        # Check if puck is below halfway line and update timer
+        if puck_present and smoothed_puck:
+            halfway_y = TABLE_H / 2.0
+            current_time = time.time()
+            
+            # Check if puck is on opponent's side (below halfway)
+            if smoothed_puck[1] > halfway_y:
+                if not puck_below_halfway:
+                    # Just crossed to opponent's side
+                    puck_below_halfway = True
+                    puck_below_halfway_start_time = current_time
+                elif not aggressive_mode_active and (current_time - puck_below_halfway_start_time) > PUCK_BELOW_THRESHOLD:
+                    # Puck has been on opponent's side for over the threshold time, activate aggressive mode
+                    aggressive_mode_active = True
+                    aggressive_mode_start_time = current_time
+                    print("AGGRESSIVE MODE ACTIVATED - Puck stuck on opponent's side")
+            else:
+                # Puck is on our side, reset the below halfway timer
+                puck_below_halfway = False
+            
+            # Check if we should exit aggressive mode
+            if aggressive_mode_active and (current_time - aggressive_mode_start_time) > AGGRESSIVE_MODE_DURATION:
+                aggressive_mode_active = False
+                print("Aggressive mode deactivated")
+                
+            # If aggressive mode is active, override the normal target with aggressive behavior
+            if aggressive_mode_active and puck_present:
+                # Define opponent's goal center (at bottom center of table)
+                goal_center_x = TABLE_W / 2.0
+                goal_center_y = TABLE_H * 0.9  # 90% down the table
+                
+                # Calculate vector from puck to goal
+                puck_x, puck_y = smoothed_puck
+                goal_vector_x = goal_center_x - puck_x
+                goal_vector_y = goal_center_y - puck_y
+                
+                # Normalize vector
+                vector_length = math.hypot(goal_vector_x, goal_vector_y)
+                if vector_length > 1e-3:
+                    norm_vector_x = goal_vector_x / vector_length
+                    norm_vector_y = goal_vector_y / vector_length
+                    
+                    # Calculate target point (10% of table length past the puck in the direction of the goal)
+                    extra_distance = TABLE_H * 0.1  # 10% of table height
+                    x_target = puck_x - norm_vector_x * extra_distance
+                    # Keep y target at the standard height
+                    y_target_orig = y_target
+                    time_until_impact = 0.2  # Set a short time to trigger hit mode
+                    
+                    # Ensure x_target stays within bounds
+                    x_target = max(0, min(x_target, TABLE_W))
+                    
+                    # Force hit mode for aggressive behavior
+                    hit_mode_active = True
+                    hit_mode_start_time = current_time
+        
         # FPS counter update
         fps_count += 1
         now = time.time()

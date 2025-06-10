@@ -9,7 +9,7 @@
 #include <math.h>
 
 /**
- * @brief  Plan a trapezoidal move (compute accel_steps/decel_steps), set DIR pin, etc.
+ * @brief  Plan a motion at constant speed, set DIR pin, etc.
  * @param  motor: Pointer to StepperMotor object
  * @note   Called internally by MoveTo().
  */
@@ -21,7 +21,9 @@ static void StepperMotor_PlanMotion(StepperMotor *motor)
         return;
     }
 
+    // Set direction
     motor->direction = (delta > 0) ? +1 : -1;
+    
     // Drive DIR pin high or low
     if (motor->direction > 0) {
         HAL_GPIO_WritePin(motor->dir_port, motor->dir_pin, GPIO_PIN_SET);
@@ -29,25 +31,20 @@ static void StepperMotor_PlanMotion(StepperMotor *motor)
         HAL_GPIO_WritePin(motor->dir_port, motor->dir_pin, GPIO_PIN_RESET);
     }
 
-    motor->total_steps = abs(delta);
-    motor->step_count   = 0;
+    motor->total_steps = fabsf(delta);
+    motor->step_count = 0;
 
-    // Compute how many steps to accelerate and decelerate:
-    //   s = v^2 / (2*a).  If 2*s > total_steps, we'll do a triangular profile.
-    int32_t accel_s = (int32_t)((motor->max_speed * motor->max_speed) / (2.0f * motor->accel));
-    if (accel_s * 2 > motor->total_steps) {
-        // Triangular: accelerate up, then immediately decelerate
-        motor->accel_steps = motor->total_steps / 2;
-    } else {
-        motor->accel_steps = accel_s;
-    }
-    motor->decel_steps = motor->accel_steps;
+    // Set to constant speed (max_speed)
+    motor->current_speed = motor->max_speed;
 
-    motor->current_speed = 0.0f;
-    motor->step_timer    = 0;           // so next ISR tick computes first period
-    motor->step_period   = UINT32_MAX;  // “invalid” until we compute real period
-    motor->pulse_high    = false;
-    motor->moving        = true;
+    // Calculate fixed step period for constant speed
+    uint32_t raw = (uint32_t)((float)TIMER_FREQUENCY_HZ / motor->current_speed);
+    motor->step_period = (raw < 1) ? 1 : raw;
+    
+    // Initialize timer
+    motor->step_timer = 0;
+    motor->pulse_high = false;
+    motor->moving = true;
 }
 
 /**
@@ -72,11 +69,11 @@ void StepperMotor_Init(
     motor->step_period    = 0;
     motor->total_steps    = 0;
     motor->step_count     = 0;
-    motor->accel_steps    = 0;
-    motor->decel_steps    = 0;
+    motor->accel_steps    = 0;  // Not used with constant speed
+    motor->decel_steps    = 0;  // Not used with constant speed
     motor->current_speed  = 0.0f;
     motor->max_speed      = max_speed;
-    motor->accel          = accel;
+    motor->accel          = accel;  // Not used with constant speed
     motor->pulse_high     = false;
 
     // Initialize GPIO state: DIR=LOW, STEP=LOW
@@ -122,57 +119,30 @@ void StepperMotor_Update(StepperMotor *motor)
         return;
     }
 
-    // 2) If we are currently holding the STEP pin HIGH from the last ISR, pull it LOW now.
+    // If we are currently holding the STEP pin HIGH from the last ISR, pull it LOW now.
     if (motor->pulse_high) {
         HAL_GPIO_WritePin(motor->step_port, motor->step_pin, GPIO_PIN_RESET);
         motor->pulse_high = false;
         return;
     }
 
-    // 3) Otherwise, count down our “step_timer.” When it reaches zero, generate the next pulse.
+    // Count down step_timer. When it reaches zero, generate the next pulse.
     if (motor->step_timer > 0) {
         motor->step_timer--;
     }
     if (motor->step_timer == 0) {
-        // (a) Determine our current phase: accelerate / cruise / decelerate
-        if (motor->step_count < motor->accel_steps) {
-            // Acceleration: v = sqrt(2 * a * s)
-            float s = (float)motor->step_count;
-            motor->current_speed = sqrtf(2.0f * motor->accel * s);
-            if (motor->current_speed < 1.0f) {
-                motor->current_speed = 1.0f;
-            }
-        }
-        else if (motor->step_count < (motor->total_steps - motor->decel_steps)) {
-            // Cruise at max_speed
-            motor->current_speed = motor->max_speed;
-        }
-        else {
-            // Deceleration: v = sqrt(2 * a * (remaining_steps))
-            float s = (float)(motor->total_steps - motor->step_count);
-            motor->current_speed = sqrtf(2.0f * motor->accel * s);
-            if (motor->current_speed < 1.0f) {
-                motor->current_speed = 1.0f;
-            }
-        }
-
-        // (b) Convert speed (steps/sec) → period in “timer ticks”
-        //     Timer runs at TIMER_FREQUENCY_HZ, so period_ticks = TIMER_FREQUENCY_HZ / speed
-        uint32_t raw = (uint32_t)((float)TIMER_FREQUENCY_HZ / motor->current_speed);
-        motor->step_period = (raw < 1) ? 1 : raw;
-
-        // (c) Reload our step_timer
+        // Reload step_timer with fixed period (constant speed)
         motor->step_timer = motor->step_period;
 
-        // (d) Issue a single step pulse: STEP→HIGH now; next ISR tick will drop it low
+        // Issue a single step pulse: STEP→HIGH now; next ISR tick will drop it low
         HAL_GPIO_WritePin(motor->step_port, motor->step_pin, GPIO_PIN_SET);
         motor->pulse_high = true;
 
-        // (e) Update bookkeeping: advance position & step_count
+        // Update bookkeeping: advance position & step_count
         motor->current_position += motor->direction;
         motor->step_count++;
 
-        // (f) If we have reached the desired total, stop motion completely
+        // If we have reached the desired total, stop motion completely
         if (motor->step_count >= motor->total_steps) {
             StepperMotor_Stop(motor);
         }
