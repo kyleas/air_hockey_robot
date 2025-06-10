@@ -1,0 +1,29 @@
+\chapter{Air Hockey Robot}
+\hypertarget{md_readme}{}\label{md_readme}\index{Air Hockey Robot@{Air Hockey Robot}}
+\label{md_readme_autotoc_md9}%
+\Hypertarget{md_readme_autotoc_md9}%
+
+
+This project implements a 2-\/axis Core\+XY air hockey robot designed as part of the ME507 embedded systems course. The robot plays against a human by tracking the puck with computer vision and responding with predictive paddle movements.
+
+The documentation pages are at \href{https://kyleas.github.io/air_hockey_robot/}{\texttt{ https\+://kyleas.\+github.\+io/air\+\_\+hockey\+\_\+robot/}}
+
+\hypertarget{md_readme_autotoc_md10}{}\doxysection{\texorpdfstring{Overview}{Overview}}\label{md_readme_autotoc_md10}
+The system is divided into two main components\+:
+
+
+\begin{DoxyItemize}
+\item {\bfseries{Sensing \& Vision (Raspberry Pi)}} ~\newline
+ Uses Open\+CV to detect the puck and paddle on the board using HSV filtering, contour detection, and predictive path planning.
+\item {\bfseries{Motion Control (STM32)}} ~\newline
+ A Core\+XY-\/style robot arm driven by two stepper motors, controlled by an STM32 microcontroller using custom C firmware.
+\end{DoxyItemize}
+
+Key features include\+:
+\begin{DoxyItemize}
+\item Limit switch-\/based auto-\/homing
+\item UART command interface between Pi and STM32
+\item Predictive reflection-\/based path planning
+\item Core\+XY motion control with synchronized velocity planning
+\end{DoxyItemize}\hypertarget{md_readme_autotoc_md11}{}\doxysection{\texorpdfstring{Repository Structure}{Repository Structure}}\label{md_readme_autotoc_md11}
+\`{}\`{}\`{}text ├── Core/ │ ├── Inc/ │ └── Src/ │ ├── \doxylink{main_8c}{main.\+c} \# Top-\/level control loop (calibration + UART parsing) │ ├── \doxylink{stepper__driver_8c}{stepper\+\_\+driver.\+c} \# Low-\/level stepper motor control │ └── \doxylink{stepper__manager_8c}{stepper\+\_\+manager.\+c} \# Core\+XY motion planning + FSM ├── Pi\+\_\+\+Side/ │ └── \doxylink{airhockey_8py}{airhockey.\+py} \# Open\+CV puck detection and trajectory prediction ├── docs/ │ └── mainpage.\+md \# Doxygen top-\/level documentation file ├── README.\+md ├── LICENSE └── .gitignore 

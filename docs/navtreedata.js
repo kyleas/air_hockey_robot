@@ -26,6 +26,11 @@ var NAVTREE =
 [
   [ "Air Hockey Robot", "index.html", [
     [ "Air Hockey Robot Documentation", "index.html", "index" ],
+    [ "license", "md_license.html", null ],
+    [ "Air Hockey Robot", "md_readme.html", [
+      [ "Overview", "md_readme.html#autotoc_md10", null ],
+      [ "Repository Structure", "md_readme.html#autotoc_md11", null ]
+    ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],

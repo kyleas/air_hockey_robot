@@ -14,13 +14,12 @@ var searchData=
   ['clicks_11',['clicks',['../airhockey_8py.html#ac7af058ff84bdc0796dd8b6c7c8eeab4',1,'airhockey']]],
   ['clicks_5fper_5fside_12',['CLICKS_PER_SIDE',['../airhockey_8py.html#a83dddc79c49840932b8c6a459d2e3375',1,'airhockey']]],
   ['code_13',['STM32 Code',['../index.html#autotoc_md4',1,'']]],
-  ['code_20example_14',['Code Example',['../index.html#autotoc_md10',1,'']]],
-  ['command_20loop_15',['\ref main.c &quot;main.c&quot; System Control and UART-Based Command loop',['../index.html#autotoc_md5',1,'']]],
-  ['compute_5ffirst_5fbounce_16',['compute_first_bounce',['../airhockey_8py.html#a2dc60cee2b9515002616105d4c11d2c9',1,'airhockey']]],
-  ['control_20and_20uart_20based_20command_20loop_17',['\ref main.c &quot;main.c&quot; System Control and UART-Based Command loop',['../index.html#autotoc_md5',1,'']]],
-  ['controller_18',['\ref stepper_driver.c &quot;stepper_driver.c&quot; Low-Level Stepper Motor Controller',['../index.html#autotoc_md7',1,'']]],
-  ['corexy_20high_20level_20motion_20planner_19',['\ref stepper_manager.c &quot;stepper_manager.c&quot; CoreXY High-Level Motion planner',['../index.html#autotoc_md6',1,'']]],
-  ['countervalue_20',['counterValue',['../main_8c.html#ac888c22e9908fbb7cf75b7f73e31440e',1,'main.c']]],
-  ['current_5fposition_21',['current_position',['../struct_stepper_motor.html#a9cee5586df5cacbcd7dba98817244fa6',1,'StepperMotor']]],
-  ['current_5fspeed_22',['current_speed',['../struct_stepper_motor.html#aae48f3acf3ffcf7d5f3f1c4e3b745118',1,'StepperMotor']]]
+  ['command_20loop_14',['\ref main.c &quot;main.c&quot; System Control and UART-Based Command loop',['../index.html#autotoc_md5',1,'']]],
+  ['compute_5ffirst_5fbounce_15',['compute_first_bounce',['../airhockey_8py.html#a2dc60cee2b9515002616105d4c11d2c9',1,'airhockey']]],
+  ['control_20and_20uart_20based_20command_20loop_16',['\ref main.c &quot;main.c&quot; System Control and UART-Based Command loop',['../index.html#autotoc_md5',1,'']]],
+  ['controller_17',['\ref stepper_driver.c &quot;stepper_driver.c&quot; Low-Level Stepper Motor Controller',['../index.html#autotoc_md7',1,'']]],
+  ['corexy_20high_20level_20motion_20planner_18',['\ref stepper_manager.c &quot;stepper_manager.c&quot; CoreXY High-Level Motion planner',['../index.html#autotoc_md6',1,'']]],
+  ['countervalue_19',['counterValue',['../main_8c.html#ac888c22e9908fbb7cf75b7f73e31440e',1,'main.c']]],
+  ['current_5fposition_20',['current_position',['../struct_stepper_motor.html#a9cee5586df5cacbcd7dba98817244fa6',1,'StepperMotor']]],
+  ['current_5fspeed_21',['current_speed',['../struct_stepper_motor.html#aae48f3acf3ffcf7d5f3f1c4e3b745118',1,'StepperMotor']]]
 ];

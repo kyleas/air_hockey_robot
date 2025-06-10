@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['robot_20documentation_0',['Air Hockey Robot Documentation',['../index.html',1,'']]]
+  ['license_0',['license',['../md_license.html',1,'']]]
 ];

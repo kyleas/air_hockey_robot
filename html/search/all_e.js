@@ -39,6 +39,7 @@ var searchData=
   ['steppermotor_5fupdate_36',['StepperMotor_Update',['../stepper__driver_8c.html#a20ead55228bbb3fe06ad33215364db3b',1,'StepperMotor_Update(StepperMotor *motor):&#160;stepper_driver.c'],['../stepper__driver_8h.html#a20ead55228bbb3fe06ad33215364db3b',1,'StepperMotor_Update(StepperMotor *motor):&#160;stepper_driver.c']]],
   ['steps_5fper_5fmm_37',['steps_per_mm',['../struct_stepper_manager.html#aef06fb32cbba9780055a7aac00057f98',1,'StepperManager']]],
   ['stm32_20code_38',['STM32 Code',['../index.html#autotoc_md4',1,'']]],
-  ['system_20control_20and_20uart_20based_20command_20loop_39',['\ref main.c &quot;main.c&quot; System Control and UART-Based Command loop',['../index.html#autotoc_md5',1,'']]],
-  ['systemclock_5fconfig_40',['SystemClock_Config',['../main_8c.html#a70af21c671abfcc773614a9a4f63d920',1,'main.c']]]
+  ['structure_39',['Repository Structure',['../md_readme.html#autotoc_md11',1,'']]],
+  ['system_20control_20and_20uart_20based_20command_20loop_40',['\ref main.c &quot;main.c&quot; System Control and UART-Based Command loop',['../index.html#autotoc_md5',1,'']]],
+  ['systemclock_5fconfig_41',['SystemClock_Config',['../main_8c.html#a70af21c671abfcc773614a9a4f63d920',1,'main.c']]]
 ];
