@@ -446,6 +446,7 @@ def main_loop():
     aggressive_phase = 0  # 0=inactive, 1=positioning, 2=striking, 3=follow-through
     aggressive_phase_start_time = 0
     last_strike_x_target = None  # Store last strike position for follow-through
+    last_strike_y_target = None  # Store last strike Y position for follow-through
     
     # Follow-through settings
     FOLLOW_THROUGH_TIMEOUT = 10.0  # Maximum follow-through seconds
@@ -832,27 +833,37 @@ def main_loop():
                             t = (y_target - puck_y) / norm_vector_y
                             intercept_x = puck_x + norm_vector_x * t
                             
-                            # Calculate additional distance vector component
+                            # Calculate additional distance vector component along the vector
                             dx = norm_vector_x * extra_distance
+                            dy = norm_vector_y * extra_distance
                             
                             # Set target beyond the intercept point
                             x_target = intercept_x + dx
-                            # Ensure x_target stays within bounds
+                            strike_y_target = y_target + dy
+                            
+                            # Ensure targets stay within bounds
                             x_target = max(0, min(x_target, TABLE_W))
+                            strike_y_target = max(0, min(strike_y_target, TABLE_H))
+                            
                             time_until_impact = 0.2  # Short time to trigger immediate movement
                             
-                            # Store position for follow-through
+                            # Store both positions for follow-through
                             last_strike_x_target = x_target
+                            last_strike_y_target = strike_y_target
                         else:
                             # Vector is horizontal, strike from side with extra distance
                             x_target = puck_x + (1.0 if puck_x < TABLE_W/2.0 else -1.0) * extra_distance
+                            strike_y_target = y_target  # Keep Y at normal position for horizontal vector
                             time_until_impact = 0.2
                             last_strike_x_target = x_target
+                            last_strike_y_target = strike_y_target
                     
                     # Phase 3: Follow through - stay in extended position
                     elif aggressive_phase == 3 and last_strike_x_target is not None:
-                        # Hold the same strike position
+                        # Hold the same strike position for both X and Y
                         x_target = last_strike_x_target
+                        # Override the normal y_target with the strike y position
+                        y_target = last_strike_y_target
                         time_until_impact = None  # No need for impact timing in follow-through
                     
                     # Draw the aggressive target and vector on visualization
