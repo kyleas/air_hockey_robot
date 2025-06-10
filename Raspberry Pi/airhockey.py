@@ -442,10 +442,14 @@ def main_loop():
     PUCK_IN_ROBOT_HALF_THRESHOLD = 1.0  # seconds
     aggressive_mode_active = False
     aggressive_mode_start_time = 0
-    AGGRESSIVE_MODE_DURATION = 3.0  # seconds - increased to account for all 3 phases
+    AGGRESSIVE_MODE_DURATION = 15.0  # seconds - increased for longer possible follow-through
     aggressive_phase = 0  # 0=inactive, 1=positioning, 2=striking, 3=follow-through
     aggressive_phase_start_time = 0
     last_strike_x_target = None  # Store last strike position for follow-through
+    
+    # Follow-through settings
+    FOLLOW_THROUGH_TIMEOUT = 10.0  # Maximum follow-through seconds
+    puck_crossed_midline = False   # Flag to track if puck crossed midline
 
     while True:
         loop_start = time.time()
@@ -738,28 +742,30 @@ def main_loop():
             halfway_y = TABLE_H / 2.0
             current_time = time.time()
             
+            # Track if puck crosses midline during follow-through
+            if aggressive_mode_active and aggressive_phase == 3:
+                if smoothed_puck[1] > halfway_y:
+                    puck_crossed_midline = True
+            
             # Check if puck is on robot's side (top half of table)
             if smoothed_puck[1] < halfway_y:
                 if not puck_in_robot_half:
                     # Just entered robot's half
                     puck_in_robot_half = True
                     puck_in_robot_half_start_time = current_time
+                    # Reset midline crossing flag when puck enters robot half
+                    puck_crossed_midline = False
                 elif not aggressive_mode_active and (current_time - puck_in_robot_half_start_time) > PUCK_IN_ROBOT_HALF_THRESHOLD:
                     # Puck has been in robot's half for over the threshold time, activate aggressive mode
                     aggressive_mode_active = True
                     aggressive_mode_start_time = current_time
                     aggressive_phase = 1  # Start with positioning phase
                     aggressive_phase_start_time = current_time
+                    puck_crossed_midline = False
                     print("AGGRESSIVE MODE ACTIVATED - POSITIONING PHASE")
             else:
                 # Puck is on human's side, reset the timer
                 puck_in_robot_half = False
-            
-            # Check if we should exit aggressive mode
-            if aggressive_mode_active and (current_time - aggressive_mode_start_time) > AGGRESSIVE_MODE_DURATION:
-                aggressive_mode_active = False
-                aggressive_phase = 0
-                print("Aggressive mode deactivated")
             
             # Check if we should transition between aggressive phases
             if aggressive_mode_active:
@@ -772,13 +778,18 @@ def main_loop():
                 elif aggressive_phase == 2 and (current_time - aggressive_phase_start_time) > 0.2:
                     aggressive_phase = 3
                     aggressive_phase_start_time = current_time
-                    print("AGGRESSIVE MODE - FOLLOW-THROUGH PHASE")
-                # From follow-through back to normal
-                elif aggressive_phase == 3 and (current_time - aggressive_phase_start_time) > 1.0:
+                    puck_crossed_midline = False
+                    print("AGGRESSIVE MODE - FOLLOW-THROUGH PHASE (until puck crosses midline)")
+                # From follow-through back to normal if puck crossed midline or timeout
+                elif aggressive_phase == 3 and (puck_crossed_midline or 
+                                             (current_time - aggressive_phase_start_time) > FOLLOW_THROUGH_TIMEOUT):
                     aggressive_mode_active = False
                     aggressive_phase = 0
-                    print("Aggressive mode complete - returning to normal")
-                
+                    if puck_crossed_midline:
+                        print("Aggressive mode complete - puck crossed midline")
+                    else:
+                        print("Aggressive mode complete - follow-through timeout (10s)")
+            
             # If aggressive mode is active, override the normal target with aggressive behavior
             if aggressive_mode_active and puck_present:
                 # Define human's goal at the bottom center of table
