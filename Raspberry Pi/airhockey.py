@@ -1,32 +1,29 @@
 #!/usr/bin/env python3
-# airhockey.py
-#
-# Complete Python script with:
-#  1) Frame calibration (windowed, not fullscreen)
-#  2) HSV calibration (windowed; live raw + masked preview)
-#  3) Main detection loop (fullscreen; centroid‐based detection, optimized)
-#  4) Exponential smoothing on puck to reduce jitter
-#  5) Drawing:
-#       • Two centroids: handle→puck vector, then puck→20% (direct or reflection)
-#       • Single puck, low velocity & puck below halfway: vertical line
-#       • Single puck, else: puck→20% (direct or reflection)
-#       • Small dots at centroids instead of circles around objects
-#       • Live FPS counter overlay
-#  6) Serial output: "x_target,time_until_impact\n" (only for single‐puck velocity cases)
-#
-# Usage:
-#   python3 airhockey.py --mode calibrate_frame
-#   python3 airhockey.py --mode calibrate_hsv
-#   python3 airhockey.py --mode run
-#
-# Dependencies:
-#   sudo apt update
-#   sudo apt install python3-pip
-#   pip3 install opencv-python numpy pyserial
-#
-# To autostart on boot, create a systemd service pointing to:
-#   ExecStart=/usr/bin/python3 /home/pi/airhockey.py --mode run
-#
+## @file airhockey.py
+## @brief Complete Python script for air hockey table detection and control
+## @details This script provides:
+##  - Frame calibration
+##  - HSV calibration 
+##  - Main detection loop 
+##  - Exponential smoothing on puck to reduce jitter
+##  - Serial communication with air hockey table controller
+##  - Multiple prediction modes including aggressive behavior
+## @author Kyle Schumacher
+## @date 2025
+## @version 1.0
+##
+## Usage:
+##   python3 airhockey.py --mode calibrate_frame
+##   python3 airhockey.py --mode calibrate_hsv
+##   python3 airhockey.py --mode run
+##
+## Dependencies:
+##   sudo apt update
+##   sudo apt install python3-pip
+##   pip3 install opencv-python numpy pyserial
+##
+## To autostart on boot, create a systemd service pointing to:
+##   ExecStart=/usr/bin/python3 /home/pi/airhockey.py --mode run
 
 import cv2
 import numpy as np
@@ -38,42 +35,72 @@ import serial
 import time
 
 # ------------------------------------------------------------------------------
-# CONFIGURABLE CONSTANTS
+## @name Configuration Constants
+## @{
 # ------------------------------------------------------------------------------
+
+## @brief File to store frame calibration warp matrix
 FRAME_CALIB_FILE = "warp_matrix.json"
+## @brief File to store HSV color calibration ranges
 HSV_CALIB_FILE   = "hsv_ranges.json"
 
+## @brief Serial port device path for communication with table controller
 SERIAL_PORT = "/dev/serial0"
+## @brief Baud rate for serial communication
 BAUD_RATE   = 115200
 
+## @brief Minimum radius for valid object detection (pixels)
 MIN_RADIUS = 15
-# Only consider contours with area at least ~half that of a circle radius MIN_RADIUS
+## @brief Minimum contour area threshold for object detection
+## Only consider contours with area at least ~half that of a circle radius MIN_RADIUS
 AREA_THRESH = math.pi * (MIN_RADIUS ** 2) * 0.5
 
+## @brief Exponential smoothing factor for puck position filtering (0-1)
 SMOOTHING_ALPHA = 0.3
+## @brief Velocity threshold for determining if puck is moving significantly
 VEL_THRESHOLD   = 2.0
 
+## @brief Number of clicks required per side during frame calibration
 CLICKS_PER_SIDE = 2
 
+## @brief HSV hue margin for color calibration
 H_MARGIN = 10
+## @brief HSV saturation margin for color calibration
 S_MARGIN = 10
+## @brief HSV value margin for color calibration
 V_MARGIN = 10
 
+## @brief Target frame rate for detection loop
 FRAME_RATE = 30.0
 
+## @}
+
 # ------------------------------------------------------------------------------
-# GLOBALS FOR MOUSE CALLBACKS & SMOOTHING STATE
+## @name Global Variables
+## @{
 # ------------------------------------------------------------------------------
+
+## @brief List of mouse click coordinates for frame calibration
 clicks        = []
+## @brief List of HSV color samples for color calibration
 hsv_samples   = []
 
+## @brief Current smoothed puck position (x, y)
 smoothed_puck       = None
+## @brief Previous smoothed puck position for velocity calculation
 prev_smoothed_puck  = None
 
+## @}
+
 # ------------------------------------------------------------------------------
-# UTILITY FUNCTIONS
+## @name Utility Functions
+## @{
 # ------------------------------------------------------------------------------
 
+## @brief Calculate line equation from two points
+## @param pt1 First point (x, y)
+## @param pt2 Second point (x, y)
+## @return Tuple (a, b, c) representing line equation ax + by + c = 0
 def line_from_two_points(pt1, pt2):
     x1, y1 = pt1
     x2, y2 = pt2
@@ -82,6 +109,10 @@ def line_from_two_points(pt1, pt2):
     c = float(x1 * y2 - x2 * y1)
     return (a, b, c)
 
+## @brief Find intersection point of two lines
+## @param l1 First line (a, b, c)
+## @param l2 Second line (a, b, c)
+## @return Intersection point (x, y)
 def intersect_lines(l1, l2):
     a1, b1, c1 = l1
     a2, b2, c2 = l2
@@ -92,6 +123,11 @@ def intersect_lines(l1, l2):
     y = (c1 * a2 - c2 * a1) / denom
     return (x, y)
 
+## @brief Save perspective transformation matrix to file
+## @param filename Output filename
+## @param matrix 3x3 transformation matrix
+## @param width Transformed image width
+## @param height Transformed image height
 def save_warp_matrix(filename, matrix, width, height):
     data = {
         "matrix": matrix.tolist(),
@@ -101,6 +137,9 @@ def save_warp_matrix(filename, matrix, width, height):
     with open(filename, "w") as f:
         json.dump(data, f)
 
+## @brief Load perspective transformation matrix from file
+## @param filename Input filename
+## @return Tuple (matrix, width, height)
 def load_warp_matrix(filename):
     with open(filename, "r") as f:
         data = json.load(f)
@@ -109,10 +148,16 @@ def load_warp_matrix(filename):
     h   = int(data["height"])
     return mat, w, h
 
+## @brief Save HSV color ranges to file
+## @param filename Output filename
+## @param hsv_dict Dictionary containing HSV min/max values
 def save_hsv_ranges(filename, hsv_dict):
     with open(filename, "w") as f:
         json.dump(hsv_dict, f)
 
+## @brief Load HSV color ranges from file
+## @param filename Input filename
+## @return Tuple (lower_bound, upper_bound) as numpy arrays
 def load_hsv_ranges(filename):
     with open(filename, "r") as f:
         data = json.load(f)
@@ -120,15 +165,27 @@ def load_hsv_ranges(filename):
     upper = np.array([data["h_max"], data["s_max"], data["v_max"]], dtype=np.uint8)
     return lower, upper
 
+## @brief Mouse callback function for frame calibration
+## @param event OpenCV mouse event type
+## @param x Mouse x coordinate
+## @param y Mouse y coordinate
+## @param flags Mouse event flags
+## @param param User data parameter
 def mouse_callback_frame(event, x, y, flags, param):
     global clicks
     if event == cv2.EVENT_LBUTTONDOWN:
         clicks.append((x, y))
 
+## @}
+
 # ------------------------------------------------------------------------------
-# CALIBRATION: FRAME WARP
+## @name Calibration Functions
+## @{
 # ------------------------------------------------------------------------------
 
+## @brief Perform frame calibration to determine perspective transformation
+## @details User clicks points on each edge of the air hockey table to define
+##          the region of interest and calculate perspective transformation matrix
 def calibrate_frame():
     global clicks
     clicks = []
@@ -228,10 +285,9 @@ def calibrate_frame():
     save_warp_matrix(FRAME_CALIB_FILE, M, maxWidth, maxHeight)
     print(f"\n[OK] Saved warp matrix to '{FRAME_CALIB_FILE}' ({maxWidth}×{maxHeight}).\n")
 
-# ------------------------------------------------------------------------------
-# CALIBRATION: HSV RANGE (WINDOWED)
-# ------------------------------------------------------------------------------
-
+## @brief Perform HSV color calibration for object detection
+## @details User clicks on objects to sample HSV values and determine
+##          appropriate color ranges for thresholding
 def calibrate_hsv():
     global hsv_samples
     hsv_samples = []
@@ -249,6 +305,12 @@ def calibrate_hsv():
     cv2.resizeWindow(win_masked, 800, 600)
 
     frame_hsv = None
+    ## @brief Mouse callback for HSV calibration
+    ## @param event OpenCV mouse event type
+    ## @param x Mouse x coordinate
+    ## @param y Mouse y coordinate
+    ## @param flags Mouse event flags
+    ## @param param User data parameter
     def on_mouse(event, x, y, flags, param):
         nonlocal frame_hsv
         if event == cv2.EVENT_LBUTTONDOWN and frame_hsv is not None:
@@ -341,10 +403,18 @@ def calibrate_hsv():
 
     print(f"\n[OK] Saved HSV to '{HSV_CALIB_FILE}': H[{h_min}-{h_max}] S[{s_min}-{s_max}] V[{v_min}-{v_max}]\n")
 
+## @}
+
 # ------------------------------------------------------------------------------
-# BOUNCE / REFLECTION LOGIC
+## @name Physics and Prediction Functions
+## @{
 # ------------------------------------------------------------------------------
 
+## @brief Reflect a velocity vector off a wall
+## @param vx X component of velocity
+## @param vy Y component of velocity
+## @param hit_wall Wall that was hit ("left", "right", "top", "bottom")
+## @return Tuple (new_vx, new_vy) with reflected velocity components
 def reflect_vector(vx, vy, hit_wall):
     if hit_wall in ("left", "right"):
         return (-vx, vy)
@@ -353,6 +423,14 @@ def reflect_vector(vx, vy, hit_wall):
     else:
         return (vx, vy)
 
+## @brief Calculate the first wall bounce for a moving object
+## @param x0 Initial X position
+## @param y0 Initial Y position
+## @param vx X velocity component
+## @param vy Y velocity component
+## @param W Table width
+## @param H Table height
+## @return Tuple (time, x_hit, y_hit, wall) or None if no collision
 def compute_first_bounce(x0, y0, vx, vy, W, H):
     candidates = []
     if vx < 0:
@@ -384,10 +462,21 @@ def compute_first_bounce(x0, y0, vx, vy, W, H):
         return None
     return min(candidates, key=lambda e: e[0])
 
+## @}
+
 # ------------------------------------------------------------------------------
-# MAIN DETECTION + SERIAL SENDING
+## @name Main Detection and Control
+## @{
 # ------------------------------------------------------------------------------
 
+## @brief Main detection loop with serial communication and multiple prediction modes
+## @details Runs the complete air hockey detection system including:
+##          - Camera capture and image processing
+##          - Object detection and tracking
+##          - Physics-based trajectory prediction
+##          - Aggressive behavior for stuck pucks
+##          - Serial communication with table controller
+##          - Real-time visualization
 def main_loop():
     global smoothed_puck, prev_smoothed_puck
 
@@ -402,7 +491,9 @@ def main_loop():
     hsv_lower, hsv_upper         = load_hsv_ranges(HSV_CALIB_FILE)
 
     # 20% from top
+    ## @brief Normal Y target position for robot (20% from top of table)
     y_target_normal = 0.2 * TABLE_H  # Store the normal Y target position
+    ## @brief Current Y target position (can be overridden by aggressive mode)
     y_target = y_target_normal       # Current Y target (can be overridden by aggressive mode)
 
     try:
@@ -428,78 +519,127 @@ def main_loop():
     prev_smoothed_puck = None
 
     # FPS counters
+    ## @brief Frame counter for FPS calculation
     fps_count = 0
+    ## @brief Start time for FPS calculation
     fps_start = time.time()
+    ## @brief Current FPS for display
     fps_display = 0.0
-    
+
     # Hit mode tracking
+    ## @brief Flag indicating if hit mode is currently active
     hit_mode_active = False
+    ## @brief Timestamp when hit mode was last activated
     hit_mode_start_time = 0
+    ## @brief Duration to maintain hit mode after activation (seconds)
     HIT_MODE_DURATION = 1.0  # seconds
-    
+
     # Aggressive mode tracking
+    ## @brief Flag indicating if puck is in robot's half of table
     puck_in_robot_half = False
+    ## @brief Timestamp when puck entered robot's half
     puck_in_robot_half_start_time = 0
+    ## @brief Time threshold before activating aggressive mode (seconds)
     PUCK_IN_ROBOT_HALF_THRESHOLD = 1.0  # seconds
+    ## @brief Flag indicating if aggressive mode is currently active
     aggressive_mode_active = False
+    ## @brief Timestamp when aggressive mode was activated
     aggressive_mode_start_time = 0
+    ## @brief Maximum duration for aggressive mode (seconds)
     AGGRESSIVE_MODE_DURATION = 15.0  # seconds - increased for longer possible follow-through
+    ## @brief Current phase of aggressive mode (0=inactive, 1=positioning, 2=striking, 3=follow-through)
     aggressive_phase = 0  # 0=inactive, 1=positioning, 2=striking, 3=follow-through
+    ## @brief Timestamp when current aggressive phase started
     aggressive_phase_start_time = 0
+    ## @brief Stored X position from strike phase for follow-through
     last_strike_x_target = None  # Store last strike position for follow-through
+    ## @brief Stored Y position from strike phase for follow-through
     last_strike_y_target = None  # Store last strike Y position for follow-through
     
     # Follow-through settings
+    ## @brief Maximum duration for follow-through phase (seconds)
     FOLLOW_THROUGH_TIMEOUT = 10.0  # Maximum follow-through seconds
+    ## @brief Flag indicating if puck has crossed midline during follow-through
     puck_crossed_midline = False   # Flag to track if puck crossed midline
 
+    ## @brief Main detection and control loop
     while True:
+        ## @brief Record start time for performance monitoring
         loop_start = time.time()
 
+        ## @brief Capture frame from camera
         ret, frame = cap.read()
         if not ret:
             continue
 
-        # Warp bird's-eye view
+        ## @brief Apply perspective transformation to get bird's-eye view of table
+        # This corrects for camera angle and gives us a top-down view
         warped = cv2.warpPerspective(frame, warp_matrix, (TABLE_W, TABLE_H))
-        # Convert to HSV and threshold once
+        
+        ## @brief Convert to HSV color space for better color detection
+        # HSV is more robust to lighting changes than RGB
         hsv = cv2.cvtColor(warped, cv2.COLOR_BGR2HSV)
+        
+        ## @brief Create binary mask using calibrated HSV ranges
+        # White pixels indicate detected objects (pucks/paddles)
         mask = cv2.inRange(hsv, hsv_lower, hsv_upper)
 
-        # Blur the mask to reduce noise then find contours
+        ## @brief Apply Gaussian blur to reduce noise in the mask
+        # This helps eliminate small false detections
         mask_blur = cv2.GaussianBlur(mask, (5, 5), 0)
+        
+        ## @brief Find contours of detected objects
+        # Contours represent the boundaries of detected objects
         contours_data = cv2.findContours(mask_blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = contours_data[-2]  # works for both OpenCV 3.x and 4.x
 
+        ## @brief Filter contours by minimum area threshold
+        # Only keep contours large enough to be real objects (not noise)
         valid = [c for c in contours if cv2.contourArea(c) >= AREA_THRESH]
+        
+        ## @brief Sort contours by area (largest first)
+        # Largest objects are most likely to be the puck and paddle
         valid.sort(key=lambda c: cv2.contourArea(c), reverse=True)
 
+        ## @brief Create visualization image for debugging and display
         vis = warped.copy()
-        handle_present = False
-        puck_present = False
-        x_target = None
-        time_until_impact = None
+        
+        ## @brief Initialize detection flags and prediction variables
+        handle_present = False      # True if paddle/handle detected
+        puck_present = False       # True if puck detected
+        x_target = None            # Predicted X position for robot to move to
+        time_until_impact = None   # Predicted time until puck reaches target line
 
+        ## @brief Object detection and classification logic
         if len(valid) >= 1:
+            ## @brief Handle case with two or more objects detected
             if len(valid) >= 2:
-                c0 = valid[0]
-                c1 = valid[1]
+                ## @brief Calculate centroids of the two largest objects
+                c0 = valid[0]  # Largest contour
+                c1 = valid[1]  # Second largest contour
                 M0 = cv2.moments(c0)
                 M1 = cv2.moments(c1)
+                
+                ## @brief Verify both objects have valid centroids
                 if M0["m00"] > 0 and M1["m00"] > 0:
+                    ## @brief Calculate centroid coordinates
                     cx0 = M0["m10"] / M0["m00"]
                     cy0 = M0["m01"] / M0["m00"]
                     cx1 = M1["m10"] / M1["m00"]
                     cy1 = M1["m01"] / M1["m00"]
-                    # Puck = smaller y (higher on table), handle = larger y
+                    
+                    ## @brief Classify objects based on Y position
+                    # Object closer to robot (smaller Y) is likely the puck
+                    # Object farther from robot (larger Y) is likely the handle/paddle
                     if cy0 < cy1:
-                        puck_raw = (cx0, cy0)
-                        handle_raw = (cx1, cy1)
+                        puck_raw = (cx0, cy0)      # Object 0 is puck
+                        handle_raw = (cx1, cy1)    # Object 1 is handle
                     else:
-                        puck_raw = (cx1, cy1)
-                        handle_raw = (cx0, cy0)
+                        puck_raw = (cx1, cy1)      # Object 1 is puck
+                        handle_raw = (cx0, cy0)    # Object 0 is handle
                     handle_present = True
                 else:
+                    ## @brief Handle case where one centroid calculation failed
                     handle_raw = None
                     if M0["m00"] > 0:
                         puck_raw = (M0["m10"] / M0["m00"], M0["m01"] / M0["m00"])
@@ -507,8 +647,9 @@ def main_loop():
                         puck_raw = (M1["m10"] / M1["m00"], M1["m01"] / M1["m00"])
                     else:
                         puck_raw = (0.0, 0.0)
-                puck_present = True
+                    puck_present = True
             else:
+                ## @brief Handle case with single object detected
                 c = valid[0]
                 M = cv2.moments(c)
                 if M["m00"] > 0:
@@ -518,46 +659,62 @@ def main_loop():
                 handle_raw = None
                 puck_present = True
 
-            # Exponential smoothing
+            ## @brief Apply exponential smoothing to puck position
+            # This reduces jitter and noise in position measurements
             if smoothed_puck is None:
+                # First detection - no smoothing needed
                 smoothed_puck = puck_raw
             else:
+                # Apply exponential smoothing filter
+                # New position = α * raw_position + (1-α) * previous_smooth_position
                 smoothed_puck = (
                     SMOOTHING_ALPHA * puck_raw[0] + (1 - SMOOTHING_ALPHA) * smoothed_puck[0],
                     SMOOTHING_ALPHA * puck_raw[1] + (1 - SMOOTHING_ALPHA) * smoothed_puck[1]
                 )
 
-            # Velocity
+            ## @brief Calculate puck velocity from position history
             if prev_smoothed_puck is not None:
+                # Velocity = change in position per frame
                 vx = smoothed_puck[0] - prev_smoothed_puck[0]
                 vy = smoothed_puck[1] - prev_smoothed_puck[1]
             else:
+                # No previous position available
                 vx, vy = 0.0, 0.0
+            
+            ## @brief Store current position for next frame's velocity calculation
             prev_smoothed_puck = smoothed_puck
 
+            ## @brief Draw puck position on visualization
             xp, yp = int(round(smoothed_puck[0])), int(round(smoothed_puck[1]))
-            cv2.circle(vis, (xp, yp), 6, (255, 255, 0), -1)  # puck dot = cyan
+            cv2.circle(vis, (xp, yp), 6, (255, 255, 0), -1)  # Cyan dot for puck
 
+            ## @brief Two-object prediction mode (puck + handle detected)
             if handle_present:
+                ## @brief Draw handle position on visualization
                 xh, yh = int(round(handle_raw[0])), int(round(handle_raw[1]))
-                cv2.circle(vis, (xh, yh), 6, (0, 255, 0), -1)  # handle dot = green
+                cv2.circle(vis, (xh, yh), 6, (0, 255, 0), -1)  # Green dot for handle
 
-                # Draw handle → puck
-                cv2.line(vis, (xh, yh), (xp, yp), (0, 255, 255), 2)  # yellow
+                ## @brief Draw vector from handle to puck
+                cv2.line(vis, (xh, yh), (xp, yp), (0, 255, 255), 2)  # Yellow line
 
-                # Check puck velocity
+                ## @brief Check if puck has sufficient velocity for physics prediction
                 puck_vel_mag = math.hypot(vx, vy)
                 use_puck_velocity = puck_vel_mag > VEL_THRESHOLD
 
                 if use_puck_velocity:
-                    # Use puck velocity for prediction (like in single-puck mode)
+                    ## @brief Use physics-based prediction with puck velocity
                     x0, y0 = smoothed_puck
+                    
+                    ## @brief Calculate potential wall bounce
                     fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
+                    
+                    ## @brief Calculate direct path to target line
                     if abs(vy) > 1e-3:
                         t_direct = (y_target - y0) / vy
                     else:
                         t_direct = None
 
+                    ## @brief Determine if bounce occurs before reaching target
                     need_bounce = False
                     if fb is not None and t_direct is not None:
                         t1, xh1, yh1, w1 = fb
@@ -565,126 +722,139 @@ def main_loop():
                             need_bounce = True
 
                     if need_bounce:
+                        ## @brief Handle trajectory with wall bounce
                         t1, xh1, yh1, w1 = fb
-                        cv2.line(vis,
-                                 (xp, yp),
-                                 (int(round(xh1)), int(round(yh1))),
-                                 (0, 255, 255),
-                                 2)  # yellow
-                        cv2.circle(vis,
-                                   (int(round(xh1)), int(round(yh1))),
-                                   6, (255, 0, 0), -1)  # blue
+                        
+                        ## @brief Draw path to bounce point
+                        cv2.line(vis, (xp, yp), 
+                               (int(round(xh1)), int(round(yh1))), 
+                               (0, 255, 255), 2)  # Yellow line to bounce
+                        cv2.circle(vis, (int(round(xh1)), int(round(yh1))), 
+                                 6, (255, 0, 0), -1)  # Blue dot at bounce
 
+                        ## @brief Calculate reflected velocity after bounce
                         vx2, vy2 = reflect_vector(vx, vy, w1)
+                        
+                        ## @brief Small offset to avoid numerical issues at wall
                         eps = 1e-3
                         x1 = xh1 + vx2 * eps
                         y1 = yh1 + vy2 * eps
+                        
+                        ## @brief Calculate time from bounce to target line
                         if abs(vy2) > 1e-3:
                             t2 = (y_target - y1) / vy2
                         else:
                             t2 = None
 
                         if t2 is not None and t2 > 0:
+                            ## @brief Calculate final target position after bounce
                             x_target = x1 + vx2 * t2
-                            cv2.line(vis,
-                                     (int(round(xh1)), int(round(yh1))),
-                                     (int(round(x_target)), int(round(y_target))),
-                                     (255, 0, 255),
-                                     2)  # magenta
-                            cv2.circle(vis,
-                                       (int(round(x_target)), int(round(y_target))),
-                                       6, (0, 0, 255), -1)  # red
-                            time_until_impact = (t1 + t2) / FRAME_RATE
-                    else:
-                        if t_direct is not None and t_direct > 0:
-                            x_target = x0 + vx * t_direct
-                            cv2.line(vis,
-                                     (xp, yp),
-                                     (int(round(x_target)), int(round(y_target))),
-                                     (0, 255, 255),
-                                     2)  # yellow
-                            cv2.circle(vis,
-                                       (int(round(x_target)), int(round(y_target))),
-                                       6, (0, 0, 255), -1)  # red
-                            time_until_impact = t_direct / FRAME_RATE
-                else:
-                    # Original handle→puck logic
-                    # Compute vector from puck along handle→puck
-                    x0, y0 = smoothed_puck
-                    vx_hp = x0 - handle_raw[0]
-                    vy_hp = y0 - handle_raw[1]
-
-                    # Compute time parameter to reach y_target along that vector
-                    if abs(vy_hp) > 1e-3:
-                        t_direct = (y_target - y0) / vy_hp
-                    else:
-                        t_direct = None
-
-                    fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
-                    need_bounce = False
-                    if fb is not None and t_direct is not None:
-                        t1, xh1, yh1, w1 = fb
-                        if t1 > 0 and t1 < t_direct:
-                            need_bounce = True
-
-                    if need_bounce:
-                        t1, xh1, yh1, w1 = fb
-                        # Draw puck → first bounce
-                        cv2.line(vis,
-                                 (xp, yp),
-                                 (int(round(xh1)), int(round(yh1))),
-                                 (0, 255, 255),
-                                 2)
-                        cv2.circle(vis,
-                                   (int(round(xh1)), int(round(yh1))),
-                                   6, (255, 0, 0), -1)  # blue
-
-                        vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
-                        eps = 1e-3
-                        x1 = xh1 + vx2 * eps
-                        y1 = yh1 + vy2 * eps
-
-                        if abs(vy2) > 1e-3:
-                            t2 = (y_target - y1) / vy2
-                        else:
-                            t2 = None
-
-                        if t2 is not None and t2 > 0:
-                            x_target = x1 + vx2 * t2
-                            cv2.line(vis,
-                                     (int(round(xh1)), int(round(yh1))),
-                                     (int(round(x_target)), int(round(y_target))),
-                                     (255, 0, 255),
-                                     2)  # magenta
-                            cv2.circle(vis,
-                                       (int(round(x_target)), int(round(y_target))),
-                                       6, (0, 0, 255), -1)  # red
-                    else:
-                        if t_direct is not None:
-                            x_target = x0 + vx_hp * t_direct
-                        else:
-                            x_target = x0
-                        cv2.line(vis,
-                                 (xp, yp),
-                                 (int(round(x_target)), int(round(y_target))),
-                                 (0, 255, 255),
-                                 2)  # yellow
-                        cv2.circle(vis,
+                            
+                            ## @brief Draw path from bounce to target
+                            cv2.line(vis, (int(round(xh1)), int(round(yh1))),
                                    (int(round(x_target)), int(round(y_target))),
-                                   6, (0, 0, 255), -1)  # red
+                                   (255, 0, 255), 2)  # Magenta line after bounce
+                            cv2.circle(vis, (int(round(x_target)), int(round(y_target))),
+                                     6, (0, 0, 255), -1)  # Red dot at target
+                            
+                            ## @brief Calculate total time until impact
+                            time_until_impact = (t1 + t2) / FRAME_RATE
+                        else:
+                            ## @brief Handle direct trajectory (no bounce)
+                            if t_direct is not None and t_direct > 0:
+                                ## @brief Calculate direct target position
+                                x_target = x0 + vx * t_direct
+                                
+                                ## @brief Draw direct path to target
+                                cv2.line(vis, (xp, yp),
+                                       (int(round(x_target)), int(round(y_target))),
+                                       (0, 255, 255), 2)  # Yellow direct line
+                                cv2.circle(vis, (int(round(x_target)), int(round(y_target))),
+                                         6, (0, 0, 255), -1)  # Red dot at target
+                                
+                                ## @brief Calculate time until impact
+                                time_until_impact = t_direct / FRAME_RATE
+                    else:
+                        ## @brief Use handle-to-puck vector prediction (low velocity case)
+                        # When puck isn't moving much, predict based on handle direction
+                        x0, y0 = smoothed_puck
+                        
+                        ## @brief Calculate vector from handle to puck
+                        vx_hp = x0 - handle_raw[0]
+                        vy_hp = y0 - handle_raw[1]
+
+                        ## @brief Calculate intersection with target line
+                        if abs(vy_hp) > 1e-3:
+                            t_direct = (y_target - y0) / vy_hp
+                        else:
+                            t_direct = None
+
+                        ## @brief Check for wall bounce along handle-puck vector
+                        fb = compute_first_bounce(x0, y0, vx_hp, vy_hp, TABLE_W, TABLE_H)
+                        need_bounce = False
+                        if fb is not None and t_direct is not None:
+                            t1, xh1, yh1, w1 = fb
+                            if t1 > 0 and t1 < t_direct:
+                                need_bounce = True
+
+                        if need_bounce:
+                            ## @brief Handle bounce case for handle-puck vector
+                            t1, xh1, yh1, w1 = fb
+                            
+                            ## @brief Draw path to bounce point
+                            cv2.line(vis, (xp, yp),
+                                   (int(round(xh1)), int(round(yh1))), 
+                                   (0, 255, 255), 2)
+                            cv2.circle(vis, (int(round(xh1)), int(round(yh1))),
+                                     6, (255, 0, 0), -1)  # Blue dot at bounce
+
+                            ## @brief Calculate reflection and final target
+                            vx2, vy2 = reflect_vector(vx_hp, vy_hp, w1)
+                            eps = 1e-3
+                            x1 = xh1 + vx2 * eps
+                            y1 = yh1 + vy2 * eps
+
+                            if abs(vy2) > 1e-3:
+                                t2 = (y_target - y1) / vy2
+                            else:
+                                t2 = None
+
+                            if t2 is not None and t2 > 0:
+                                x_target = x1 + vx2 * t2
+                                cv2.line(vis, (int(round(xh1)), int(round(yh1))),
+                                       (int(round(x_target)), int(round(y_target))),
+                                       (255, 0, 255), 2)  # Magenta
+                                cv2.circle(vis, (int(round(x_target)), int(round(y_target))),
+                                         6, (0, 0, 255), -1)  # Red
+                        else:
+                            ## @brief Direct path case for handle-puck vector
+                            if t_direct is not None:
+                                x_target = x0 + vx_hp * t_direct
+                            else:
+                                x_target = x0
+                            cv2.line(vis, (xp, yp),
+                                   (int(round(x_target)), int(round(y_target))),
+                                   (0, 255, 255), 2)  # Yellow
+                            cv2.circle(vis, (int(round(x_target)), int(round(y_target))),
+                                     6, (0, 0, 255), -1)  # Red
 
             else:
-                # Single-puck logic
+                ## @brief Single-puck prediction mode (only puck detected)
                 mag = math.hypot(vx, vy)
                 if (mag > VEL_THRESHOLD):
-                    # Predict using puck velocity
+                    ## @brief Use physics prediction only if puck has significant velocity
                     x0, y0 = smoothed_puck
+                    
+                    ## @brief Calculate potential wall bounce
                     fb = compute_first_bounce(x0, y0, vx, vy, TABLE_W, TABLE_H)
+                    
+                    ## @brief Calculate direct path time
                     if abs(vy) > 1e-3:
                         t_direct = (y_target - y0) / vy
                     else:
                         t_direct = None
 
+                    ## @brief Check if bounce occurs before target
                     need_bounce = False
                     if fb is not None and t_direct is not None:
                         t1, xh1, yh1, w1 = fb
@@ -692,15 +862,13 @@ def main_loop():
                             need_bounce = True
 
                     if need_bounce:
+                        ## @brief Handle bounce trajectory for single puck
                         t1, xh1, yh1, w1 = fb
-                        cv2.line(vis,
-                                 (xp, yp),
-                                 (int(round(xh1)), int(round(yh1))),
-                                 (0, 255, 255),
-                                 2)  # yellow
-                        cv2.circle(vis,
-                                   (int(round(xh1)), int(round(yh1))),
-                                   6, (255, 0, 0), -1)  # blue
+                        cv2.line(vis, (xp, yp),
+                               (int(round(xh1)), int(round(yh1))),
+                               (0, 255, 255), 2)  # Yellow to bounce
+                        cv2.circle(vis, (int(round(xh1)), int(round(yh1))),
+                                 6, (255, 0, 0), -1)  # Blue at bounce
 
                         vx2, vy2 = reflect_vector(vx, vy, w1)
                         eps = 1e-3
@@ -713,52 +881,49 @@ def main_loop():
 
                         if t2 is not None and t2 > 0:
                             x_target = x1 + vx2 * t2
-                            cv2.line(vis,
-                                     (int(round(xh1)), int(round(yh1))),
-                                     (int(round(x_target)), int(round(y_target))),
-                                     (255, 0, 255),
-                                     2)  # magenta
-                            cv2.circle(vis,
-                                       (int(round(x_target)), int(round(y_target))),
-                                       6, (0, 0, 255), -1)  # red
+                            cv2.line(vis, (int(round(xh1)), int(round(yh1))),
+                                   (int(round(x_target)), int(round(y_target))),
+                                   (255, 0, 255), 2)  # Magenta after bounce
+                            cv2.circle(vis, (int(round(x_target)), int(round(y_target))),
+                                     6, (0, 0, 255), -1)  # Red at target
                             time_until_impact = (t1 + t2) / FRAME_RATE
-                    else:
-                        if t_direct is not None and t_direct > 0:
-                            x_target = x0 + vx * t_direct
-                            cv2.line(vis,
-                                     (xp, yp),
-                                     (int(round(x_target)), int(round(y_target))),
-                                     (0, 255, 255),
-                                     2)  # yellow
-                            cv2.circle(vis,
+                        else:
+                            ## @brief Handle direct trajectory for single puck
+                            if t_direct is not None and t_direct > 0:
+                                x_target = x0 + vx * t_direct
+                                cv2.line(vis, (xp, yp),
                                        (int(round(x_target)), int(round(y_target))),
-                                       6, (0, 0, 255), -1)  # red
-                            time_until_impact = t_direct / FRAME_RATE
-                else:
-                    # Not enough velocity for prediction
-                    x_target = None
-                    time_until_impact = None
+                                       (0, 255, 255), 2)  # Yellow direct
+                                cv2.circle(vis, (int(round(x_target)), int(round(y_target))),
+                                         6, (0, 0, 255), -1)  # Red at target
+                                time_until_impact = t_direct / FRAME_RATE
+                    else:
+                        ## @brief No prediction when puck velocity is too low
+                        # Avoid making predictions when puck is stationary or moving very slowly
+                        x_target = None
+                        time_until_impact = None
 
+        ## @brief Aggressive behavior state machine for stuck pucks
         # Check if puck is in robot's half (top half) and update timer
         if puck_present and smoothed_puck:
             halfway_y = TABLE_H / 2.0
             current_time = time.time()
             
-            # Track if puck crosses midline during follow-through
+            ## @brief Track if puck crosses midline during follow-through
             if aggressive_mode_active and aggressive_phase == 3:
                 if smoothed_puck[1] > halfway_y:
                     puck_crossed_midline = True
             
-            # Check if puck is on robot's side (top half of table)
+            ## @brief Monitor puck position relative to table center
             if smoothed_puck[1] < halfway_y:
+                ## @brief Puck is in robot's territory (top half)
                 if not puck_in_robot_half:
-                    # Just entered robot's half
+                    ## @brief Puck just entered robot's half - start timer
                     puck_in_robot_half = True
                     puck_in_robot_half_start_time = current_time
-                    # Reset midline crossing flag when puck enters robot half
-                    puck_crossed_midline = False
+                    puck_crossed_midline = False  # Reset crossing flag
                 elif not aggressive_mode_active and (current_time - puck_in_robot_half_start_time) > PUCK_IN_ROBOT_HALF_THRESHOLD:
-                    # Puck has been in robot's half for over the threshold time, activate aggressive mode
+                    ## @brief Puck stuck in robot's half - activate aggressive mode
                     aggressive_mode_active = True
                     aggressive_mode_start_time = current_time
                     aggressive_phase = 1  # Start with positioning phase
@@ -766,138 +931,124 @@ def main_loop():
                     puck_crossed_midline = False
                     print("AGGRESSIVE MODE ACTIVATED - POSITIONING PHASE")
             else:
-                # Puck is on human's side, reset the timer
+                ## @brief Puck is in human's territory (bottom half) - reset timer
                 puck_in_robot_half = False
             
-            # Check if we should transition between aggressive phases
+            ## @brief Aggressive mode phase transitions
             if aggressive_mode_active:
-                # From positioning to striking
+                ## @brief Phase 1 → Phase 2: Positioning → Striking
                 if aggressive_phase == 1 and (current_time - aggressive_phase_start_time) > 1.0:
                     aggressive_phase = 2
                     aggressive_phase_start_time = current_time
                     print("AGGRESSIVE MODE - STRIKING PHASE")
-                # From striking to follow-through
+                ## @brief Phase 2 → Phase 3: Striking → Follow-through
                 elif aggressive_phase == 2 and (current_time - aggressive_phase_start_time) > 0.2:
                     aggressive_phase = 3
                     aggressive_phase_start_time = current_time
                     puck_crossed_midline = False
                     print("AGGRESSIVE MODE - FOLLOW-THROUGH PHASE (until puck crosses midline)")
-                # From follow-through back to normal if puck crossed midline or timeout
+                ## @brief Phase 3 → End: Follow-through → Normal operation
                 elif aggressive_phase == 3 and (puck_crossed_midline or 
                                              (current_time - aggressive_phase_start_time) > FOLLOW_THROUGH_TIMEOUT):
                     aggressive_mode_active = False
                     aggressive_phase = 0
-                    # Reset Y target to normal position
-                    y_target = y_target_normal
+                    y_target = y_target_normal  # Reset Y position to normal
                     if puck_crossed_midline:
                         print("Aggressive mode complete - puck crossed midline, returning to normal Y position")
                     else:
                         print("Aggressive mode complete - follow-through timeout (10s), returning to normal Y position")
-            
-            # If aggressive mode is active, override the normal target with aggressive behavior
-            if aggressive_mode_active and puck_present:
-                # Define human's goal at the bottom center of table
-                goal_x = TABLE_W / 2.0
-                goal_y = TABLE_H  # Bottom of table
                 
-                # Calculate vector from puck to goal
-                puck_x, puck_y = smoothed_puck
-                goal_vector_x = goal_x - puck_x
-                goal_vector_y = goal_y - puck_y
-                
-                # Normalize vector
-                vector_length = math.hypot(goal_vector_x, goal_vector_y)
-                if vector_length > 1e-3:
-                    norm_vector_x = goal_vector_x / vector_length
-                    norm_vector_y = goal_vector_y / vector_length
+                ## @brief Override normal prediction with aggressive behavior
+                if aggressive_mode_active and puck_present:
+                    ## @brief Define target goal for aggressive shot
+                    goal_x = TABLE_W / 2.0  # Center of opponent's goal
+                    goal_y = TABLE_H        # Bottom of table (opponent's end)
                     
-                    # Phase 1: Position at intercept point along vector, at normal Y height
-                    if aggressive_phase == 1:
-                        # Find where the vector crosses the striker's y position
-                        if abs(norm_vector_y) > 1e-3:  # Avoid division by zero
-                            t = (y_target - puck_y) / norm_vector_y
-                            x_target = puck_x + norm_vector_x * t
-                            # Ensure x_target stays within bounds
-                            x_target = max(0, min(x_target, TABLE_W))
-                            time_until_impact = None  # Not hitting yet
-                        else:
-                            # Vector is horizontal, just position at puck's x
-                            x_target = puck_x
-                            time_until_impact = None
+                    ## @brief Calculate vector from puck to goal
+                    puck_x, puck_y = smoothed_puck
+                    goal_vector_x = goal_x - puck_x
+                    goal_vector_y = goal_y - puck_y
                     
-                    # Phase 2: Strike position - go to the halfway point
-                    elif aggressive_phase == 2:
-                        # Calculate distance to halfway point along the vector
-                        halfway_point = TABLE_H / 2.0
+                    ## @brief Normalize the goal vector
+                    vector_length = math.hypot(goal_vector_x, goal_vector_y)
+                    if vector_length > 1e-3:
+                        norm_vector_x = goal_vector_x / vector_length
+                        norm_vector_y = goal_vector_y / vector_length
                         
-                        # Calculate strike point - we need to hit the puck and go to halfway point
-                        # First find where the vector crosses the striker's y position
-                        if abs(norm_vector_y) > 1e-3:  # Avoid division by zero
-                            t = (y_target_normal - puck_y) / norm_vector_y
-                            intercept_x = puck_x + norm_vector_x * t
+                        ## @brief Phase 1: Position at intercept point
+                        if aggressive_phase == 1:
+                            ## @brief Find where puck-to-goal vector crosses robot's Y line
+                            if abs(norm_vector_y) > 1e-3:  # Avoid division by zero
+                                t = (y_target_normal - puck_y) / norm_vector_y
+                                x_target = puck_x + norm_vector_x * t
+                                x_target = max(0, min(x_target, TABLE_W))  # Keep in bounds
+                                time_until_impact = None  # Not striking yet
+                            else:
+                                ## @brief Handle horizontal vectors
+                                x_target = puck_x
+                                time_until_impact = None
+                        
+                        ## @brief Phase 2: Strike toward halfway point
+                        elif aggressive_phase == 2:
+                            ## @brief Calculate strike point to reach table center
+                            halfway_point = TABLE_H / 2.0
                             
-                            # Calculate how far we need to go to reach halfway point
-                            # Find the parameter t that gets us to halfway point
-                            t_halfway = (halfway_point - puck_y) / norm_vector_y
-                            
-                            # Calculate target position at halfway point along vector
-                            x_target = puck_x + norm_vector_x * t_halfway
-                            strike_y_target = puck_y + norm_vector_y * t_halfway
-                            
-                            # Ensure targets stay within bounds
-                            x_target = max(0, min(x_target, TABLE_W))
-                            strike_y_target = max(0, min(strike_y_target, TABLE_H))
-                            
-                            time_until_impact = 0.2  # Short time to trigger immediate movement
-                            
-                            # Store both positions for follow-through
-                            last_strike_x_target = x_target
-                            last_strike_y_target = strike_y_target
+                            if abs(norm_vector_y) > 1e-3:
+                                ## @brief Find where vector intersects halfway line
+                                t_halfway = (halfway_point - puck_y) / norm_vector_y
+                                
+                                ## @brief Calculate target position at halfway point
+                                x_target = puck_x + norm_vector_x * t_halfway
+                                strike_y_target = puck_y + norm_vector_y * t_halfway
+                                
+                                ## @brief Ensure targets stay within table bounds
+                                x_target = max(0, min(x_target, TABLE_W))
+                                strike_y_target = max(0, min(strike_y_target, TABLE_H))
+                                
+                                time_until_impact = 0.2  # Quick strike movement
+                                
+                                ## @brief Store positions for follow-through phase
+                                last_strike_x_target = x_target
+                                last_strike_y_target = strike_y_target
+                            else:
+                                ## @brief Handle horizontal vectors - strike toward center
+                                x_target = TABLE_W / 2.0
+                                strike_y_target = halfway_point
+                                time_until_impact = 0.2
+                                last_strike_x_target = x_target
+                                last_strike_y_target = strike_y_target
+                        
+                        ## @brief Phase 3: Follow through - maintain strike position
+                        elif aggressive_phase == 3 and last_strike_x_target is not None:
+                            ## @brief Hold extended position for momentum and power
+                            x_target = last_strike_x_target
+                            y_target = last_strike_y_target  # Override normal Y position
+                            time_until_impact = None  # No timing needed for follow-through
+                        
+                        ## @brief Visualization for aggressive mode
+                        if aggressive_phase == 1:
+                            mode_text = "POSITION"
+                        elif aggressive_phase == 2:
+                            mode_text = "STRIKE"
                         else:
-                            # Vector is horizontal, strike toward halfway point
-                            x_target = TABLE_W / 2.0  # Go to center if horizontal
-                            strike_y_target = halfway_point
-                            time_until_impact = 0.2
-                            last_strike_x_target = x_target
-                            last_strike_y_target = strike_y_target
-                    
-                    # Phase 3: Follow through - stay in extended position
-                    elif aggressive_phase == 3 and last_strike_x_target is not None:
-                        # Hold the same strike position for both X and Y
-                        x_target = last_strike_x_target
-                        # Override the normal y_target with the strike y position
-                        y_target = last_strike_y_target
-                        time_until_impact = None  # No need for impact timing in follow-through
-                    
-                    # Draw the aggressive target and vector on visualization
-                    if aggressive_phase == 1:
-                        mode_text = "POSITION"
-                    elif aggressive_phase == 2:
-                        mode_text = "STRIKE"
-                    else:
-                        mode_text = "FOLLOW"
-                    
-                    # Draw vector from puck to goal
-                    cv2.line(vis,
-                            (int(round(puck_x)), int(round(puck_y))),
-                            (int(round(goal_x)), int(round(goal_y))),
-                            (255, 0, 255),  # Magenta for goal vector
-                            1)  # Thin line
-                    
-                    # Draw target position
-                    cv2.line(vis,
-                            (int(round(puck_x)), int(round(puck_y))),
-                            (int(round(x_target)), int(round(y_target))),
-                            (0, 0, 255),  # Red line for aggressive mode
-                            3)  # Thicker line
-                    cv2.circle(vis,
-                            (int(round(x_target)), int(round(y_target))),
-                            8, (0, 0, 255), -1)  # Red, larger dot
-                    
-                    # Override hit mode - explicitly NOT using hit mode for aggressive behavior
-                    hit_mode_active = False
+                            mode_text = "FOLLOW"
+                        
+                        ## @brief Draw puck-to-goal vector
+                        cv2.line(vis, (int(round(puck_x)), int(round(puck_y))),
+                               (int(round(goal_x)), int(round(goal_y))),
+                               (255, 0, 255), 1)  # Thin magenta line to goal
+                        
+                        ## @brief Draw robot target position
+                        cv2.line(vis, (int(round(puck_x)), int(round(puck_y))),
+                               (int(round(x_target)), int(round(y_target))),
+                               (0, 0, 255), 3)  # Thick red line for aggressive target
+                        cv2.circle(vis, (int(round(x_target)), int(round(y_target))),
+                                 8, (0, 0, 255), -1)  # Large red dot
+                        
+                        ## @brief Disable normal hit mode during aggressive behavior
+                        hit_mode_active = False
 
-        # FPS counter update
+        ## @brief Update FPS counter for performance monitoring
         fps_count += 1
         now = time.time()
         elapsed = now - fps_start
@@ -906,131 +1057,136 @@ def main_loop():
             fps_count = 0
             fps_start = now
             
+        ## @brief Hit mode state management
         # Send command over serial on every frame if we have a valid target
         if x_target is not None and ser is not None:
             try:
-                # Determine if hit mode should be activated
+                ## @brief Determine if hit mode should be activated
                 hit_mode_trigger = (time_until_impact is not None and time_until_impact < 0.4) or \
                             (puck_present and smoothed_puck and abs(smoothed_puck[1] - y_target) < TABLE_H * 0.15)
                 
                 current_time = time.time()
                 
-                # If hit mode triggered, start/extend the timer
+                ## @brief Activate hit mode and set timer
                 if hit_mode_trigger:
                     hit_mode_active = True
                     hit_mode_start_time = current_time
                 
-                # Check if we should exit hit mode
+                ## @brief Check if hit mode should expire
                 if hit_mode_active and (current_time - hit_mode_start_time) > HIT_MODE_DURATION:
                     hit_mode_active = False
                 
-                # Use hit mode state for position adjustment
+                ## @brief Use hit mode state for position adjustment
                 in_hit_mode = hit_mode_active
                 
-                # Apply adjustment logic
+                ## @brief Calculate table coordinate percentages
                 table_width = float(TABLE_W)
                 adjusted_x_target = x_target
                 
+                ## @brief Y target adjustment for hit mode
                 y_target_adder = 0.0
                 if in_hit_mode:
+                    # Move slightly forward during hit mode for better contact
                     y_target_adder = 0.05 * TABLE_H
 
-                # Percent X and Y
+                ## @brief Convert to percentage coordinates (0.0 to 1.0)
                 percent_x = x_target / TABLE_W
                 percent_y = (y_target + y_target_adder) / TABLE_H
 
-                # min and max values
+                ## @brief Clamp percentages to valid range
                 percent_x = max(percent_x, 0.0)
                 percent_x = min(percent_x, 1.0)
                 percent_y = max(percent_y, 0.0)
                 percent_y = min(percent_y, 1.0)
-   
-                # Scale coordinates
+
+                ## @brief Scale to controller coordinate system
+                # Controller expects coordinates scaled to specific ranges
                 scaled_x = int((percent_x) * 2857)
                 scaled_y = int((percent_y) * 4873)             
                 
-                # Format and send command
+                ## @brief Format command for serial transmission
+                # Command format: MXXXXYYYY where XXXX and YYYY are 4-digit coordinates
                 msg = f"M{scaled_x:04d}{scaled_y:04d}\r\n"
                 
-                # Send each byte individually with a small delay between them
+                ## @brief Send command byte-by-byte with delays
+                # Small delays help prevent buffer overruns on the controller
                 for byte in msg.encode('ascii'):
                     ser.write(bytes([byte]))  # Send single byte
                     time.sleep(0.001)  # 1ms delay between bytes
             except Exception as e:
                 print(f"Error sending command: {e}")
             
-        # Print status to terminal once per second when we have a valid target
+        ## @brief Terminal output for monitoring (once per second)
         current_time = time.time()
         if x_target is not None and (not hasattr(main_loop, "last_print_time") or (current_time - main_loop.last_print_time) >= 1.0):
-            # Use the persistent hit mode state for status display
+            ## @brief Determine current operational mode
             mode_str = "HIT" if hit_mode_active else "PREDICT"
             status_msg = f"{mode_str}: Target={x_target:.1f},{y_target:.1f}"
+            
+            ## @brief Add timing information if available
             if time_until_impact is not None:
                 status_msg += f" Time={time_until_impact:.2f}s"
             else:
                 status_msg += " Time=unknown"
                 
-            # Add serial command details if available
+            ## @brief Add serial command information
             if ser is not None:
                 status_msg += f" Command=M{scaled_x:04d}{scaled_y:04d}"
                 
             print(status_msg)
             main_loop.last_print_time = current_time
 
-        # Overlay FPS
-        cv2.putText(vis,
-                    f"FPS: {fps_display:.1f}",
-                    (30, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (0, 255, 0),
-                    2)
+        ## @brief Display FPS counter on visualization
+        cv2.putText(vis, f"FPS: {fps_display:.1f}", (30, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         
-        # Add mode indicator text
+        ## @brief Display current operational mode
         if aggressive_mode_active:
             if aggressive_phase == 1:
                 mode_text = "Aggressive-Position"
                 mode_color = (255, 0, 255)  # Magenta for positioning
             elif aggressive_phase == 2:
                 mode_text = "Aggressive-Strike"
-                mode_color = (0, 0, 255)  # Red for striking
+                mode_color = (0, 0, 255)    # Red for striking
             else:
                 mode_text = "Aggressive-Follow"
                 mode_color = (255, 165, 0)  # Orange for follow-through
         elif hit_mode_active:
             mode_text = "Hit"
-            mode_color = (0, 0, 255)  # Red for Hit
+            mode_color = (0, 0, 255)        # Red for hit mode
         else:
             mode_text = "Predict"
-            mode_color = (0, 255, 0)  # Green for Predict
+            mode_color = (0, 255, 0)        # Green for prediction mode
             
-        cv2.putText(vis,
-                    mode_text,
-                    (30, 70),  # Position under FPS counter
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    mode_color,
-                    2)
+        cv2.putText(vis, mode_text, (30, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, mode_color, 2)
 
-        # Display in a regular window with more reasonable size
+        ## @brief Display processed image in window
         vis_display = cv2.resize(vis, (800, 600), interpolation=cv2.INTER_LINEAR)
         cv2.imshow(win, vis_display)
 
+        ## @brief Check for quit command
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
 
+    ## @brief Cleanup resources
     cap.release()
     cv2.destroyAllWindows()
     if ser is not None:
         ser.close()
         print("\nSerial port closed.\n")
 
+## @}
+
 # ------------------------------------------------------------------------------
-# ENTRY POINT
+## @name Program Entry Point
+## @{
 # ------------------------------------------------------------------------------
 
+## @brief Main program entry point with command line argument parsing
 if __name__ == "__main__":
+    ## @brief Setup command line argument parser
     parser = argparse.ArgumentParser(description="Air Hockey Table Detection on Raspberry Pi")
     parser.add_argument(
         "--mode",
@@ -1040,6 +1196,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    ## @brief Execute requested mode
     if args.mode == "calibrate_frame":
         calibrate_frame()
     elif args.mode == "calibrate_hsv":
@@ -1048,3 +1205,5 @@ if __name__ == "__main__":
         main_loop()
     else:
         print("Unknown mode. Use --mode calibrate_frame / calibrate_hsv / run.")
+
+## @}
