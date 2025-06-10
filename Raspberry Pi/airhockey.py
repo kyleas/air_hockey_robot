@@ -402,7 +402,8 @@ def main_loop():
     hsv_lower, hsv_upper         = load_hsv_ranges(HSV_CALIB_FILE)
 
     # 20% from top
-    y_target = 0.2 * TABLE_H
+    y_target_normal = 0.2 * TABLE_H  # Store the normal Y target position
+    y_target = y_target_normal       # Current Y target (can be overridden by aggressive mode)
 
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
@@ -786,10 +787,12 @@ def main_loop():
                                              (current_time - aggressive_phase_start_time) > FOLLOW_THROUGH_TIMEOUT):
                     aggressive_mode_active = False
                     aggressive_phase = 0
+                    # Reset Y target to normal position
+                    y_target = y_target_normal
                     if puck_crossed_midline:
-                        print("Aggressive mode complete - puck crossed midline")
+                        print("Aggressive mode complete - puck crossed midline, returning to normal Y position")
                     else:
-                        print("Aggressive mode complete - follow-through timeout (10s)")
+                        print("Aggressive mode complete - follow-through timeout (10s), returning to normal Y position")
             
             # If aggressive mode is active, override the normal target with aggressive behavior
             if aggressive_mode_active and puck_present:
@@ -822,24 +825,24 @@ def main_loop():
                             x_target = puck_x
                             time_until_impact = None
                     
-                    # Phase 2: Strike position - go 10% past the puck
+                    # Phase 2: Strike position - go to the halfway point
                     elif aggressive_phase == 2:
-                        # Distance to travel along vector
-                        extra_distance = TABLE_H * 0.1  # 10% of table height
+                        # Calculate distance to halfway point along the vector
+                        halfway_point = TABLE_H / 2.0
                         
-                        # Calculate strike point - we need to hit the puck and go 10% further
+                        # Calculate strike point - we need to hit the puck and go to halfway point
                         # First find where the vector crosses the striker's y position
                         if abs(norm_vector_y) > 1e-3:  # Avoid division by zero
                             t = (y_target - puck_y) / norm_vector_y
                             intercept_x = puck_x + norm_vector_x * t
                             
-                            # Calculate additional distance vector component along the vector
-                            dx = norm_vector_x * extra_distance
-                            dy = norm_vector_y * extra_distance
+                            # Calculate how far we need to go to reach halfway point
+                            # Find the parameter t that gets us to halfway point
+                            t_halfway = (halfway_point - puck_y) / norm_vector_y
                             
-                            # Set target beyond the intercept point
-                            x_target = intercept_x + dx
-                            strike_y_target = y_target + dy
+                            # Calculate target position at halfway point along vector
+                            x_target = puck_x + norm_vector_x * t_halfway
+                            strike_y_target = puck_y + norm_vector_y * t_halfway
                             
                             # Ensure targets stay within bounds
                             x_target = max(0, min(x_target, TABLE_W))
@@ -851,9 +854,9 @@ def main_loop():
                             last_strike_x_target = x_target
                             last_strike_y_target = strike_y_target
                         else:
-                            # Vector is horizontal, strike from side with extra distance
-                            x_target = puck_x + (1.0 if puck_x < TABLE_W/2.0 else -1.0) * extra_distance
-                            strike_y_target = y_target  # Keep Y at normal position for horizontal vector
+                            # Vector is horizontal, strike toward halfway point
+                            x_target = TABLE_W / 2.0  # Go to center if horizontal
+                            strike_y_target = halfway_point
                             time_until_impact = 0.2
                             last_strike_x_target = x_target
                             last_strike_y_target = strike_y_target
