@@ -437,9 +437,9 @@ def main_loop():
     HIT_MODE_DURATION = 1.0  # seconds
     
     # Aggressive mode tracking
-    puck_below_halfway = False
-    puck_below_halfway_start_time = 0
-    PUCK_BELOW_THRESHOLD = 1.0  # seconds
+    puck_in_robot_half = False
+    puck_in_robot_half_start_time = 0
+    PUCK_IN_ROBOT_HALF_THRESHOLD = 1.0  # seconds
     aggressive_mode_active = False
     aggressive_mode_start_time = 0
     AGGRESSIVE_MODE_DURATION = 1.0  # seconds
@@ -730,25 +730,25 @@ def main_loop():
                     x_target = None
                     time_until_impact = None
 
-        # Check if puck is below halfway line and update timer
+        # Check if puck is in robot's half (top half) and update timer
         if puck_present and smoothed_puck:
             halfway_y = TABLE_H / 2.0
             current_time = time.time()
             
-            # Check if puck is on opponent's side (below halfway)
-            if smoothed_puck[1] > halfway_y:
-                if not puck_below_halfway:
-                    # Just crossed to opponent's side
-                    puck_below_halfway = True
-                    puck_below_halfway_start_time = current_time
-                elif not aggressive_mode_active and (current_time - puck_below_halfway_start_time) > PUCK_BELOW_THRESHOLD:
-                    # Puck has been on opponent's side for over the threshold time, activate aggressive mode
+            # Check if puck is on robot's side (top half of table)
+            if smoothed_puck[1] < halfway_y:
+                if not puck_in_robot_half:
+                    # Just entered robot's half
+                    puck_in_robot_half = True
+                    puck_in_robot_half_start_time = current_time
+                elif not aggressive_mode_active and (current_time - puck_in_robot_half_start_time) > PUCK_IN_ROBOT_HALF_THRESHOLD:
+                    # Puck has been in robot's half for over the threshold time, activate aggressive mode
                     aggressive_mode_active = True
                     aggressive_mode_start_time = current_time
-                    print("AGGRESSIVE MODE ACTIVATED - Puck stuck on opponent's side")
+                    print("AGGRESSIVE MODE ACTIVATED - Puck stuck in robot's half")
             else:
-                # Puck is on our side, reset the below halfway timer
-                puck_below_halfway = False
+                # Puck is on human's side, reset the timer
+                puck_in_robot_half = False
             
             # Check if we should exit aggressive mode
             if aggressive_mode_active and (current_time - aggressive_mode_start_time) > AGGRESSIVE_MODE_DURATION:
@@ -757,26 +757,26 @@ def main_loop():
                 
             # If aggressive mode is active, override the normal target with aggressive behavior
             if aggressive_mode_active and puck_present:
-                # Define opponent's goal center (at bottom center of table)
-                goal_center_x = TABLE_W / 2.0
-                goal_center_y = TABLE_H * 0.9  # 90% down the table
+                # Define robot's striking position (aim for the puck)
+                # Calculate vector from striker position to puck
+                striker_y = y_target  # Default striking position
+                striker_x = TABLE_W / 2.0  # Center of table width
                 
-                # Calculate vector from puck to goal
+                # Calculate vector from striker to puck
                 puck_x, puck_y = smoothed_puck
-                goal_vector_x = goal_center_x - puck_x
-                goal_vector_y = goal_center_y - puck_y
+                strike_vector_x = puck_x - striker_x
+                strike_vector_y = puck_y - striker_y
                 
                 # Normalize vector
-                vector_length = math.hypot(goal_vector_x, goal_vector_y)
+                vector_length = math.hypot(strike_vector_x, strike_vector_y)
                 if vector_length > 1e-3:
-                    norm_vector_x = goal_vector_x / vector_length
-                    norm_vector_y = goal_vector_y / vector_length
+                    norm_vector_x = strike_vector_x / vector_length
+                    norm_vector_y = strike_vector_y / vector_length
                     
-                    # Calculate target point (10% of table length past the puck in the direction of the goal)
+                    # Calculate target point (go 10% past the puck)
                     extra_distance = TABLE_H * 0.1  # 10% of table height
-                    x_target = puck_x - norm_vector_x * extra_distance
-                    # Keep y target at the standard height
-                    y_target_orig = y_target
+                    x_target = striker_x + norm_vector_x * (vector_length + extra_distance)
+                    # Keep y target at the standard height for consistency
                     time_until_impact = 0.2  # Set a short time to trigger hit mode
                     
                     # Ensure x_target stays within bounds
@@ -785,7 +785,18 @@ def main_loop():
                     # Force hit mode for aggressive behavior
                     hit_mode_active = True
                     hit_mode_start_time = current_time
-        
+                    
+                    # Draw the aggressive target on visualization
+                    if puck_present:
+                        cv2.line(vis,
+                                (int(round(striker_x)), int(round(striker_y))),
+                                (int(round(x_target)), int(round(y_target))),
+                                (0, 0, 255),  # Red line for aggressive mode
+                                3)  # Thicker line
+                        cv2.circle(vis,
+                                (int(round(x_target)), int(round(y_target))),
+                                8, (0, 0, 255), -1)  # Red, larger dot
+
         # FPS counter update
         fps_count += 1
         now = time.time()
