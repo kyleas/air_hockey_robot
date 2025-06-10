@@ -1,0 +1,66 @@
+\doxysection{stepper\+\_\+driver.\+h}
+\hypertarget{stepper__driver_8h_source}{}\label{stepper__driver_8h_source}\index{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_driver.h@{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_driver.h}}
+\mbox{\hyperlink{stepper__driver_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ }
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#ifndef\ INC\_STEPPER\_DRIVER\_H\_}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#define\ INC\_STEPPER\_DRIVER\_H\_}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ "{}stm32f4xx\_hal.h"{}}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <stdbool.h>}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <stdint.h>}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#define\ TIMER\_FREQUENCY\_HZ\ \ 10000U}}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00036\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{struct\ }\{}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{comment}{/*\ GPIO\ pin\ assignments\ */}}
+\DoxyCodeLine{00038\ \ \ \ \ GPIO\_TypeDef\ *\mbox{\hyperlink{struct_stepper_motor_a0d89235ec62a493643dace0a1f3e1fb5}{dir\_port}};\ \ \ \ \ }
+\DoxyCodeLine{00039\ \ \ \ \ uint16\_t\ \ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor_a64be71ecf856c835dfa1f1959a3d1405}{dir\_pin}};\ \ \ \ \ \ }
+\DoxyCodeLine{00040\ \ \ \ \ GPIO\_TypeDef\ *\mbox{\hyperlink{struct_stepper_motor_a5da44f8c614bde0aee91004205c3b342}{step\_port}};\ \ \ \ }
+\DoxyCodeLine{00041\ \ \ \ \ uint16\_t\ \ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor_a737900c62e5f8ab47195200b752cff21}{step\_pin}};\ \ \ \ \ }
+\DoxyCodeLine{00042\ \ \ \ \ GPIO\_TypeDef\ *\mbox{\hyperlink{struct_stepper_motor_ad80f8e8ff92e1285b916e418839e4664}{limit\_port}};\ \ \ }
+\DoxyCodeLine{00043\ \ \ \ \ uint16\_t\ \ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor_a536e68e7e2a7283c9d31d86cf3c70848}{limit\_pin}};\ \ \ \ }
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{comment}{/*\ Position\ and\ motion\ state\ */}}
+\DoxyCodeLine{00046\ \ \ \ \ int32\_t\ \mbox{\hyperlink{struct_stepper_motor_a9cee5586df5cacbcd7dba98817244fa6}{current\_position}};\ \ \ }
+\DoxyCodeLine{00047\ \ \ \ \ int32\_t\ \mbox{\hyperlink{struct_stepper_motor_a290a33dc67309011107cdf3f61ca0d26}{target\_position}};\ \ \ \ }
+\DoxyCodeLine{00048\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ \mbox{\hyperlink{struct_stepper_motor_a2f6f88a128604392219aa5c2533c8038}{moving}};\ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00049\ \ \ \ \ int8\_t\ \ \mbox{\hyperlink{struct_stepper_motor_ad9c1a4d4b161d8b102f8fd41ddb855e1}{direction}};\ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \ \ \ \ \textcolor{comment}{/*\ Timing\ and\ step\ generation\ */}}
+\DoxyCodeLine{00052\ \ \ \ \ uint32\_t\ \mbox{\hyperlink{struct_stepper_motor_a189510cc591669ca50e185f3f465494e}{step\_timer}};\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00053\ \ \ \ \ uint32\_t\ \mbox{\hyperlink{struct_stepper_motor_a21090533d00cee36ef7e5fb0cf7e78af}{step\_period}};\ \ \ \ \ \ \ }
+\DoxyCodeLine{00054\ \ \ \ \ int32\_t\ \ \mbox{\hyperlink{struct_stepper_motor_a8842203cef60e4e5bfd46caf0db38514}{total\_steps}};\ \ \ \ \ \ \ }
+\DoxyCodeLine{00055\ \ \ \ \ int32\_t\ \ \mbox{\hyperlink{struct_stepper_motor_a6c74f2c4098f28db76513347c4fb8afa}{step\_count}};\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00056\ \ \ \ \ int32\_t\ \ \mbox{\hyperlink{struct_stepper_motor_a0078da3dd4d9e637035c612a97daf7a9}{accel\_steps}};\ \ \ \ \ \ \ }
+\DoxyCodeLine{00057\ \ \ \ \ int32\_t\ \ \mbox{\hyperlink{struct_stepper_motor_aadd8abb590d702c505af73bfe4c6bcec}{decel\_steps}};\ \ \ \ \ \ \ }
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{comment}{/*\ Speed\ configuration\ */}}
+\DoxyCodeLine{00060\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_motor_aae48f3acf3ffcf7d5f3f1c4e3b745118}{current\_speed}};\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_motor_af5f474eb127c930f2d3e2712520aef89}{max\_speed}};\ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_motor_a954989009c0ff315c354e27f81b1222d}{accel}};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \ \ \ \ \textcolor{comment}{/*\ Step\ pulse\ state\ */}}
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{struct_stepper_motor_a11be977d5d50852b403454ab3069068c}{pulse\_high}};\ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00066\ \}\ \mbox{\hyperlink{struct_stepper_motor}{StepperMotor}};}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00084\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__driver_8h_af7e9f2eadd56410e1bc28145f817f9fb}{StepperMotor\_Init}}(}
+\DoxyCodeLine{00085\ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ *motor,}
+\DoxyCodeLine{00086\ \ \ \ \ GPIO\_TypeDef\ *dir\_port,\ uint16\_t\ dir\_pin,}
+\DoxyCodeLine{00087\ \ \ \ \ GPIO\_TypeDef\ *step\_port,\ uint16\_t\ step\_pin,}
+\DoxyCodeLine{00088\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{main_8c_aaf1f3d96cc7a45bdd0c41084c3faddf7}{max\_speed}},}
+\DoxyCodeLine{00089\ \ \ \ \ \textcolor{keywordtype}{float}\ accel}
+\DoxyCodeLine{00090\ );}
+\DoxyCodeLine{00091\ }
+\DoxyCodeLine{00104\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__driver_8h_aa30ef822b82f1ff6647d3b0c8ff793b0}{StepperMotor\_MoveTo}}(\mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ *motor,\ int32\_t\ target\_position);}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00116\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__driver_8h_a3e886c313879021bbef28da316f584fe}{StepperMotor\_Stop}}(\mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ *motor);}
+\DoxyCodeLine{00117\ }
+\DoxyCodeLine{00127\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{stepper__driver_8h_a610b7146c313d8ab07cd04d93e99682d}{StepperMotor\_IsMoving}}(\mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ *motor);}
+\DoxyCodeLine{00128\ }
+\DoxyCodeLine{00144\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__driver_8h_a20ead55228bbb3fe06ad33215364db3b}{StepperMotor\_Update}}(\mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ *motor);}
+\DoxyCodeLine{00145\ }
+\DoxyCodeLine{00146\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{/*\ INC\_STEPPER\_DRIVER\_H\_\ */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

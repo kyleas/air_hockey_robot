@@ -1,0 +1,272 @@
+\doxysection{Stepper\+Motor Struct Reference}
+\hypertarget{struct_stepper_motor}{}\label{struct_stepper_motor}\index{StepperMotor@{StepperMotor}}
+
+
+Stepper motor control structure.  
+
+
+
+
+{\ttfamily \#include $<$stepper\+\_\+driver.\+h$>$}
+
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{struct_stepper_motor_a0d89235ec62a493643dace0a1f3e1fb5}{dir\+\_\+port}}
+\begin{DoxyCompactList}\small\item\em GPIO port for direction control pin. \end{DoxyCompactList}\item 
+uint16\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a64be71ecf856c835dfa1f1959a3d1405}{dir\+\_\+pin}}
+\begin{DoxyCompactList}\small\item\em GPIO pin number for direction control. \end{DoxyCompactList}\item 
+GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{struct_stepper_motor_a5da44f8c614bde0aee91004205c3b342}{step\+\_\+port}}
+\begin{DoxyCompactList}\small\item\em GPIO port for step pulse pin. \end{DoxyCompactList}\item 
+uint16\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a737900c62e5f8ab47195200b752cff21}{step\+\_\+pin}}
+\begin{DoxyCompactList}\small\item\em GPIO pin number for step pulse generation. \end{DoxyCompactList}\item 
+GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{struct_stepper_motor_ad80f8e8ff92e1285b916e418839e4664}{limit\+\_\+port}}
+\begin{DoxyCompactList}\small\item\em GPIO port for limit switch (not used in current implementation) \end{DoxyCompactList}\item 
+uint16\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a536e68e7e2a7283c9d31d86cf3c70848}{limit\+\_\+pin}}
+\begin{DoxyCompactList}\small\item\em GPIO pin number for limit switch (not used in current implementation) \end{DoxyCompactList}\item 
+int32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a9cee5586df5cacbcd7dba98817244fa6}{current\+\_\+position}}
+\begin{DoxyCompactList}\small\item\em Current position in steps (signed, relative to init) \end{DoxyCompactList}\item 
+int32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a290a33dc67309011107cdf3f61ca0d26}{target\+\_\+position}}
+\begin{DoxyCompactList}\small\item\em Target position in steps for current move. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{struct_stepper_motor_a2f6f88a128604392219aa5c2533c8038}{moving}}
+\begin{DoxyCompactList}\small\item\em True if motor is currently executing a move. \end{DoxyCompactList}\item 
+int8\+\_\+t \mbox{\hyperlink{struct_stepper_motor_ad9c1a4d4b161d8b102f8fd41ddb855e1}{direction}}
+\begin{DoxyCompactList}\small\item\em Movement direction\+: +1 (forward) or -\/1 (reverse) \end{DoxyCompactList}\item 
+uint32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a189510cc591669ca50e185f3f465494e}{step\+\_\+timer}}
+\begin{DoxyCompactList}\small\item\em Countdown timer for next step pulse (in timer ticks) \end{DoxyCompactList}\item 
+uint32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a21090533d00cee36ef7e5fb0cf7e78af}{step\+\_\+period}}
+\begin{DoxyCompactList}\small\item\em Timer ticks between step pulses (determines speed) \end{DoxyCompactList}\item 
+int32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a8842203cef60e4e5bfd46caf0db38514}{total\+\_\+steps}}
+\begin{DoxyCompactList}\small\item\em Total number of steps required for current move. \end{DoxyCompactList}\item 
+int32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a6c74f2c4098f28db76513347c4fb8afa}{step\+\_\+count}}
+\begin{DoxyCompactList}\small\item\em Number of steps completed in current move. \end{DoxyCompactList}\item 
+int32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_a0078da3dd4d9e637035c612a97daf7a9}{accel\+\_\+steps}}
+\begin{DoxyCompactList}\small\item\em Number of acceleration steps (unused in constant speed mode) \end{DoxyCompactList}\item 
+int32\+\_\+t \mbox{\hyperlink{struct_stepper_motor_aadd8abb590d702c505af73bfe4c6bcec}{decel\+\_\+steps}}
+\begin{DoxyCompactList}\small\item\em Number of deceleration steps (unused in constant speed mode) \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_motor_aae48f3acf3ffcf7d5f3f1c4e3b745118}{current\+\_\+speed}}
+\begin{DoxyCompactList}\small\item\em Current operating speed in steps per second. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_motor_af5f474eb127c930f2d3e2712520aef89}{max\+\_\+speed}}
+\begin{DoxyCompactList}\small\item\em Maximum configured speed in steps per second. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_motor_a954989009c0ff315c354e27f81b1222d}{accel}}
+\begin{DoxyCompactList}\small\item\em Acceleration value (unused in constant speed mode) \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{struct_stepper_motor_a11be977d5d50852b403454ab3069068c}{pulse\+\_\+high}}
+\begin{DoxyCompactList}\small\item\em True when STEP pin is currently HIGH (pulse active) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Stepper motor control structure. 
+
+Contains all state and configuration data for a single stepper motor. Manages GPIO pins for direction and step control, maintains position tracking, and handles constant-\/speed motion profiles. \begin{DoxyNote}{Note}
+Initialize with \doxylink{stepper__driver_8c_af7e9f2eadd56410e1bc28145f817f9fb}{Stepper\+Motor\+\_\+\+Init()} before use 
+
+All position values are in steps relative to initialization point 
+\end{DoxyNote}
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{struct_stepper_motor_a954989009c0ff315c354e27f81b1222d}\index{StepperMotor@{StepperMotor}!accel@{accel}}
+\index{accel@{accel}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{accel}{accel}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a954989009c0ff315c354e27f81b1222d} 
+float Stepper\+Motor\+::accel}
+
+
+
+Acceleration value (unused in constant speed mode) 
+
+\Hypertarget{struct_stepper_motor_a0078da3dd4d9e637035c612a97daf7a9}\index{StepperMotor@{StepperMotor}!accel\_steps@{accel\_steps}}
+\index{accel\_steps@{accel\_steps}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{accel\_steps}{accel\_steps}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a0078da3dd4d9e637035c612a97daf7a9} 
+int32\+\_\+t Stepper\+Motor\+::accel\+\_\+steps}
+
+
+
+Number of acceleration steps (unused in constant speed mode) 
+
+\Hypertarget{struct_stepper_motor_a9cee5586df5cacbcd7dba98817244fa6}\index{StepperMotor@{StepperMotor}!current\_position@{current\_position}}
+\index{current\_position@{current\_position}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{current\_position}{current\_position}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a9cee5586df5cacbcd7dba98817244fa6} 
+int32\+\_\+t Stepper\+Motor\+::current\+\_\+position}
+
+
+
+Current position in steps (signed, relative to init) 
+
+\Hypertarget{struct_stepper_motor_aae48f3acf3ffcf7d5f3f1c4e3b745118}\index{StepperMotor@{StepperMotor}!current\_speed@{current\_speed}}
+\index{current\_speed@{current\_speed}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{current\_speed}{current\_speed}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_aae48f3acf3ffcf7d5f3f1c4e3b745118} 
+float Stepper\+Motor\+::current\+\_\+speed}
+
+
+
+Current operating speed in steps per second. 
+
+\Hypertarget{struct_stepper_motor_aadd8abb590d702c505af73bfe4c6bcec}\index{StepperMotor@{StepperMotor}!decel\_steps@{decel\_steps}}
+\index{decel\_steps@{decel\_steps}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{decel\_steps}{decel\_steps}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_aadd8abb590d702c505af73bfe4c6bcec} 
+int32\+\_\+t Stepper\+Motor\+::decel\+\_\+steps}
+
+
+
+Number of deceleration steps (unused in constant speed mode) 
+
+\Hypertarget{struct_stepper_motor_a64be71ecf856c835dfa1f1959a3d1405}\index{StepperMotor@{StepperMotor}!dir\_pin@{dir\_pin}}
+\index{dir\_pin@{dir\_pin}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{dir\_pin}{dir\_pin}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a64be71ecf856c835dfa1f1959a3d1405} 
+uint16\+\_\+t Stepper\+Motor\+::dir\+\_\+pin}
+
+
+
+GPIO pin number for direction control. 
+
+\Hypertarget{struct_stepper_motor_a0d89235ec62a493643dace0a1f3e1fb5}\index{StepperMotor@{StepperMotor}!dir\_port@{dir\_port}}
+\index{dir\_port@{dir\_port}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{dir\_port}{dir\_port}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a0d89235ec62a493643dace0a1f3e1fb5} 
+GPIO\+\_\+\+Type\+Def\texorpdfstring{$\ast$}{*} Stepper\+Motor\+::dir\+\_\+port}
+
+
+
+GPIO port for direction control pin. 
+
+\Hypertarget{struct_stepper_motor_ad9c1a4d4b161d8b102f8fd41ddb855e1}\index{StepperMotor@{StepperMotor}!direction@{direction}}
+\index{direction@{direction}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{direction}{direction}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_ad9c1a4d4b161d8b102f8fd41ddb855e1} 
+int8\+\_\+t Stepper\+Motor\+::direction}
+
+
+
+Movement direction\+: +1 (forward) or -\/1 (reverse) 
+
+\Hypertarget{struct_stepper_motor_a536e68e7e2a7283c9d31d86cf3c70848}\index{StepperMotor@{StepperMotor}!limit\_pin@{limit\_pin}}
+\index{limit\_pin@{limit\_pin}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{limit\_pin}{limit\_pin}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a536e68e7e2a7283c9d31d86cf3c70848} 
+uint16\+\_\+t Stepper\+Motor\+::limit\+\_\+pin}
+
+
+
+GPIO pin number for limit switch (not used in current implementation) 
+
+\Hypertarget{struct_stepper_motor_ad80f8e8ff92e1285b916e418839e4664}\index{StepperMotor@{StepperMotor}!limit\_port@{limit\_port}}
+\index{limit\_port@{limit\_port}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{limit\_port}{limit\_port}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_ad80f8e8ff92e1285b916e418839e4664} 
+GPIO\+\_\+\+Type\+Def\texorpdfstring{$\ast$}{*} Stepper\+Motor\+::limit\+\_\+port}
+
+
+
+GPIO port for limit switch (not used in current implementation) 
+
+\Hypertarget{struct_stepper_motor_af5f474eb127c930f2d3e2712520aef89}\index{StepperMotor@{StepperMotor}!max\_speed@{max\_speed}}
+\index{max\_speed@{max\_speed}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{max\_speed}{max\_speed}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_af5f474eb127c930f2d3e2712520aef89} 
+float Stepper\+Motor\+::max\+\_\+speed}
+
+
+
+Maximum configured speed in steps per second. 
+
+\Hypertarget{struct_stepper_motor_a2f6f88a128604392219aa5c2533c8038}\index{StepperMotor@{StepperMotor}!moving@{moving}}
+\index{moving@{moving}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{moving}{moving}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a2f6f88a128604392219aa5c2533c8038} 
+bool Stepper\+Motor\+::moving}
+
+
+
+True if motor is currently executing a move. 
+
+\Hypertarget{struct_stepper_motor_a11be977d5d50852b403454ab3069068c}\index{StepperMotor@{StepperMotor}!pulse\_high@{pulse\_high}}
+\index{pulse\_high@{pulse\_high}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{pulse\_high}{pulse\_high}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a11be977d5d50852b403454ab3069068c} 
+bool Stepper\+Motor\+::pulse\+\_\+high}
+
+
+
+True when STEP pin is currently HIGH (pulse active) 
+
+\Hypertarget{struct_stepper_motor_a6c74f2c4098f28db76513347c4fb8afa}\index{StepperMotor@{StepperMotor}!step\_count@{step\_count}}
+\index{step\_count@{step\_count}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{step\_count}{step\_count}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a6c74f2c4098f28db76513347c4fb8afa} 
+int32\+\_\+t Stepper\+Motor\+::step\+\_\+count}
+
+
+
+Number of steps completed in current move. 
+
+\Hypertarget{struct_stepper_motor_a21090533d00cee36ef7e5fb0cf7e78af}\index{StepperMotor@{StepperMotor}!step\_period@{step\_period}}
+\index{step\_period@{step\_period}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{step\_period}{step\_period}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a21090533d00cee36ef7e5fb0cf7e78af} 
+uint32\+\_\+t Stepper\+Motor\+::step\+\_\+period}
+
+
+
+Timer ticks between step pulses (determines speed) 
+
+\Hypertarget{struct_stepper_motor_a737900c62e5f8ab47195200b752cff21}\index{StepperMotor@{StepperMotor}!step\_pin@{step\_pin}}
+\index{step\_pin@{step\_pin}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{step\_pin}{step\_pin}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a737900c62e5f8ab47195200b752cff21} 
+uint16\+\_\+t Stepper\+Motor\+::step\+\_\+pin}
+
+
+
+GPIO pin number for step pulse generation. 
+
+\Hypertarget{struct_stepper_motor_a5da44f8c614bde0aee91004205c3b342}\index{StepperMotor@{StepperMotor}!step\_port@{step\_port}}
+\index{step\_port@{step\_port}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{step\_port}{step\_port}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a5da44f8c614bde0aee91004205c3b342} 
+GPIO\+\_\+\+Type\+Def\texorpdfstring{$\ast$}{*} Stepper\+Motor\+::step\+\_\+port}
+
+
+
+GPIO port for step pulse pin. 
+
+\Hypertarget{struct_stepper_motor_a189510cc591669ca50e185f3f465494e}\index{StepperMotor@{StepperMotor}!step\_timer@{step\_timer}}
+\index{step\_timer@{step\_timer}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{step\_timer}{step\_timer}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a189510cc591669ca50e185f3f465494e} 
+uint32\+\_\+t Stepper\+Motor\+::step\+\_\+timer}
+
+
+
+Countdown timer for next step pulse (in timer ticks) 
+
+\Hypertarget{struct_stepper_motor_a290a33dc67309011107cdf3f61ca0d26}\index{StepperMotor@{StepperMotor}!target\_position@{target\_position}}
+\index{target\_position@{target\_position}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{target\_position}{target\_position}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a290a33dc67309011107cdf3f61ca0d26} 
+int32\+\_\+t Stepper\+Motor\+::target\+\_\+position}
+
+
+
+Target position in steps for current move. 
+
+\Hypertarget{struct_stepper_motor_a8842203cef60e4e5bfd46caf0db38514}\index{StepperMotor@{StepperMotor}!total\_steps@{total\_steps}}
+\index{total\_steps@{total\_steps}!StepperMotor@{StepperMotor}}
+\doxysubsubsection{\texorpdfstring{total\_steps}{total\_steps}}
+{\footnotesize\ttfamily \label{struct_stepper_motor_a8842203cef60e4e5bfd46caf0db38514} 
+int32\+\_\+t Stepper\+Motor\+::total\+\_\+steps}
+
+
+
+Total number of steps required for current move. 
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+workspace\+\_\+1.\+18.\+0/me507\+\_\+term\+\_\+project/\+Core/\+Inc/\mbox{\hyperlink{stepper__driver_8h}{stepper\+\_\+driver.\+h}}\end{DoxyCompactItemize}

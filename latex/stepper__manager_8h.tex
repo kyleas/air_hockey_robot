@@ -1,0 +1,340 @@
+\doxysection{workspace\+\_\+1.18.0/me507\+\_\+term\+\_\+project/\+Core/\+Inc/stepper\+\_\+manager.h File Reference}
+\hypertarget{stepper__manager_8h}{}\label{stepper__manager_8h}\index{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_manager.h@{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_manager.h}}
+
+
+High-\/level Core\+XY stepper motor management interface.  
+
+
+{\ttfamily \#include "{}stepper\+\_\+driver.\+h"{}}\newline
+{\ttfamily \#include "{}stm32f4xx\+\_\+hal.\+h"{}}\newline
+{\ttfamily \#include $<$stdbool.\+h$>$}\newline
+{\ttfamily \#include $<$stdint.\+h$>$}\newline
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}}
+\begin{DoxyCompactList}\small\item\em Core\+XY stepper motor management structure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3}{Manager\+State}} \{ \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3ad00e743eab555a0d5b76b8b0a7a12a12}{MANAGER\+\_\+\+IDLE}}
+, \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3a0257629fbf75ae49bf624ef857c8c3aa}{MANAGER\+\_\+\+CALIBRATING}}
+, \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3aa7c719ce86bb278bbc830066f0adc1a8}{MANAGER\+\_\+\+MOVING}}
+ \}
+\begin{DoxyCompactList}\small\item\em Stepper manager state machine states. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{stepper__manager_8h_abeb1669aadc76115841b6dc1886225c9}{Stepper\+Manager\+\_\+\+Init}} (\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}}, \mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}motor\+\_\+x, \mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}motor\+\_\+y, GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}limit\+\_\+x\+\_\+port, uint16\+\_\+t limit\+\_\+x\+\_\+pin, GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}limit\+\_\+y\+\_\+port, uint16\+\_\+t limit\+\_\+y\+\_\+pin, float steps\+\_\+per\+\_\+mm, float soft\+\_\+limit\+\_\+x\+\_\+min\+\_\+mm, float soft\+\_\+limit\+\_\+x\+\_\+max\+\_\+mm, float soft\+\_\+limit\+\_\+y\+\_\+min\+\_\+mm, float soft\+\_\+limit\+\_\+y\+\_\+max\+\_\+mm, float calib\+\_\+backoff\+\_\+mm)
+\begin{DoxyCompactList}\small\item\em Initialize the Core\+XY stepper motor manager. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{stepper__manager_8h_a757510201ce0f9b4903c71213ff7cd13}{Stepper\+Manager\+\_\+\+Start\+Calibration}} (\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}})
+\begin{DoxyCompactList}\small\item\em Start automatic homing calibration sequence. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{stepper__manager_8h_af7181cae98a35b565a23310a04bf989f}{Stepper\+Manager\+\_\+\+Move\+To}} (\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}}, float x\+\_\+mm, float y\+\_\+mm)
+\begin{DoxyCompactList}\small\item\em Request coordinated move to specified position. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{stepper__manager_8h_a964ebe800c39288a955044757d72ae6e}{Stepper\+Manager\+\_\+\+Update}} (\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}})
+\begin{DoxyCompactList}\small\item\em Update manager state machine (call from main loop) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+High-\/level Core\+XY stepper motor management interface. 
+
+Provides coordinated control of dual stepper motors in Core\+XY configuration with features including automatic calibration, soft limits, position tracking, and intelligent motion planning with interruption capabilities. \begin{DoxyAuthor}{Author}
+Kyle Schumacher 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+Jun 9, 2025 
+\end{DoxyDate}
+
+
+\doxysubsection{Enumeration Type Documentation}
+\Hypertarget{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3}\index{stepper\_manager.h@{stepper\_manager.h}!ManagerState@{ManagerState}}
+\index{ManagerState@{ManagerState}!stepper\_manager.h@{stepper\_manager.h}}
+\doxysubsubsection{\texorpdfstring{ManagerState}{ManagerState}}
+{\footnotesize\ttfamily \label{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3} 
+enum \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3}{Manager\+State}}}
+
+
+
+Stepper manager state machine states. 
+
+Defines the operational states of the stepper manager for proper sequencing of calibration, movement, and idle operations. \begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MANAGER\_IDLE@{MANAGER\_IDLE}!stepper\_manager.h@{stepper\_manager.h}}\index{stepper\_manager.h@{stepper\_manager.h}!MANAGER\_IDLE@{MANAGER\_IDLE}}}\Hypertarget{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3ad00e743eab555a0d5b76b8b0a7a12a12}\label{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3ad00e743eab555a0d5b76b8b0a7a12a12} 
+MANAGER\+\_\+\+IDLE&Ready for new commands, no active operations. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MANAGER\_CALIBRATING@{MANAGER\_CALIBRATING}!stepper\_manager.h@{stepper\_manager.h}}\index{stepper\_manager.h@{stepper\_manager.h}!MANAGER\_CALIBRATING@{MANAGER\_CALIBRATING}}}\Hypertarget{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3a0257629fbf75ae49bf624ef857c8c3aa}\label{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3a0257629fbf75ae49bf624ef857c8c3aa} 
+MANAGER\+\_\+\+CALIBRATING&Performing automatic homing calibration sequence. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MANAGER\_MOVING@{MANAGER\_MOVING}!stepper\_manager.h@{stepper\_manager.h}}\index{stepper\_manager.h@{stepper\_manager.h}!MANAGER\_MOVING@{MANAGER\_MOVING}}}\Hypertarget{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3aa7c719ce86bb278bbc830066f0adc1a8}\label{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3aa7c719ce86bb278bbc830066f0adc1a8} 
+MANAGER\+\_\+\+MOVING&Executing coordinated motor movements. \\
+\hline
+
+\end{DoxyEnumFields}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{stepper__manager_8h_abeb1669aadc76115841b6dc1886225c9}\index{stepper\_manager.h@{stepper\_manager.h}!StepperManager\_Init@{StepperManager\_Init}}
+\index{StepperManager\_Init@{StepperManager\_Init}!stepper\_manager.h@{stepper\_manager.h}}
+\doxysubsubsection{\texorpdfstring{StepperManager\_Init()}{StepperManager\_Init()}}
+{\footnotesize\ttfamily \label{stepper__manager_8h_abeb1669aadc76115841b6dc1886225c9} 
+void Stepper\+Manager\+\_\+\+Init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}}]{mgr}{, }\item[{\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}}]{motor\+\_\+x}{, }\item[{\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}}]{motor\+\_\+y}{, }\item[{GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}}]{limit\+\_\+x\+\_\+port}{, }\item[{uint16\+\_\+t}]{limit\+\_\+x\+\_\+pin}{, }\item[{GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}}]{limit\+\_\+y\+\_\+port}{, }\item[{uint16\+\_\+t}]{limit\+\_\+y\+\_\+pin}{, }\item[{float}]{steps\+\_\+per\+\_\+mm}{, }\item[{float}]{soft\+\_\+limit\+\_\+x\+\_\+min\+\_\+mm}{, }\item[{float}]{soft\+\_\+limit\+\_\+x\+\_\+max\+\_\+mm}{, }\item[{float}]{soft\+\_\+limit\+\_\+y\+\_\+min\+\_\+mm}{, }\item[{float}]{soft\+\_\+limit\+\_\+y\+\_\+max\+\_\+mm}{, }\item[{float}]{calib\+\_\+backoff\+\_\+mm}{}\end{DoxyParamCaption})}
+
+
+
+Initialize the Core\+XY stepper motor manager. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to \doxylink{struct_stepper_manager}{Stepper\+Manager} structure \\
+\hline
+{\em motor\+\_\+x} & Pointer to motor A (already initialized with Stepper\+Motor\+\_\+\+Init) \\
+\hline
+{\em motor\+\_\+y} & Pointer to motor B (already initialized with Stepper\+Motor\+\_\+\+Init) \\
+\hline
+{\em limit\+\_\+x\+\_\+port} & GPIO port for X-\/axis limit switch \\
+\hline
+{\em limit\+\_\+x\+\_\+pin} & GPIO pin for X-\/axis limit switch (active LOW) \\
+\hline
+{\em limit\+\_\+y\+\_\+port} & GPIO port for Y-\/axis limit switch \\
+\hline
+{\em limit\+\_\+y\+\_\+pin} & GPIO pin for Y-\/axis limit switch (active LOW) \\
+\hline
+{\em steps\+\_\+per\+\_\+mm} & Conversion factor from millimeters to motor steps \\
+\hline
+{\em soft\+\_\+limit\+\_\+x\+\_\+min\+\_\+mm} & Minimum allowed X position in millimeters \\
+\hline
+{\em soft\+\_\+limit\+\_\+x\+\_\+max\+\_\+mm} & Maximum allowed X position in millimeters \\
+\hline
+{\em soft\+\_\+limit\+\_\+y\+\_\+min\+\_\+mm} & Minimum allowed Y position in millimeters \\
+\hline
+{\em soft\+\_\+limit\+\_\+y\+\_\+max\+\_\+mm} & Maximum allowed Y position in millimeters \\
+\hline
+{\em calib\+\_\+backoff\+\_\+mm} & Distance to back away from limit switches after contact\\
+\hline
+\end{DoxyParams}
+Configures the manager with motor references, limit switches, coordinate system parameters, and soft limits. Motors must be pre-\/initialized. \begin{DoxyNote}{Note}
+Limit switches are expected to be active LOW (pressed = GPIO\+\_\+\+PIN\+\_\+\+RESET) 
+
+Soft limits are enforced during all normal movements 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Motors must be initialized with \doxylink{stepper__driver_8c_af7e9f2eadd56410e1bc28145f817f9fb}{Stepper\+Motor\+\_\+\+Init()} before calling this
+\end{DoxyWarning}
+Initialize the Core\+XY stepper motor manager.
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to the \doxylink{struct_stepper_manager}{Stepper\+Manager} structure \\
+\hline
+{\em motor\+\_\+x} & Pointer to motor A (X+Y axis motor in Core\+XY) \\
+\hline
+{\em motor\+\_\+y} & Pointer to motor B (X-\/Y axis motor in Core\+XY) \\
+\hline
+{\em limit\+\_\+x\+\_\+port} & GPIO port for X-\/axis limit switch \\
+\hline
+{\em limit\+\_\+x\+\_\+pin} & GPIO pin for X-\/axis limit switch \\
+\hline
+{\em limit\+\_\+y\+\_\+port} & GPIO port for Y-\/axis limit switch \\
+\hline
+{\em limit\+\_\+y\+\_\+pin} & GPIO pin for Y-\/axis limit switch \\
+\hline
+{\em steps\+\_\+per\+\_\+mm} & Motor steps per millimeter conversion factor \\
+\hline
+{\em soft\+\_\+limit\+\_\+x\+\_\+min\+\_\+mm} & Minimum X position in mm (soft limit) \\
+\hline
+{\em soft\+\_\+limit\+\_\+x\+\_\+max\+\_\+mm} & Maximum X position in mm (soft limit) \\
+\hline
+{\em soft\+\_\+limit\+\_\+y\+\_\+min\+\_\+mm} & Minimum Y position in mm (soft limit) \\
+\hline
+{\em soft\+\_\+limit\+\_\+y\+\_\+max\+\_\+mm} & Maximum Y position in mm (soft limit) \\
+\hline
+{\em calib\+\_\+backoff\+\_\+mm} & Distance to back off from limit switches after homing \\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+All position limits are in millimeters relative to home position 
+\end{DoxyNote}
+\Hypertarget{stepper__manager_8h_af7181cae98a35b565a23310a04bf989f}\index{stepper\_manager.h@{stepper\_manager.h}!StepperManager\_MoveTo@{StepperManager\_MoveTo}}
+\index{StepperManager\_MoveTo@{StepperManager\_MoveTo}!stepper\_manager.h@{stepper\_manager.h}}
+\doxysubsubsection{\texorpdfstring{StepperManager\_MoveTo()}{StepperManager\_MoveTo()}}
+{\footnotesize\ttfamily \label{stepper__manager_8h_af7181cae98a35b565a23310a04bf989f} 
+void Stepper\+Manager\+\_\+\+Move\+To (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}}]{mgr}{, }\item[{float}]{new\+\_\+x\+\_\+mm}{, }\item[{float}]{new\+\_\+y\+\_\+mm}{}\end{DoxyParamCaption})}
+
+
+
+Request coordinated move to specified position. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to \doxylink{struct_stepper_manager}{Stepper\+Manager} structure \\
+\hline
+{\em x\+\_\+mm} & Target X position in millimeters \\
+\hline
+{\em y\+\_\+mm} & Target Y position in millimeters\\
+\hline
+\end{DoxyParams}
+Executes intelligent coordinated movement with advanced features\+:
+\begin{DoxyItemize}
+\item Automatic soft limit clamping
+\item Motion interruption for responsive control
+\item Real-\/time position tracking during interruption
+\item Distance-\/based speed optimization
+\item Core\+XY kinematic transformation
+\item Minimum movement filtering (1mm threshold) \begin{DoxyNote}{Note}
+Movements less than 1mm total distance are automatically ignored 
+
+New commands interrupt current movements seamlessly 
+
+Calibration commands take priority over movement requests 
+
+Position coordinates are absolute, not relative
+\end{DoxyNote}
+Request coordinated move to specified position.
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to the \doxylink{struct_stepper_manager}{Stepper\+Manager} structure \\
+\hline
+{\em new\+\_\+x\+\_\+mm} & Target X position in millimeters \\
+\hline
+{\em new\+\_\+y\+\_\+mm} & Target Y position in millimeters\\
+\hline
+\end{DoxyParams}
+Performs intelligent motion planning with the following features\+:
+\begin{DoxyItemize}
+\item Automatic soft limit enforcement
+\item Motion interruption for new commands
+\item Position tracking during interruption
+\item Minimum movement threshold (1mm) filtering
+\item Speed scaling based on move distance
+\item Core\+XY kinematic transformation \begin{DoxyNote}{Note}
+Movements less than 1mm total distance are ignored 
+
+Calibration commands take priority and will ignore move requests 
+\end{DoxyNote}
+
+\end{DoxyItemize}\Hypertarget{stepper__manager_8h_a757510201ce0f9b4903c71213ff7cd13}\index{stepper\_manager.h@{stepper\_manager.h}!StepperManager\_StartCalibration@{StepperManager\_StartCalibration}}
+\index{StepperManager\_StartCalibration@{StepperManager\_StartCalibration}!stepper\_manager.h@{stepper\_manager.h}}
+\doxysubsubsection{\texorpdfstring{StepperManager\_StartCalibration()}{StepperManager\_StartCalibration()}}
+{\footnotesize\ttfamily \label{stepper__manager_8h_a757510201ce0f9b4903c71213ff7cd13} 
+void Stepper\+Manager\+\_\+\+Start\+Calibration (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}}]{mgr}{}\end{DoxyParamCaption})}
+
+
+
+Start automatic homing calibration sequence. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to \doxylink{struct_stepper_manager}{Stepper\+Manager} structure\\
+\hline
+\end{DoxyParams}
+Initiates a two-\/phase automatic calibration sequence\+:
+\begin{DoxyEnumerate}
+\item X-\/axis homing\+: Move toward X limit switch, back off, zero position
+\item Y-\/axis homing\+: Move toward Y limit switch, back off, zero position
+\end{DoxyEnumerate}
+
+The sequence uses slow, controlled speeds for accuracy and sets the final position to the configured limit boundaries. \begin{DoxyNote}{Note}
+Call \doxylink{stepper__manager_8h_a964ebe800c39288a955044757d72ae6e}{Stepper\+Manager\+\_\+\+Update()} continuously to advance the calibration 
+
+Movement commands are ignored during calibration 
+
+Motors operate at reduced speed during calibration for safety 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Ensure limit switches are properly configured and functional
+\end{DoxyWarning}
+Start automatic homing calibration sequence.
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to the \doxylink{struct_stepper_manager}{Stepper\+Manager} structure\\
+\hline
+\end{DoxyParams}
+Initiates a two-\/phase homing sequence\+:
+\begin{DoxyEnumerate}
+\item Move towards X limit switch, back off, and zero X position
+\item Move towards Y limit switch, back off, and zero Y position The sequence runs in slow calibration speed for accuracy. \begin{DoxyNote}{Note}
+Call \doxylink{stepper__manager_8h_a964ebe800c39288a955044757d72ae6e}{Stepper\+Manager\+\_\+\+Update()} repeatedly to progress the calibration 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Do not send move commands during calibration 
+\end{DoxyWarning}
+
+\end{DoxyEnumerate}\Hypertarget{stepper__manager_8h_a964ebe800c39288a955044757d72ae6e}\index{stepper\_manager.h@{stepper\_manager.h}!StepperManager\_Update@{StepperManager\_Update}}
+\index{StepperManager\_Update@{StepperManager\_Update}!stepper\_manager.h@{stepper\_manager.h}}
+\doxysubsubsection{\texorpdfstring{StepperManager\_Update()}{StepperManager\_Update()}}
+{\footnotesize\ttfamily \label{stepper__manager_8h_a964ebe800c39288a955044757d72ae6e} 
+void Stepper\+Manager\+\_\+\+Update (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \texorpdfstring{$\ast$}{*}}]{mgr}{}\end{DoxyParamCaption})}
+
+
+
+Update manager state machine (call from main loop) 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to \doxylink{struct_stepper_manager}{Stepper\+Manager} structure\\
+\hline
+\end{DoxyParams}
+Core state machine update function that must be called continuously from the main application loop. Handles\+:
+
+{\bfseries{CALIBRATING State\+:}}
+\begin{DoxyItemize}
+\item Monitors limit switch activation during homing
+\item Controls backoff movements after limit contact
+\item Sets final calibrated position coordinates
+\item Transitions to IDLE when complete
+\end{DoxyItemize}
+
+{\bfseries{MOVING State\+:}}
+\begin{DoxyItemize}
+\item Monitors for unexpected limit switch activation
+\item Detects movement completion
+\item Provides emergency stop on limit contact
+\item Transitions to IDLE when both motors stop
+\end{DoxyItemize}
+
+{\bfseries{IDLE State\+:}}
+\begin{DoxyItemize}
+\item Ready to accept new commands
+\item No active processing required \begin{DoxyNote}{Note}
+This function is non-\/blocking and must be called frequently 
+
+Limit switch contact during normal moves triggers immediate stop 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Continuous calling is required for proper operation
+\end{DoxyWarning}
+Update manager state machine (call from main loop)
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parameters}
+{\em mgr} & Pointer to the \doxylink{struct_stepper_manager}{Stepper\+Manager} structure\\
+\hline
+\end{DoxyParams}
+This function must be called continuously from the main loop. Handles state transitions for\+:
+\begin{DoxyItemize}
+\item CALIBRATING\+: Manages the two-\/phase homing sequence
+\item MOVING\+: Monitors move completion and limit switch safety
+\item IDLE\+: No action required \begin{DoxyNote}{Note}
+In CALIBRATING state\+:
+\end{DoxyNote}
+
+\end{DoxyItemize}
+
+Monitors limit switches for homing detection
+\begin{DoxyItemize}
+\item Handles backoff moves after limit contact
+\item Sets final position coordinates after calibration \begin{DoxyNote}{Note}
+In MOVING state\+:
+\end{DoxyNote}
+
+\item Checks for unexpected limit switch activation
+\item Transitions to IDLE when both motors complete their moves \begin{DoxyWarning}{Warning}
+Limit switch activation during normal moves will immediately stop all motion 
+\end{DoxyWarning}
+
+\end{DoxyItemize}

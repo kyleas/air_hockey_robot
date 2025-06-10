@@ -1,0 +1,294 @@
+\doxysection{workspace\+\_\+1.18.0/me507\+\_\+term\+\_\+project/\+Core/\+Inc/stepper\+\_\+driver.h File Reference}
+\hypertarget{stepper__driver_8h}{}\label{stepper__driver_8h}\index{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_driver.h@{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_driver.h}}
+
+
+Low-\/level stepper motor driver interface.  
+
+
+{\ttfamily \#include "{}stm32f4xx\+\_\+hal.\+h"{}}\newline
+{\ttfamily \#include $<$stdbool.\+h$>$}\newline
+{\ttfamily \#include $<$stdint.\+h$>$}\newline
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}}
+\begin{DoxyCompactList}\small\item\em Stepper motor control structure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{stepper__driver_8h_a290a7b04bb56e02e733a35599442a915}{TIMER\+\_\+\+FREQUENCY\+\_\+\+HZ}}~10000U
+\begin{DoxyCompactList}\small\item\em Timer interrupt frequency in Hz. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{stepper__driver_8h_af7e9f2eadd56410e1bc28145f817f9fb}{Stepper\+Motor\+\_\+\+Init}} (\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}motor, GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}dir\+\_\+port, uint16\+\_\+t dir\+\_\+pin, GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}step\+\_\+port, uint16\+\_\+t step\+\_\+pin, float \mbox{\hyperlink{main_8c_aaf1f3d96cc7a45bdd0c41084c3faddf7}{max\+\_\+speed}}, float accel)
+\begin{DoxyCompactList}\small\item\em Initialize a stepper motor instance. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{stepper__driver_8h_aa30ef822b82f1ff6647d3b0c8ff793b0}{Stepper\+Motor\+\_\+\+Move\+To}} (\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}motor, int32\+\_\+t target\+\_\+position)
+\begin{DoxyCompactList}\small\item\em Start a non-\/blocking move to absolute position. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{stepper__driver_8h_a3e886c313879021bbef28da316f584fe}{Stepper\+Motor\+\_\+\+Stop}} (\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}motor)
+\begin{DoxyCompactList}\small\item\em Immediately stop motor motion. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{stepper__driver_8h_a610b7146c313d8ab07cd04d93e99682d}{Stepper\+Motor\+\_\+\+Is\+Moving}} (\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}motor)
+\begin{DoxyCompactList}\small\item\em Check if motor is currently moving. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{stepper__driver_8h_a20ead55228bbb3fe06ad33215364db3b}{Stepper\+Motor\+\_\+\+Update}} (\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}motor)
+\begin{DoxyCompactList}\small\item\em Update motor state and generate step pulses (ISR function) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Low-\/level stepper motor driver interface. 
+
+Provides direct control interface for individual stepper motors with constant speed operation. Includes step pulse generation, direction control, position tracking, and timer interrupt integration. \begin{DoxyAuthor}{Author}
+Kyle Schumacher 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+Jun 9, 2025 
+\end{DoxyDate}
+
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{stepper__driver_8h_a290a7b04bb56e02e733a35599442a915}\index{stepper\_driver.h@{stepper\_driver.h}!TIMER\_FREQUENCY\_HZ@{TIMER\_FREQUENCY\_HZ}}
+\index{TIMER\_FREQUENCY\_HZ@{TIMER\_FREQUENCY\_HZ}!stepper\_driver.h@{stepper\_driver.h}}
+\doxysubsubsection{\texorpdfstring{TIMER\_FREQUENCY\_HZ}{TIMER\_FREQUENCY\_HZ}}
+{\footnotesize\ttfamily \label{stepper__driver_8h_a290a7b04bb56e02e733a35599442a915} 
+\#define TIMER\+\_\+\+FREQUENCY\+\_\+\+HZ~10000U}
+
+
+
+Timer interrupt frequency in Hz. 
+
+The application must configure a hardware timer (e.\+g. TIM2) to generate update interrupts at exactly this rate. In the ISR, call \doxylink{stepper__driver_8h_a20ead55228bbb3fe06ad33215364db3b}{Stepper\+Motor\+\_\+\+Update()} for each motor instance. \begin{DoxyNote}{Note}
+Higher frequencies allow faster step rates but increase CPU overhead 
+
+Must match your actual timer configuration 
+\end{DoxyNote}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{stepper__driver_8h_af7e9f2eadd56410e1bc28145f817f9fb}\index{stepper\_driver.h@{stepper\_driver.h}!StepperMotor\_Init@{StepperMotor\_Init}}
+\index{StepperMotor\_Init@{StepperMotor\_Init}!stepper\_driver.h@{stepper\_driver.h}}
+\doxysubsubsection{\texorpdfstring{StepperMotor\_Init()}{StepperMotor\_Init()}}
+{\footnotesize\ttfamily \label{stepper__driver_8h_af7e9f2eadd56410e1bc28145f817f9fb} 
+void Stepper\+Motor\+\_\+\+Init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}}]{motor}{, }\item[{GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}}]{dir\+\_\+port}{, }\item[{uint16\+\_\+t}]{dir\+\_\+pin}{, }\item[{GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*}}]{step\+\_\+port}{, }\item[{uint16\+\_\+t}]{step\+\_\+pin}{, }\item[{float}]{max\+\_\+speed}{, }\item[{float}]{accel}{}\end{DoxyParamCaption})}
+
+
+
+Initialize a stepper motor instance. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to \doxylink{struct_stepper_motor}{Stepper\+Motor} structure to initialize \\
+\hline
+{\em dir\+\_\+port} & GPIO port for direction control pin \\
+\hline
+{\em dir\+\_\+pin} & GPIO pin number for direction control \\
+\hline
+{\em step\+\_\+port} & GPIO port for step pulse generation pin \\
+\hline
+{\em step\+\_\+pin} & GPIO pin number for step pulse generation \\
+\hline
+{\em max\+\_\+speed} & Maximum operating speed in steps per second \\
+\hline
+{\em accel} & Acceleration parameter (retained for compatibility, unused in constant speed mode)\\
+\hline
+\end{DoxyParams}
+Configures the motor structure with hardware pin assignments and motion parameters. Sets initial safe states for all variables and initializes GPIO pins to LOW state. \begin{DoxyNote}{Note}
+GPIO pins must be configured as outputs before calling this function 
+
+The accel parameter is retained for API compatibility but not used 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Ensure proper GPIO configuration in your hardware initialization
+\end{DoxyWarning}
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to the \doxylink{struct_stepper_motor}{Stepper\+Motor} structure to initialize \\
+\hline
+{\em dir\+\_\+port} & GPIO port for direction pin \\
+\hline
+{\em dir\+\_\+pin} & GPIO pin number for direction control \\
+\hline
+{\em step\+\_\+port} & GPIO port for step pin \\
+\hline
+{\em step\+\_\+pin} & GPIO pin number for step pulse generation \\
+\hline
+{\em max\+\_\+speed} & Maximum speed in steps per second \\
+\hline
+{\em accel} & Acceleration parameter (not used in constant speed mode)\\
+\hline
+\end{DoxyParams}
+Configures the motor structure with hardware connections and motion parameters. Initializes all state variables to safe defaults and sets GPIO pins to their initial states (DIR=LOW, STEP=LOW). \begin{DoxyNote}{Note}
+The accel parameter is retained for compatibility but not used 
+
+GPIO pins must be configured as outputs before calling this function 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Ensure GPIO pins are properly configured in your hardware setup 
+\end{DoxyWarning}
+\Hypertarget{stepper__driver_8h_a610b7146c313d8ab07cd04d93e99682d}\index{stepper\_driver.h@{stepper\_driver.h}!StepperMotor\_IsMoving@{StepperMotor\_IsMoving}}
+\index{StepperMotor\_IsMoving@{StepperMotor\_IsMoving}!stepper\_driver.h@{stepper\_driver.h}}
+\doxysubsubsection{\texorpdfstring{StepperMotor\_IsMoving()}{StepperMotor\_IsMoving()}}
+{\footnotesize\ttfamily \label{stepper__driver_8h_a610b7146c313d8ab07cd04d93e99682d} 
+bool Stepper\+Motor\+\_\+\+Is\+Moving (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}}]{motor}{}\end{DoxyParamCaption})}
+
+
+
+Check if motor is currently moving. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to \doxylink{struct_stepper_motor}{Stepper\+Motor} structure \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if motor is executing a move, false if stopped or idle
+\end{DoxyReturn}
+Returns current motion status for coordination with other motors or determining when moves have completed. \begin{DoxyNote}{Note}
+Fast and safe to call frequently from main loop 
+
+Useful for multi-\/motor synchronization
+\end{DoxyNote}
+Check if motor is currently moving.
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to the \doxylink{struct_stepper_motor}{Stepper\+Motor} structure \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if motor is moving, false if stopped or idle
+\end{DoxyReturn}
+Returns the current motion status. Useful for coordination between multiple motors or determining when a move has completed. \begin{DoxyNote}{Note}
+This function is fast and safe to call frequently 
+\end{DoxyNote}
+\Hypertarget{stepper__driver_8h_aa30ef822b82f1ff6647d3b0c8ff793b0}\index{stepper\_driver.h@{stepper\_driver.h}!StepperMotor\_MoveTo@{StepperMotor\_MoveTo}}
+\index{StepperMotor\_MoveTo@{StepperMotor\_MoveTo}!stepper\_driver.h@{stepper\_driver.h}}
+\doxysubsubsection{\texorpdfstring{StepperMotor\_MoveTo()}{StepperMotor\_MoveTo()}}
+{\footnotesize\ttfamily \label{stepper__driver_8h_aa30ef822b82f1ff6647d3b0c8ff793b0} 
+void Stepper\+Motor\+\_\+\+Move\+To (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}}]{motor}{, }\item[{int32\+\_\+t}]{target\+\_\+position}{}\end{DoxyParamCaption})}
+
+
+
+Start a non-\/blocking move to absolute position. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to \doxylink{struct_stepper_motor}{Stepper\+Motor} structure \\
+\hline
+{\em target\+\_\+position} & Target position in steps (absolute coordinate)\\
+\hline
+\end{DoxyParams}
+Initiates constant-\/speed motion to the specified absolute position. Movement starts immediately and runs at the configured max\+\_\+speed. Function returns immediately; use \doxylink{stepper__driver_8h_a610b7146c313d8ab07cd04d93e99682d}{Stepper\+Motor\+\_\+\+Is\+Moving()} to monitor completion status. \begin{DoxyNote}{Note}
+Position is absolute, not relative to current position 
+
+Multiple calls will override previous target (no move queuing) 
+
+No acceleration/deceleration -\/ motor runs at constant speed
+\end{DoxyNote}
+Start a non-\/blocking move to absolute position.
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to the \doxylink{struct_stepper_motor}{Stepper\+Motor} structure \\
+\hline
+{\em target\+\_\+position} & Target position in steps (absolute coordinate)\\
+\hline
+\end{DoxyParams}
+Initiates a non-\/blocking move to the target position at constant speed. The motor will immediately start moving towards the target using the configured max\+\_\+speed. Position tracking is automatically maintained. \begin{DoxyNote}{Note}
+This function returns immediately; use \doxylink{stepper__driver_8h_a610b7146c313d8ab07cd04d93e99682d}{Stepper\+Motor\+\_\+\+Is\+Moving()} to check status 
+
+Multiple calls will override the previous target (no queuing) 
+
+Position is tracked in steps relative to the initialization point 
+\end{DoxyNote}
+\Hypertarget{stepper__driver_8h_a3e886c313879021bbef28da316f584fe}\index{stepper\_driver.h@{stepper\_driver.h}!StepperMotor\_Stop@{StepperMotor\_Stop}}
+\index{StepperMotor\_Stop@{StepperMotor\_Stop}!stepper\_driver.h@{stepper\_driver.h}}
+\doxysubsubsection{\texorpdfstring{StepperMotor\_Stop()}{StepperMotor\_Stop()}}
+{\footnotesize\ttfamily \label{stepper__driver_8h_a3e886c313879021bbef28da316f584fe} 
+void Stepper\+Motor\+\_\+\+Stop (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}}]{motor}{}\end{DoxyParamCaption})}
+
+
+
+Immediately stop motor motion. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to \doxylink{struct_stepper_motor}{Stepper\+Motor} structure\\
+\hline
+\end{DoxyParams}
+Performs emergency stop of motor motion without deceleration. Clears motion state and ensures STEP pin is in safe LOW state. Position tracking remains accurate up to the point of stopping. \begin{DoxyNote}{Note}
+This is an immediate stop -\/ no deceleration ramp 
+
+Current position tracking is preserved 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Abrupt stopping may cause mechanical stress at high speeds
+\end{DoxyWarning}
+Immediately stop motor motion.
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to the \doxylink{struct_stepper_motor}{Stepper\+Motor} structure\\
+\hline
+\end{DoxyParams}
+Stops all motor motion immediately without deceleration. Clears the moving flag and ensures the STEP pin is in a safe LOW state. Current position tracking is preserved. \begin{DoxyNote}{Note}
+This is an emergency stop -\/ no deceleration is performed 
+
+Position tracking remains accurate up to the point of stopping 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Motor will stop abruptly which may cause mechanical stress 
+\end{DoxyWarning}
+\Hypertarget{stepper__driver_8h_a20ead55228bbb3fe06ad33215364db3b}\index{stepper\_driver.h@{stepper\_driver.h}!StepperMotor\_Update@{StepperMotor\_Update}}
+\index{StepperMotor\_Update@{StepperMotor\_Update}!stepper\_driver.h@{stepper\_driver.h}}
+\doxysubsubsection{\texorpdfstring{StepperMotor\_Update()}{StepperMotor\_Update()}}
+{\footnotesize\ttfamily \label{stepper__driver_8h_a20ead55228bbb3fe06ad33215364db3b} 
+void Stepper\+Motor\+\_\+\+Update (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*}}]{motor}{}\end{DoxyParamCaption})}
+
+
+
+Update motor state and generate step pulses (ISR function) 
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to \doxylink{struct_stepper_motor}{Stepper\+Motor} structure\\
+\hline
+\end{DoxyParams}
+Core motor update function that must be called from timer ISR at TIMER\+\_\+\+FREQUENCY\+\_\+\+HZ rate. Handles step pulse timing, GPIO control, position tracking, and move completion detection.
+
+Step pulse generation uses two-\/phase approach\+:
+\begin{DoxyItemize}
+\item Phase 1\+: Set STEP pin HIGH, start pulse
+\item Phase 2\+: Set STEP pin LOW, complete pulse \begin{DoxyNote}{Note}
+MUST be called from timer interrupt at TIMER\+\_\+\+FREQUENCY\+\_\+\+HZ rate 
+
+Timer frequency must exactly match TIMER\+\_\+\+FREQUENCY\+\_\+\+HZ definition 
+
+Keep ISR processing minimal for consistent timing 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Incorrect timer frequency will cause speed errors
+\end{DoxyWarning}
+Update motor state and generate step pulses (ISR function)
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parameters}
+{\em motor} & Pointer to the \doxylink{struct_stepper_motor}{Stepper\+Motor} structure\\
+\hline
+\end{DoxyParams}
+This function must be called periodically from a timer interrupt at TIMER\+\_\+\+FREQUENCY\+\_\+\+HZ rate. Handles the step pulse generation state machine\+:
+\begin{DoxyItemize}
+\item Manages step pulse timing based on configured speed
+\item Generates step pulses with proper HIGH/\+LOW timing
+\item Updates position tracking after each step
+\item Stops motion when target position is reached \begin{DoxyNote}{Note}
+Call this function from your timer interrupt service routine 
+
+Timer frequency must match TIMER\+\_\+\+FREQUENCY\+\_\+\+HZ definition 
+
+Uses a two-\/phase approach\+: HIGH pulse, then LOW pulse on next call 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+This function assumes it\textquotesingle{}s called at the correct timer frequency 
+\end{DoxyWarning}
+
+\end{DoxyItemize}

@@ -1,0 +1,144 @@
+\doxysection{Raspberry Pi/airhockey.py File Reference}
+\hypertarget{airhockey_8py}{}\label{airhockey_8py}\index{Raspberry Pi/airhockey.py@{Raspberry Pi/airhockey.py}}
+
+
+Complete Python script for air hockey table detection and control.  
+
+
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespaceairhockey}{airhockey}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{Indent}\textbf{ Utility Functions}\par
+{\em \hypertarget{namespaceairhockey_autotoc_md2}{}\doxysubsubsection{\texorpdfstring{@\{}{@\{}}\label{namespaceairhockey_autotoc_md2}
+}\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespaceairhockey_a634cfe20188ed244c15c2594612c5b08}{airhockey.\+line\+\_\+from\+\_\+two\+\_\+points}} (pt1, pt2)
+\begin{DoxyCompactList}\small\item\em Calculate line equation from two points. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_a355bef0a486d717a36d69113d0eae933}{airhockey.\+intersect\+\_\+lines}} (l1, l2)
+\begin{DoxyCompactList}\small\item\em Find intersection point of two lines. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_a21a31afd4ba3edffb291c7ccd9337292}{airhockey.\+save\+\_\+warp\+\_\+matrix}} (filename, matrix, width, height)
+\begin{DoxyCompactList}\small\item\em Save perspective transformation matrix to file. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_ac4e5dfb58a651e73477731d6c53beddd}{airhockey.\+load\+\_\+warp\+\_\+matrix}} (filename)
+\begin{DoxyCompactList}\small\item\em Load perspective transformation matrix from file. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_aebf7c4c8e8ec8490883b607d22fc2893}{airhockey.\+save\+\_\+hsv\+\_\+ranges}} (filename, hsv\+\_\+dict)
+\begin{DoxyCompactList}\small\item\em Save HSV color ranges to file. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_a24611b86754e976d4bde02b32b26bfe1}{airhockey.\+load\+\_\+hsv\+\_\+ranges}} (filename)
+\begin{DoxyCompactList}\small\item\em Load HSV color ranges from file. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_ad764c0ea9449ef471f64ad2714f0360f}{airhockey.\+mouse\+\_\+callback\+\_\+frame}} (event, x, y, flags, param)
+\begin{DoxyCompactList}\small\item\em Mouse callback function for frame calibration. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Calibration Functions}\par
+{\em \hypertarget{namespaceairhockey_autotoc_md3}{}\doxysubsubsection{\texorpdfstring{@\{}{@\{}}\label{namespaceairhockey_autotoc_md3}
+}\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespaceairhockey_aeff8a9c7bb0578564feb390db89a5717}{airhockey.\+calibrate\+\_\+frame}} ()
+\begin{DoxyCompactList}\small\item\em Perform frame calibration to determine perspective transformation. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_aa2daf3c33c3038a928010e15ff3f6b5a}{airhockey.\+calibrate\+\_\+hsv}} ()
+\begin{DoxyCompactList}\small\item\em Perform HSV color calibration for object detection. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Physics and Prediction Functions}\par
+{\em \hypertarget{namespaceairhockey_autotoc_md4}{}\doxysubsubsection{\texorpdfstring{@\{}{@\{}}\label{namespaceairhockey_autotoc_md4}
+}\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespaceairhockey_aabb72c6acd39438423e44e84c29cfc3d}{airhockey.\+reflect\+\_\+vector}} (vx, vy, hit\+\_\+wall)
+\begin{DoxyCompactList}\small\item\em Reflect a velocity vector off a wall. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_a2dc60cee2b9515002616105d4c11d2c9}{airhockey.\+compute\+\_\+first\+\_\+bounce}} (x0, y0, vx, vy, W, H)
+\begin{DoxyCompactList}\small\item\em Calculate the first wall bounce for a moving object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Main Detection and Control}\par
+{\em \hypertarget{namespaceairhockey_autotoc_md5}{}\doxysubsubsection{\texorpdfstring{@\{}{@\{}}\label{namespaceairhockey_autotoc_md5}
+}\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespaceairhockey_ac183891a031378b40e47c798f90d6525}{airhockey.\+main\+\_\+loop}} ()
+\begin{DoxyCompactList}\small\item\em Main detection loop with serial communication and multiple prediction modes. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\end{Indent}
+\doxysubsubsection*{Variables}
+\begin{Indent}\textbf{ Configuration Constants}\par
+{\em \hypertarget{namespaceairhockey_autotoc_md0}{}\doxysubsubsection{\texorpdfstring{@\{}{@\{}}\label{namespaceairhockey_autotoc_md0}
+}\begin{DoxyCompactItemize}
+\item 
+str \mbox{\hyperlink{namespaceairhockey_a1f74c23e9bad555569e6ee53937976ae}{airhockey.\+FRAME\+\_\+\+CALIB\+\_\+\+FILE}} = "{}warp\+\_\+matrix.\+json"{}
+\begin{DoxyCompactList}\small\item\em File to store frame calibration warp matrix. \end{DoxyCompactList}\item 
+str \mbox{\hyperlink{namespaceairhockey_a32dc60879b48fe2b761d2865144fee9d}{airhockey.\+HSV\+\_\+\+CALIB\+\_\+\+FILE}} = "{}hsv\+\_\+ranges.\+json"{}
+\begin{DoxyCompactList}\small\item\em File to store HSV color calibration ranges. \end{DoxyCompactList}\item 
+str \mbox{\hyperlink{namespaceairhockey_ac5a72e5d2111618866c206bb13af2665}{airhockey.\+SERIAL\+\_\+\+PORT}} = "{}/dev/serial0"{}
+\begin{DoxyCompactList}\small\item\em Serial port device path for communication with table controller. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{namespaceairhockey_a8415d51f265e0c4560391bac218b2a00}{airhockey.\+BAUD\+\_\+\+RATE}} = 115200
+\begin{DoxyCompactList}\small\item\em Baud rate for serial communication. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{namespaceairhockey_a65dd07b2ae5e3f6031b420dccd4d53b3}{airhockey.\+MIN\+\_\+\+RADIUS}} = 15
+\begin{DoxyCompactList}\small\item\em Minimum radius for valid object detection (pixels) \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{namespaceairhockey_a0724c7ab1effe752093fa404c279942b}{airhockey.\+AREA\+\_\+\+THRESH}} = math.\+pi \texorpdfstring{$\ast$}{*} (\mbox{\hyperlink{namespaceairhockey_a65dd07b2ae5e3f6031b420dccd4d53b3}{MIN\+\_\+\+RADIUS}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*} 2) \texorpdfstring{$\ast$}{*} 0.\+5
+\begin{DoxyCompactList}\small\item\em Minimum contour area threshold for object detection Only consider contours with area at least \texorpdfstring{$\sim$}{\string~}half that of a circle radius MIN\+\_\+\+RADIUS. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{namespaceairhockey_ad2ed76ca3a786a0813d30ce4e9e2f7a1}{airhockey.\+SMOOTHING\+\_\+\+ALPHA}} = 0.\+3
+\begin{DoxyCompactList}\small\item\em Exponential smoothing factor for puck position filtering (0-\/1) \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{namespaceairhockey_a761bb60af6aab603f4cacd9bc08b1652}{airhockey.\+VEL\+\_\+\+THRESHOLD}} = 2.\+0
+\begin{DoxyCompactList}\small\item\em Velocity threshold for determining if puck is moving significantly. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{namespaceairhockey_a83dddc79c49840932b8c6a459d2e3375}{airhockey.\+CLICKS\+\_\+\+PER\+\_\+\+SIDE}} = 2
+\begin{DoxyCompactList}\small\item\em Number of clicks required per side during frame calibration. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{namespaceairhockey_ad8a87909db892d79061a5b50189bfab4}{airhockey.\+H\+\_\+\+MARGIN}} = 10
+\begin{DoxyCompactList}\small\item\em HSV hue margin for color calibration. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{namespaceairhockey_a3cc5683be0067e7efe5d764f7a084416}{airhockey.\+S\+\_\+\+MARGIN}} = 10
+\begin{DoxyCompactList}\small\item\em HSV saturation margin for color calibration. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{namespaceairhockey_a4fa368d73ec0b7e781c40055fa65a988}{airhockey.\+V\+\_\+\+MARGIN}} = 10
+\begin{DoxyCompactList}\small\item\em HSV value margin for color calibration. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{namespaceairhockey_a5f001f19d21cf09c9e6c46dee21ddab4}{airhockey.\+FRAME\+\_\+\+RATE}} = 30.\+0
+\begin{DoxyCompactList}\small\item\em Target frame rate for detection loop. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Global Variables}\par
+{\em \hypertarget{namespaceairhockey_autotoc_md1}{}\doxysubsubsection{\texorpdfstring{@\{}{@\{}}\label{namespaceairhockey_autotoc_md1}
+}\begin{DoxyCompactItemize}
+\item 
+list \mbox{\hyperlink{namespaceairhockey_ac7af058ff84bdc0796dd8b6c7c8eeab4}{airhockey.\+clicks}} = \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em List of mouse click coordinates for frame calibration. \end{DoxyCompactList}\item 
+list \mbox{\hyperlink{namespaceairhockey_af10dbcbc3a98cd43f59f887e0334e306}{airhockey.\+hsv\+\_\+samples}} = \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em List of HSV color samples for color calibration. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_a0190753a292bf310bf875f9c351e525c}{airhockey.\+smoothed\+\_\+puck}} = None
+\begin{DoxyCompactList}\small\item\em Current smoothed puck position (x, y) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_a1b01720767f342fc9b4c7810bb1ea80e}{airhockey.\+prev\+\_\+smoothed\+\_\+puck}} = None
+\begin{DoxyCompactList}\small\item\em Previous smoothed puck position for velocity calculation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ Program Entry Point}\par
+{\em \hypertarget{namespaceairhockey_autotoc_md6}{}\doxysubsubsection{\texorpdfstring{@\{}{@\{}}\label{namespaceairhockey_autotoc_md6}
+}\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespaceairhockey_a43e03bfd60827fe656c006001d202b80}{airhockey.\+parser}} = argparse.\+Argument\+Parser(description="{}Air Hockey Table Detection on Raspberry Pi"{})
+\begin{DoxyCompactList}\small\item\em Setup command line argument parser. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceairhockey_abf1e45245781d3e6204ca5f938f53fe1}{airhockey.\+choices}}
+\item 
+\mbox{\hyperlink{namespaceairhockey_a0c7f3e8ca824368fc114606331fff8d7}{airhockey.\+required}}
+\item 
+\mbox{\hyperlink{namespaceairhockey_a832a32ab3ab65e397b30b97dfd8de2de}{airhockey.\+help}}
+\item 
+\mbox{\hyperlink{namespaceairhockey_ad0fb2e825e631f17d6f89013ad127968}{airhockey.\+args}} = parser.\+parse\+\_\+args()
+\end{DoxyCompactItemize}
+\end{Indent}
+
+
+\doxysubsection{Detailed Description}
+Complete Python script for air hockey table detection and control. 
+
+This script provides\+:
+\begin{DoxyItemize}
+\item Frame calibration
+\item HSV calibration
+\item Main detection loop
+\item Exponential smoothing on puck to reduce jitter
+\item Serial communication with air hockey table controller
+\item Multiple prediction modes including aggressive behavior \begin{DoxyAuthor}{Author}
+Kyle Schumacher 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2025 
+\end{DoxyDate}
+\begin{DoxyVersion}{Version}
+1.\+0
+\end{DoxyVersion}
+Usage\+: python3 \doxylink{airhockey_8py}{airhockey.\+py} --mode calibrate\+\_\+frame python3 \doxylink{airhockey_8py}{airhockey.\+py} --mode calibrate\+\_\+hsv python3 \doxylink{airhockey_8py}{airhockey.\+py} --mode run
+\end{DoxyItemize}
+
+Dependencies\+: sudo apt update sudo apt install python3-\/pip pip3 install opencv-\/python numpy pyserial
+
+To autostart on boot, create a systemd service pointing to\+: Exec\+Start=/usr/bin/python3 /home/pi/airhockey.py --mode run 

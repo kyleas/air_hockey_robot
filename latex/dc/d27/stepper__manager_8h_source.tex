@@ -1,0 +1,84 @@
+\doxysection{stepper\+\_\+manager.\+h}
+\hypertarget{stepper__manager_8h_source}{}\label{stepper__manager_8h_source}\index{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_manager.h@{workspace\_1.18.0/me507\_term\_project/Core/Inc/stepper\_manager.h}}
+\mbox{\hyperlink{stepper__manager_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ }
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#ifndef\ INC\_STEPPER\_MANAGER\_H\_}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#define\ INC\_STEPPER\_MANAGER\_H\_}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{stepper__driver_8h}{stepper\_driver.h}}"{}}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ "{}stm32f4xx\_hal.h"{}}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <stdbool.h>}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#include\ <stdint.h>}}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00024\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{enum}\ \{}
+\DoxyCodeLine{00025\ \ \ \ \ \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3ad00e743eab555a0d5b76b8b0a7a12a12}{MANAGER\_IDLE}},\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00026\ \ \ \ \ \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3a0257629fbf75ae49bf624ef857c8c3aa}{MANAGER\_CALIBRATING}},\ }
+\DoxyCodeLine{00027\ \ \ \ \ \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3aa7c719ce86bb278bbc830066f0adc1a8}{MANAGER\_MOVING}}\ \ \ \ \ \ \ }
+\DoxyCodeLine{00028\ \}\ \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3}{ManagerState}};}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00042\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{struct\ }\{}
+\DoxyCodeLine{00043\ \ \ \ \ \textcolor{comment}{/*\ Motor\ references\ */}}
+\DoxyCodeLine{00044\ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ *\mbox{\hyperlink{struct_stepper_manager_ad448af4c01b190b60b5fcfc62693a767}{motor\_x}};\ \ }
+\DoxyCodeLine{00045\ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ *\mbox{\hyperlink{struct_stepper_manager_af1231eeea3577d9e5f8b0d20fcb55b1e}{motor\_y}};\ \ }
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \textcolor{comment}{/*\ Limit\ switch\ configuration\ */}}
+\DoxyCodeLine{00048\ \ \ \ \ GPIO\_TypeDef\ *\mbox{\hyperlink{struct_stepper_manager_ad6df753ed4ccd2aaf0d68af8679facf7}{limit\_x\_port}};\ \ }
+\DoxyCodeLine{00049\ \ \ \ \ uint16\_t\ \ \ \ \ \ \mbox{\hyperlink{struct_stepper_manager_a732f3495457e79037f3cb3ed9288b0d6}{limit\_x\_pin}};\ \ \ }
+\DoxyCodeLine{00050\ \ \ \ \ GPIO\_TypeDef\ *\mbox{\hyperlink{struct_stepper_manager_ac55625e0178a6d55bae3f5fbedb350e0}{limit\_y\_port}};\ \ }
+\DoxyCodeLine{00051\ \ \ \ \ uint16\_t\ \ \ \ \ \ \mbox{\hyperlink{struct_stepper_manager_a2261b22d8416b6f5755ccabadc2f3b50}{limit\_y\_pin}};\ \ \ }
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{comment}{/*\ Position\ tracking\ (in\ millimeters)\ */}}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a63419ddde6b18c64f6711e847abb3b55}{position\_x\_mm}};\ \ \ \ }
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_aad0ca767c6cd5a77965fbad8058f8657}{position\_y\_mm}};\ \ \ \ }
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \ \ \ \ \textcolor{comment}{/*\ Soft\ limit\ boundaries\ (in\ millimeters)\ */}}
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a48a0179816a0d90977328e9c0e512e4f}{soft\_limit\_x\_min\_mm}};\ \ }
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_acd1e1428b4fddae25e9b61583d9be788}{soft\_limit\_x\_max\_mm}};\ \ }
+\DoxyCodeLine{00060\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a91309a8624b8cae5b5c2966eeb982dc2}{soft\_limit\_y\_min\_mm}};\ \ }
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a570cb2b22bdb01d1cc867ae3fa9a5810}{soft\_limit\_y\_max\_mm}};\ \ }
+\DoxyCodeLine{00062\ }
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{comment}{/*\ Conversion\ and\ calibration\ */}}
+\DoxyCodeLine{00064\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_aef06fb32cbba9780055a7aac00057f98}{steps\_per\_mm}};\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a3fadd09189a4fe900fec5ce7a31f5848}{calib\_backoff\_mm}};\ \ \ \ \ }
+\DoxyCodeLine{00066\ }
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{comment}{/*\ State\ management\ */}}
+\DoxyCodeLine{00068\ \ \ \ \ \mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3}{ManagerState}}\ \mbox{\hyperlink{struct_stepper_manager_ab1b3143c003bdc8150156e14af0a8ede}{state}};\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \ \ \ \ \textcolor{comment}{/*\ Calibration\ status\ */}}
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{struct_stepper_manager_a172b3ef6a7eeae8aa881dbc742b8819a}{calib\_x\_homed}};\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00072\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{struct_stepper_manager_a76a831cd6827c235d426e87f8d726ad4}{calib\_y\_homed}};\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00073\ }
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{comment}{/*\ Default\ motion\ parameters\ */}}
+\DoxyCodeLine{00075\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a76dbb6efc393b0d66aede91f4646b1d8}{default\_speed\_a}};\ \ \ \ \ \ }
+\DoxyCodeLine{00076\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a70819f16a383beabbab2346394850ef2}{default\_speed\_b}};\ \ \ \ \ \ }
+\DoxyCodeLine{00077\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_af0d6686dcddc10cc07ac5c60c34cd24b}{default\_accel\_a}};\ \ \ \ \ \ }
+\DoxyCodeLine{00078\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{struct_stepper_manager_a2ac61bc526dc536d9139b3d09a368991}{default\_accel\_b}};\ \ \ \ \ \ }
+\DoxyCodeLine{00079\ \}\ \mbox{\hyperlink{struct_stepper_manager}{StepperManager}};}
+\DoxyCodeLine{00080\ }
+\DoxyCodeLine{00102\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__manager_8h_abeb1669aadc76115841b6dc1886225c9}{StepperManager\_Init}}(}
+\DoxyCodeLine{00103\ \ \ \ \ \mbox{\hyperlink{struct_stepper_manager}{StepperManager}}\ *\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}},}
+\DoxyCodeLine{00104\ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ \ \ *motor\_x,}
+\DoxyCodeLine{00105\ \ \ \ \ \mbox{\hyperlink{struct_stepper_motor}{StepperMotor}}\ \ \ *motor\_y,}
+\DoxyCodeLine{00106\ \ \ \ \ GPIO\_TypeDef\ \ \ *limit\_x\_port,}
+\DoxyCodeLine{00107\ \ \ \ \ uint16\_t\ \ \ \ \ \ \ \ limit\_x\_pin,}
+\DoxyCodeLine{00108\ \ \ \ \ GPIO\_TypeDef\ \ \ *limit\_y\_port,}
+\DoxyCodeLine{00109\ \ \ \ \ uint16\_t\ \ \ \ \ \ \ \ limit\_y\_pin,}
+\DoxyCodeLine{00110\ \ \ \ \ \textcolor{keywordtype}{float}\ \ \ \ \ \ \ \ \ \ \ steps\_per\_mm,}
+\DoxyCodeLine{00111\ \ \ \ \ \textcolor{keywordtype}{float}\ \ \ \ \ \ \ \ \ \ \ soft\_limit\_x\_min\_mm,}
+\DoxyCodeLine{00112\ \ \ \ \ \textcolor{keywordtype}{float}\ \ \ \ \ \ \ \ \ \ \ soft\_limit\_x\_max\_mm,}
+\DoxyCodeLine{00113\ \ \ \ \ \textcolor{keywordtype}{float}\ \ \ \ \ \ \ \ \ \ \ soft\_limit\_y\_min\_mm,}
+\DoxyCodeLine{00114\ \ \ \ \ \textcolor{keywordtype}{float}\ \ \ \ \ \ \ \ \ \ \ soft\_limit\_y\_max\_mm,}
+\DoxyCodeLine{00115\ \ \ \ \ \textcolor{keywordtype}{float}\ \ \ \ \ \ \ \ \ \ \ calib\_backoff\_mm}
+\DoxyCodeLine{00116\ );}
+\DoxyCodeLine{00117\ }
+\DoxyCodeLine{00132\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__manager_8h_a757510201ce0f9b4903c71213ff7cd13}{StepperManager\_StartCalibration}}(\mbox{\hyperlink{struct_stepper_manager}{StepperManager}}\ *\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}});}
+\DoxyCodeLine{00133\ }
+\DoxyCodeLine{00151\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__manager_8h_af7181cae98a35b565a23310a04bf989f}{StepperManager\_MoveTo}}(\mbox{\hyperlink{struct_stepper_manager}{StepperManager}}\ *\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}},\ \textcolor{keywordtype}{float}\ x\_mm,\ \textcolor{keywordtype}{float}\ y\_mm);}
+\DoxyCodeLine{00152\ }
+\DoxyCodeLine{00178\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{stepper__manager_8h_a964ebe800c39288a955044757d72ae6e}{StepperManager\_Update}}(\mbox{\hyperlink{struct_stepper_manager}{StepperManager}}\ *\mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}});}
+\DoxyCodeLine{00179\ }
+\DoxyCodeLine{00180\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{/*\ INC\_STEPPER\_MANAGER\_H\_\ */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

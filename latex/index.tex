@@ -1,0 +1,52 @@
+\chapter{Air Hockey Robot Documentation}
+\hypertarget{index}{}\label{index}\index{Air Hockey Robot Documentation@{Air Hockey Robot Documentation}}
+\hypertarget{index_autotoc_md0}{}\doxysection{\texorpdfstring{Air Hockey Robot}{Air Hockey Robot}}\label{index_autotoc_md0}
+As part of the ME507 class project, an air hockey robot was created. A human player is situated on one side of the board, and a 2-\/axis, Core\+XY style robot is on the other side. The robot will automatically predict where the puck will go and move the handle to that location. The robot is not quite fast enough to play the game as intended, so the operator will wait until the robot is in location. The robot is also not quite fast enough to hit it back, so if the puck becomes stuck, the robot will automatically push the puck to the operators side.
+
+\hypertarget{index_autotoc_md1}{}\doxysubsection{\texorpdfstring{Robot Overview}{Robot Overview}}\label{index_autotoc_md1}
+The robot is separated into two separate functions\+: movement and sensing.\hypertarget{index_autotoc_md2}{}\doxysubsection{\texorpdfstring{Movement}{Movement}}\label{index_autotoc_md2}
+The movement portion is a typical Core\+XY style robot where two steppers use differential control to move the handle to each location. The steppers are both stationary and use one belt for movement. The movement portion automatically zeros itself upon each restart. This involves using two limit switches to zero the X and Y axis. The movement is all controled by an STM32 with TMC2209 stepper drivers.
+
+\hypertarget{index_autotoc_md3}{}\doxysubsubsection{\texorpdfstring{PCB}{PCB}}\label{index_autotoc_md3}
+The robot itself is controlled through a custom PCB with a couple of important features. The main processor is an STM32\+F411\+CEU6 using C/\+C++. There are header pins on the board to program the chip with an ST-\/\+LINK from a Nucelo board. The board also features two TMC2209 stepper driver chips. These chips were selected for their quiet operation. These chips are only using the DIR/\+STEP pins to define motion, but have the functionality for full control with UART. There are two limit switch inputs in the board as well to zero. The board can take in 8V-\/18V as it has a built in buck to give a constant 5V and 3.\+3V rail. The power input comes from 1x XT-\/30 input to give the functionality for either a power supply or Li\+Po battery.
+
+\hypertarget{index_autotoc_md4}{}\doxysubsubsection{\texorpdfstring{STM32 Code}{STM32 Code}}\label{index_autotoc_md4}
+The STM32 firmware is written in C using the STM32\+Cube\+IDE and follows a structured, modular style. It is splot across three main components\+:\hypertarget{index_autotoc_md5}{}\doxysubsubsection{\texorpdfstring{\protect\doxylink{main_8c}{main.c} System Control and UART-\/\+Based Command loop}{{main.c} System Control and UART-\/\+Based Command loop}}\label{index_autotoc_md5}
+The \doxylink{main_8c}{main.c} file initializes all hardware (GPIOs, UARTs, timer, etc.) and executes the core application loop. It supports two operational modes\+:
+
+
+\begin{DoxyEnumerate}
+\item Calibration Mode\+: Runs at startup and homes the X and Y axes using limit switches. The handle moves until contact in both axes, backs off a configurable distance, and then resets its internal coordates to zero.
+\item Positioning Mode\+: The system listens for movement commands from a Raspberry Pi over UART. Each command encodes a new target (x, y) position. The main loop parses the commands, calls the high-\/level motion planner, and manages status responses for debugging.
+\end{DoxyEnumerate}
+
+The firmware employs a responsive, interrupt-\/driven UART scheme using HAL callbacks and circular buffers, enabling non-\/blocking serial communication with both a PC and the Pi simultaneously.\hypertarget{index_autotoc_md6}{}\doxysubsubsection{\texorpdfstring{\protect\doxylink{stepper__manager_8c}{stepper\+\_\+manager.c} Core\+XY High-\/\+Level Motion planner}{{stepper\+\_\+manager.c} Core\+XY High-\/\+Level Motion planner}}\label{index_autotoc_md6}
+The \doxylink{stepper__manager_8c}{stepper\+\_\+manager.c} file implements coordinated motion planning and Core\+XY kinematics. It manages\+:
+
+
+\begin{DoxyEnumerate}
+\item Calibration Sequencing\+: Executes a multi-\/step homing routing using two limit switches, including precise backoff and position zeroing.
+\item Soft Limit Enforcement\+: Ensures motion commands respect physical bounds of the board.
+\item Path Planning\+: Converts global X/Y commands into Core\+XY A/B motor commands with velocity synchronization.
+\item Speed Scaling\+: Dynamically adjusts speed and acceleration based on travel distance.
+\item Limit Switch Detection\+: Calls an emergency stop on all steppers when a limit switch is detected in the positioning mode to prevent hardware damage.
+\end{DoxyEnumerate}
+
+All logic is handled in a simple finite-\/state machine (FSM) pattern (IDLE, MOVING, CALIBRATING) and is updated through a central \doxylink{stepper__manager_8c_a964ebe800c39288a955044757d72ae6e}{Stepper\+Manager\+\_\+\+Update()} call in the main loop.\hypertarget{index_autotoc_md7}{}\doxysubsubsection{\texorpdfstring{\protect\doxylink{stepper__driver_8c}{stepper\+\_\+driver.c} Low-\/\+Level Stepper Motor Controller}{{stepper\+\_\+driver.c} Low-\/\+Level Stepper Motor Controller}}\label{index_autotoc_md7}
+This file provides the real-\/time control of individual stepper motors. Features include\+:
+
+\begin{DoxyItemize}
+\item Constant speed stepping with configurable max speed and acceleration. \item Direction and step pin toggling via GPIO. \item Position tracking and step count management. \item Non-\/blocking move execution, compatible with timer-\/driven \doxylink{main_8c_a8a3b0ad512a6e6c6157440b68d395eac}{HAL\+\_\+\+TIM\+\_\+\+Period\+Elapsed\+Callback()} ISR. \item Safe emergency stop behavior on limit switch triggers.\end{DoxyItemize}
+This driver is intentionally kept hardware-\/focused and timing-\/tight, isolating motion primitives from higher-\/level path logic.\hypertarget{index_autotoc_md8}{}\doxysubsection{\texorpdfstring{Sensing}{Sensing}}\label{index_autotoc_md8}
+The sensing portion executed using a Raspberry Pi 4 with a camera attached. The Raspberry Pi uses Open\+Cv for image detection. The process for getting the final detection takes place through multiple steps in the \doxylink{airhockey_8py}{airhockey file}\+:
+
+\hypertarget{index_autotoc_md9}{}\doxysubsubsection{\texorpdfstring{autotoc\+\_\+md9}{autotoc\+\_\+md9}}\label{index_autotoc_md9}
+\hypertarget{index_autotoc_md10}{}\doxysubsection{\texorpdfstring{Code Example}{Code Example}}\label{index_autotoc_md10}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ motor\_init()\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ Initialize\ motor\ here}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+ 

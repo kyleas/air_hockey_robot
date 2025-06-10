@@ -1,0 +1,105 @@
+\doxysection{workspace\+\_\+1.18.0/me507\+\_\+term\+\_\+project/\+Core/\+Inc/main.h File Reference}
+\hypertarget{main_8h}{}\label{main_8h}\index{workspace\_1.18.0/me507\_term\_project/Core/Inc/main.h@{workspace\_1.18.0/me507\_term\_project/Core/Inc/main.h}}
+
+
+\+: Header for \doxylink{main_8c}{main.\+c} file. This file contains the common defines of the application.  
+
+
+{\ttfamily \#include "{}stm32f4xx\+\_\+hal.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{main_8h_a1730ffe1e560465665eb47d9264826f9}{Error\+\_\+\+Handler}} (void)
+\begin{DoxyCompactList}\small\item\em This function is executed in case of error occurrence. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8h_a0763eb1b83fba15f5169a4f4c55db86d}{four\+\_\+hex\+\_\+to\+\_\+int}} (uint8\+\_\+t num1, uint8\+\_\+t num2, uint8\+\_\+t num3, uint8\+\_\+t num4)
+\begin{DoxyCompactList}\small\item\em Convert four hexadecimal characters to integer. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8h_a1cf79069241c7176fab4bbac2a9c3627}{four\+\_\+ascii\+\_\+to\+\_\+int}} (uint8\+\_\+t d1, uint8\+\_\+t d2, uint8\+\_\+t d3, uint8\+\_\+t d4)
+\begin{DoxyCompactList}\small\item\em Convert four ASCII decimal characters to integer. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\+: Header for \doxylink{main_8c}{main.\+c} file. This file contains the common defines of the application. 
+
+\begin{DoxyAttention}{Attention}
+
+\end{DoxyAttention}
+Copyright (c) 2025 STMicroelectronics. All rights reserved.
+
+This software is licensed under terms that can be found in the LICENSE file in the root directory of this software component. If no LICENSE file comes with this software, it is provided AS-\/\+IS. 
+
+\doxysubsection{Function Documentation}
+\Hypertarget{main_8h_a1730ffe1e560465665eb47d9264826f9}\index{main.h@{main.h}!Error\_Handler@{Error\_Handler}}
+\index{Error\_Handler@{Error\_Handler}!main.h@{main.h}}
+\doxysubsubsection{\texorpdfstring{Error\_Handler()}{Error\_Handler()}}
+{\footnotesize\ttfamily \label{main_8h_a1730ffe1e560465665eb47d9264826f9} 
+void Error\+\_\+\+Handler (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+This function is executed in case of error occurrence. 
+
+
+\begin{DoxyRetVals}{Return values}
+{\em None} & \\
+\hline
+\end{DoxyRetVals}
+\Hypertarget{main_8h_a1cf79069241c7176fab4bbac2a9c3627}\index{main.h@{main.h}!four\_ascii\_to\_int@{four\_ascii\_to\_int}}
+\index{four\_ascii\_to\_int@{four\_ascii\_to\_int}!main.h@{main.h}}
+\doxysubsubsection{\texorpdfstring{four\_ascii\_to\_int()}{four\_ascii\_to\_int()}}
+{\footnotesize\ttfamily \label{main_8h_a1cf79069241c7176fab4bbac2a9c3627} 
+int four\+\_\+ascii\+\_\+to\+\_\+int (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{d1}{, }\item[{uint8\+\_\+t}]{d2}{, }\item[{uint8\+\_\+t}]{d3}{, }\item[{uint8\+\_\+t}]{d4}{}\end{DoxyParamCaption})}
+
+
+
+Convert four ASCII decimal characters to integer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em d1} & First decimal digit (thousands place) \\
+\hline
+{\em d2} & Second decimal digit (hundreds place) \\
+\hline
+{\em d3} & Third decimal digit (tens place) \\
+\hline
+{\em d4} & Fourth decimal digit (ones place) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Combined integer value (0-\/9999) or -\/1 for invalid input
+\end{DoxyReturn}
+Validates each character is a valid decimal digit (\textquotesingle{}0\textquotesingle{}-\/\textquotesingle{}9\textquotesingle{}) before performing conversion. Used for parsing position commands. \begin{DoxyNote}{Note}
+Returns -\/1 if any character is not a valid decimal digit 
+
+Result range is 0-\/9999 for valid inputs 
+\end{DoxyNote}
+\Hypertarget{main_8h_a0763eb1b83fba15f5169a4f4c55db86d}\index{main.h@{main.h}!four\_hex\_to\_int@{four\_hex\_to\_int}}
+\index{four\_hex\_to\_int@{four\_hex\_to\_int}!main.h@{main.h}}
+\doxysubsubsection{\texorpdfstring{four\_hex\_to\_int()}{four\_hex\_to\_int()}}
+{\footnotesize\ttfamily \label{main_8h_a0763eb1b83fba15f5169a4f4c55db86d} 
+int four\+\_\+hex\+\_\+to\+\_\+int (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{num1}{, }\item[{uint8\+\_\+t}]{num2}{, }\item[{uint8\+\_\+t}]{num3}{, }\item[{uint8\+\_\+t}]{num4}{}\end{DoxyParamCaption})}
+
+
+
+Convert four hexadecimal characters to integer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em num1} & First hex digit (most significant) \\
+\hline
+{\em num2} & Second hex digit \\
+\hline
+{\em num3} & Third hex digit ~\newline
+ \\
+\hline
+{\em num4} & Fourth hex digit (least significant) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Combined integer value from four hex digits 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Uses \doxylink{main_8c_a277aca6e6d7eecf02cbdcc3f243c8035}{hex\+\_\+to\+\_\+int()} internally for each digit conversion 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+No validation performed on input characters 
+\end{DoxyWarning}

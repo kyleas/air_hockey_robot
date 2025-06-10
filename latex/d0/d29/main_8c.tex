@@ -1,0 +1,474 @@
+\doxysection{workspace\+\_\+1.18.0/me507\+\_\+term\+\_\+project/\+Core/\+Src/main.c File Reference}
+\hypertarget{main_8c}{}\label{main_8c}\index{workspace\_1.18.0/me507\_term\_project/Core/Src/main.c@{workspace\_1.18.0/me507\_term\_project/Core/Src/main.c}}
+
+
+\+: Main program body for Core\+XY stepper motor control system  
+
+
+{\ttfamily \#include "{}main.\+h"{}}\newline
+{\ttfamily \#include "{}stm32f4xx\+\_\+hal.\+h"{}}\newline
+{\ttfamily \#include "{}stepper\+\_\+driver.\+h"{}}\newline
+{\ttfamily \#include "{}stepper\+\_\+manager.\+h"{}}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$stdbool.\+h$>$}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{main_8c_a739a2a1a0047c98ac1b18ecd25dac092}{RX\+\_\+\+BUFFER\+\_\+\+SIZE}}~64
+\begin{DoxyCompactList}\small\item\em UART receive buffer size in bytes. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{main_8c_a70af21c671abfcc773614a9a4f63d920}{System\+Clock\+\_\+\+Config}} (void)
+\begin{DoxyCompactList}\small\item\em System Clock Configuration. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_a840291bc02cba5474a4cb46a9b9566fe}{main}} (void)
+\begin{DoxyCompactList}\small\item\em The application entry point. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_a8a3b0ad512a6e6c6157440b68d395eac}{HAL\+\_\+\+TIM\+\_\+\+Period\+Elapsed\+Callback}} (TIM\+\_\+\+Handle\+Type\+Def \texorpdfstring{$\ast$}{*}htim)
+\begin{DoxyCompactList}\small\item\em Timer interrupt callback for stepper motor updates. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_ae494a9643f29b87d6d81e5264e60e57b}{HAL\+\_\+\+UART\+\_\+\+Rx\+Cplt\+Callback}} (UART\+\_\+\+Handle\+Type\+Def \texorpdfstring{$\ast$}{*}huart)
+\begin{DoxyCompactList}\small\item\em UART receive complete interrupt callback. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_a277aca6e6d7eecf02cbdcc3f243c8035}{hex\+\_\+to\+\_\+int}} (uint8\+\_\+t c)
+\begin{DoxyCompactList}\small\item\em Convert single hexadecimal character to integer. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_a0763eb1b83fba15f5169a4f4c55db86d}{four\+\_\+hex\+\_\+to\+\_\+int}} (uint8\+\_\+t num1, uint8\+\_\+t num2, uint8\+\_\+t num3, uint8\+\_\+t num4)
+\begin{DoxyCompactList}\small\item\em Convert four hexadecimal characters to integer. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_a1cf79069241c7176fab4bbac2a9c3627}{four\+\_\+ascii\+\_\+to\+\_\+int}} (uint8\+\_\+t d1, uint8\+\_\+t d2, uint8\+\_\+t d3, uint8\+\_\+t d4)
+\begin{DoxyCompactList}\small\item\em Convert four ASCII decimal characters to integer. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_a1730ffe1e560465665eb47d9264826f9}{Error\+\_\+\+Handler}} (void)
+\begin{DoxyCompactList}\small\item\em This function is executed in case of error occurrence. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \mbox{\hyperlink{main_8c_af9d1cee639a3fce5ae72cb65015063b4}{motor1}}
+\begin{DoxyCompactList}\small\item\em Motor A for Core\+XY system (X+Y movement) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \mbox{\hyperlink{main_8c_a8855fc3e98221d2560ad3f7b089ff477}{motor2}}
+\begin{DoxyCompactList}\small\item\em Motor B for Core\+XY system (X-\/Y movement) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} \mbox{\hyperlink{main_8c_a3a03217ef6d0562a458adbbb06da7de7}{mgr}}
+\begin{DoxyCompactList}\small\item\em High-\/level motion controller for coordinated moves. \end{DoxyCompactList}\item 
+TIM\+\_\+\+Handle\+Type\+Def \mbox{\hyperlink{main_8c_a2c80fd5510e2990a59a5c90d745c716c}{htim2}}
+\item 
+UART\+\_\+\+Handle\+Type\+Def \mbox{\hyperlink{main_8c_a2cf715bef37f7e8ef385a30974a5f0d5}{huart1}}
+\item 
+UART\+\_\+\+Handle\+Type\+Def \mbox{\hyperlink{main_8c_aa9479c261d65eecedd3d9582f7f0f89c}{huart2}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a0aee9aa24b9ab3afd9e6af5a891fa9f1}{PWM\+\_\+duty\+\_\+cycle}} = 4800
+\begin{DoxyCompactList}\small\item\em PWM duty cycle (not currently used) \end{DoxyCompactList}\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_ac888c22e9908fbb7cf75b7f73e31440e}{counter\+Value}} = 0
+\begin{DoxyCompactList}\small\item\em General purpose counter. \end{DoxyCompactList}\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a605f21e5e75ad0d91fffa21f3b223009}{board\+\_\+dim\+\_\+x}} = 285.\+75
+\begin{DoxyCompactList}\small\item\em Physical board dimension X in mm. \end{DoxyCompactList}\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_aa0fb26c984d3a6aab58bccd9f2170750}{board\+\_\+dim\+\_\+y}} = 487.\+3
+\begin{DoxyCompactList}\small\item\em Physical board dimension Y in mm. \end{DoxyCompactList}\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8c_a2c7582f6a334f3183819911ede27e716}{uart1\+\_\+rx\+\_\+data}}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8c_aa2828e9fe86766bf123720582f3e445c}{uart2\+\_\+rx\+\_\+data}}
+\begin{DoxyCompactList}\small\item\em Single byte buffers for UART interrupts. \end{DoxyCompactList}\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8c_ae713a6952b3dfd08b26cc09008807094}{uart\+\_\+rx\+\_\+data}}
+\begin{DoxyCompactList}\small\item\em Common variable for processing received data. \end{DoxyCompactList}\item 
+HAL\+\_\+\+Status\+Type\+Def \mbox{\hyperlink{main_8c_a25a23681d2b4a01624065190975633fa}{uart\+\_\+status}}
+\begin{DoxyCompactList}\small\item\em UART operation status. \end{DoxyCompactList}\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8c_af0e9c759254cf69d46288d60ccae888a}{uart\+\_\+rx\+\_\+buffer}} \mbox{[}\mbox{\hyperlink{main_8c_a739a2a1a0047c98ac1b18ecd25dac092}{RX\+\_\+\+BUFFER\+\_\+\+SIZE}}\mbox{]}
+\begin{DoxyCompactList}\small\item\em Command assembly buffer. \end{DoxyCompactList}\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8c_a83d4899e1af23b67ac37afbb65cc0dd9}{uart\+\_\+rx\+\_\+index}} = 0
+\begin{DoxyCompactList}\small\item\em Current position in receive buffer. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{main_8c_a5a4ba60143c31271df0f72bf0e503876}{new\+\_\+data}} = false
+\begin{DoxyCompactList}\small\item\em Flag indicating new UART data received. \end{DoxyCompactList}\item 
+char \mbox{\hyperlink{main_8c_a6de90bb7e8180681b9a421fdb5ab63a6}{tx\+\_\+buff}} \mbox{[}64\mbox{]}
+\begin{DoxyCompactList}\small\item\em Transmit buffer for UART responses. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{main_8c_aaf1f3d96cc7a45bdd0c41084c3faddf7}{max\+\_\+speed}} = 4000.\+0f
+\begin{DoxyCompactList}\small\item\em Maximum motor speed in steps/second. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{main_8c_a9a5267be8142ddc16ba713bccd5ae0ad}{max\+\_\+accel}} = 20000.\+0f
+\begin{DoxyCompactList}\small\item\em Maximum motor acceleration in steps/second² \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\+: Main program body for Core\+XY stepper motor control system 
+
+\+: Implements dual UART communication (PC and Raspberry Pi) with Core\+XY motion control, position commands processing, and stepper motor coordination with limit switches. \begin{DoxyAuthor}{Author}
+\+: Kyle Schumacher 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+\+: Jun 9, 2025
+\end{DoxyDate}
+\begin{DoxyAttention}{Attention}
+
+\end{DoxyAttention}
+Copyright (c) 2025 STMicroelectronics. All rights reserved.
+
+This software is licensed under terms that can be found in the LICENSE file in the root directory of this software component. If no LICENSE file comes with this software, it is provided AS-\/\+IS. 
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{main_8c_a739a2a1a0047c98ac1b18ecd25dac092}\index{main.c@{main.c}!RX\_BUFFER\_SIZE@{RX\_BUFFER\_SIZE}}
+\index{RX\_BUFFER\_SIZE@{RX\_BUFFER\_SIZE}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{RX\_BUFFER\_SIZE}{RX\_BUFFER\_SIZE}}
+{\footnotesize\ttfamily \label{main_8c_a739a2a1a0047c98ac1b18ecd25dac092} 
+\#define RX\+\_\+\+BUFFER\+\_\+\+SIZE~64}
+
+
+
+UART receive buffer size in bytes. 
+
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{main_8c_a1730ffe1e560465665eb47d9264826f9}\index{main.c@{main.c}!Error\_Handler@{Error\_Handler}}
+\index{Error\_Handler@{Error\_Handler}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Error\_Handler()}{Error\_Handler()}}
+{\footnotesize\ttfamily \label{main_8c_a1730ffe1e560465665eb47d9264826f9} 
+void Error\+\_\+\+Handler (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+This function is executed in case of error occurrence. 
+
+
+\begin{DoxyRetVals}{Return values}
+{\em None} & \\
+\hline
+\end{DoxyRetVals}
+\Hypertarget{main_8c_a1cf79069241c7176fab4bbac2a9c3627}\index{main.c@{main.c}!four\_ascii\_to\_int@{four\_ascii\_to\_int}}
+\index{four\_ascii\_to\_int@{four\_ascii\_to\_int}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{four\_ascii\_to\_int()}{four\_ascii\_to\_int()}}
+{\footnotesize\ttfamily \label{main_8c_a1cf79069241c7176fab4bbac2a9c3627} 
+int four\+\_\+ascii\+\_\+to\+\_\+int (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{d1}{, }\item[{uint8\+\_\+t}]{d2}{, }\item[{uint8\+\_\+t}]{d3}{, }\item[{uint8\+\_\+t}]{d4}{}\end{DoxyParamCaption})}
+
+
+
+Convert four ASCII decimal characters to integer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em d1} & First decimal digit (thousands place) \\
+\hline
+{\em d2} & Second decimal digit (hundreds place) \\
+\hline
+{\em d3} & Third decimal digit (tens place) \\
+\hline
+{\em d4} & Fourth decimal digit (ones place) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Combined integer value (0-\/9999) or -\/1 for invalid input
+\end{DoxyReturn}
+Validates each character is a valid decimal digit (\textquotesingle{}0\textquotesingle{}-\/\textquotesingle{}9\textquotesingle{}) before performing conversion. Used for parsing position commands. \begin{DoxyNote}{Note}
+Returns -\/1 if any character is not a valid decimal digit 
+
+Result range is 0-\/9999 for valid inputs 
+\end{DoxyNote}
+\Hypertarget{main_8c_a0763eb1b83fba15f5169a4f4c55db86d}\index{main.c@{main.c}!four\_hex\_to\_int@{four\_hex\_to\_int}}
+\index{four\_hex\_to\_int@{four\_hex\_to\_int}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{four\_hex\_to\_int()}{four\_hex\_to\_int()}}
+{\footnotesize\ttfamily \label{main_8c_a0763eb1b83fba15f5169a4f4c55db86d} 
+int four\+\_\+hex\+\_\+to\+\_\+int (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{num1}{, }\item[{uint8\+\_\+t}]{num2}{, }\item[{uint8\+\_\+t}]{num3}{, }\item[{uint8\+\_\+t}]{num4}{}\end{DoxyParamCaption})}
+
+
+
+Convert four hexadecimal characters to integer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em num1} & First hex digit (most significant) \\
+\hline
+{\em num2} & Second hex digit \\
+\hline
+{\em num3} & Third hex digit ~\newline
+ \\
+\hline
+{\em num4} & Fourth hex digit (least significant) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Combined integer value from four hex digits 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Uses \doxylink{main_8c_a277aca6e6d7eecf02cbdcc3f243c8035}{hex\+\_\+to\+\_\+int()} internally for each digit conversion 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+No validation performed on input characters 
+\end{DoxyWarning}
+\Hypertarget{main_8c_a8a3b0ad512a6e6c6157440b68d395eac}\index{main.c@{main.c}!HAL\_TIM\_PeriodElapsedCallback@{HAL\_TIM\_PeriodElapsedCallback}}
+\index{HAL\_TIM\_PeriodElapsedCallback@{HAL\_TIM\_PeriodElapsedCallback}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{HAL\_TIM\_PeriodElapsedCallback()}{HAL\_TIM\_PeriodElapsedCallback()}}
+{\footnotesize\ttfamily \label{main_8c_a8a3b0ad512a6e6c6157440b68d395eac} 
+void HAL\+\_\+\+TIM\+\_\+\+Period\+Elapsed\+Callback (\begin{DoxyParamCaption}\item[{TIM\+\_\+\+Handle\+Type\+Def \texorpdfstring{$\ast$}{*}}]{htim}{}\end{DoxyParamCaption})}
+
+
+
+Timer interrupt callback for stepper motor updates. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em htim} & Pointer to timer handle that triggered the interrupt\\
+\hline
+\end{DoxyParams}
+Called automatically by HAL when TIM2 period elapses. Updates both stepper motors to generate step pulses and maintain motion profiles. This function runs at high frequency and should be kept minimal. \begin{DoxyNote}{Note}
+Timer frequency determines maximum step rate and motion smoothness 
+\end{DoxyNote}
+\Hypertarget{main_8c_ae494a9643f29b87d6d81e5264e60e57b}\index{main.c@{main.c}!HAL\_UART\_RxCpltCallback@{HAL\_UART\_RxCpltCallback}}
+\index{HAL\_UART\_RxCpltCallback@{HAL\_UART\_RxCpltCallback}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{HAL\_UART\_RxCpltCallback()}{HAL\_UART\_RxCpltCallback()}}
+{\footnotesize\ttfamily \label{main_8c_ae494a9643f29b87d6d81e5264e60e57b} 
+void HAL\+\_\+\+UART\+\_\+\+Rx\+Cplt\+Callback (\begin{DoxyParamCaption}\item[{UART\+\_\+\+Handle\+Type\+Def \texorpdfstring{$\ast$}{*}}]{huart}{}\end{DoxyParamCaption})}
+
+
+
+UART receive complete interrupt callback. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em huart} & Pointer to UART handle that received data\\
+\hline
+\end{DoxyParams}
+Handles incoming data from both UART1 (PC/\+Pu\+TTY) and UART2 (Raspberry Pi). Provides echo functionality for PC connection and visual feedback for Raspberry Pi communication via LED toggle. Automatically re-\/enables UART interrupts for continuous reception. \begin{DoxyNote}{Note}
+UART1 data is echoed back to sender for debugging 
+
+UART2 data toggles onboard LED to indicate activity 
+
+Both UARTs share the same processing pipeline via uart\+\_\+rx\+\_\+data 
+\end{DoxyNote}
+\Hypertarget{main_8c_a277aca6e6d7eecf02cbdcc3f243c8035}\index{main.c@{main.c}!hex\_to\_int@{hex\_to\_int}}
+\index{hex\_to\_int@{hex\_to\_int}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{hex\_to\_int()}{hex\_to\_int()}}
+{\footnotesize\ttfamily \label{main_8c_a277aca6e6d7eecf02cbdcc3f243c8035} 
+int hex\+\_\+to\+\_\+int (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{c}{}\end{DoxyParamCaption})}
+
+
+
+Convert single hexadecimal character to integer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & Hexadecimal character (\textquotesingle{}0\textquotesingle{}-\/\textquotesingle{}9\textquotesingle{}, \textquotesingle{}A\textquotesingle{}-\/\textquotesingle{}F\textquotesingle{}, \textquotesingle{}a\textquotesingle{}-\/\textquotesingle{}f\textquotesingle{}) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Integer value (0-\/15) or undefined for invalid input 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This function doesn\textquotesingle{}t validate input -\/ ensure valid hex chars 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+No bounds checking performed on input 
+\end{DoxyWarning}
+\Hypertarget{main_8c_a840291bc02cba5474a4cb46a9b9566fe}\index{main.c@{main.c}!main@{main}}
+\index{main@{main}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily \label{main_8c_a840291bc02cba5474a4cb46a9b9566fe} 
+int main (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+The application entry point. 
+
+
+\begin{DoxyRetVals}{Return values}
+{\em int} & \\
+\hline
+\end{DoxyRetVals}
+\Hypertarget{main_8c_a70af21c671abfcc773614a9a4f63d920}\index{main.c@{main.c}!SystemClock\_Config@{SystemClock\_Config}}
+\index{SystemClock\_Config@{SystemClock\_Config}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{SystemClock\_Config()}{SystemClock\_Config()}}
+{\footnotesize\ttfamily \label{main_8c_a70af21c671abfcc773614a9a4f63d920} 
+void System\+Clock\+\_\+\+Config (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+System Clock Configuration. 
+
+
+\begin{DoxyRetVals}{Return values}
+{\em None} & \\
+\hline
+\end{DoxyRetVals}
+Configure the main internal regulator output voltage
+
+Initializes the RCC Oscillators according to the specified parameters in the RCC\+\_\+\+Osc\+Init\+Type\+Def structure.
+
+Initializes the CPU, AHB and APB buses clocks
+
+\doxysubsection{Variable Documentation}
+\Hypertarget{main_8c_a605f21e5e75ad0d91fffa21f3b223009}\index{main.c@{main.c}!board\_dim\_x@{board\_dim\_x}}
+\index{board\_dim\_x@{board\_dim\_x}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{board\_dim\_x}{board\_dim\_x}}
+{\footnotesize\ttfamily \label{main_8c_a605f21e5e75ad0d91fffa21f3b223009} 
+uint32\+\_\+t board\+\_\+dim\+\_\+x = 285.\+75}
+
+
+
+Physical board dimension X in mm. 
+
+\Hypertarget{main_8c_aa0fb26c984d3a6aab58bccd9f2170750}\index{main.c@{main.c}!board\_dim\_y@{board\_dim\_y}}
+\index{board\_dim\_y@{board\_dim\_y}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{board\_dim\_y}{board\_dim\_y}}
+{\footnotesize\ttfamily \label{main_8c_aa0fb26c984d3a6aab58bccd9f2170750} 
+uint32\+\_\+t board\+\_\+dim\+\_\+y = 487.\+3}
+
+
+
+Physical board dimension Y in mm. 
+
+\Hypertarget{main_8c_ac888c22e9908fbb7cf75b7f73e31440e}\index{main.c@{main.c}!counterValue@{counterValue}}
+\index{counterValue@{counterValue}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{counterValue}{counterValue}}
+{\footnotesize\ttfamily \label{main_8c_ac888c22e9908fbb7cf75b7f73e31440e} 
+uint32\+\_\+t counter\+Value = 0}
+
+
+
+General purpose counter. 
+
+\Hypertarget{main_8c_a2c80fd5510e2990a59a5c90d745c716c}\index{main.c@{main.c}!htim2@{htim2}}
+\index{htim2@{htim2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{htim2}{htim2}}
+{\footnotesize\ttfamily \label{main_8c_a2c80fd5510e2990a59a5c90d745c716c} 
+TIM\+\_\+\+Handle\+Type\+Def htim2}
+
+\Hypertarget{main_8c_a2cf715bef37f7e8ef385a30974a5f0d5}\index{main.c@{main.c}!huart1@{huart1}}
+\index{huart1@{huart1}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{huart1}{huart1}}
+{\footnotesize\ttfamily \label{main_8c_a2cf715bef37f7e8ef385a30974a5f0d5} 
+UART\+\_\+\+Handle\+Type\+Def huart1}
+
+\Hypertarget{main_8c_aa9479c261d65eecedd3d9582f7f0f89c}\index{main.c@{main.c}!huart2@{huart2}}
+\index{huart2@{huart2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{huart2}{huart2}}
+{\footnotesize\ttfamily \label{main_8c_aa9479c261d65eecedd3d9582f7f0f89c} 
+UART\+\_\+\+Handle\+Type\+Def huart2}
+
+\Hypertarget{main_8c_a9a5267be8142ddc16ba713bccd5ae0ad}\index{main.c@{main.c}!max\_accel@{max\_accel}}
+\index{max\_accel@{max\_accel}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{max\_accel}{max\_accel}}
+{\footnotesize\ttfamily \label{main_8c_a9a5267be8142ddc16ba713bccd5ae0ad} 
+float max\+\_\+accel = 20000.\+0f}
+
+
+
+Maximum motor acceleration in steps/second² 
+
+\Hypertarget{main_8c_aaf1f3d96cc7a45bdd0c41084c3faddf7}\index{main.c@{main.c}!max\_speed@{max\_speed}}
+\index{max\_speed@{max\_speed}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{max\_speed}{max\_speed}}
+{\footnotesize\ttfamily \label{main_8c_aaf1f3d96cc7a45bdd0c41084c3faddf7} 
+float max\+\_\+speed = 4000.\+0f}
+
+
+
+Maximum motor speed in steps/second. 
+
+\Hypertarget{main_8c_a3a03217ef6d0562a458adbbb06da7de7}\index{main.c@{main.c}!mgr@{mgr}}
+\index{mgr@{mgr}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{mgr}{mgr}}
+{\footnotesize\ttfamily \label{main_8c_a3a03217ef6d0562a458adbbb06da7de7} 
+\mbox{\hyperlink{struct_stepper_manager}{Stepper\+Manager}} mgr}
+
+
+
+High-\/level motion controller for coordinated moves. 
+
+\Hypertarget{main_8c_af9d1cee639a3fce5ae72cb65015063b4}\index{main.c@{main.c}!motor1@{motor1}}
+\index{motor1@{motor1}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{motor1}{motor1}}
+{\footnotesize\ttfamily \label{main_8c_af9d1cee639a3fce5ae72cb65015063b4} 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} motor1}
+
+
+
+Motor A for Core\+XY system (X+Y movement) 
+
+\Hypertarget{main_8c_a8855fc3e98221d2560ad3f7b089ff477}\index{main.c@{main.c}!motor2@{motor2}}
+\index{motor2@{motor2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{motor2}{motor2}}
+{\footnotesize\ttfamily \label{main_8c_a8855fc3e98221d2560ad3f7b089ff477} 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} motor2}
+
+
+
+Motor B for Core\+XY system (X-\/Y movement) 
+
+\Hypertarget{main_8c_a5a4ba60143c31271df0f72bf0e503876}\index{main.c@{main.c}!new\_data@{new\_data}}
+\index{new\_data@{new\_data}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{new\_data}{new\_data}}
+{\footnotesize\ttfamily \label{main_8c_a5a4ba60143c31271df0f72bf0e503876} 
+bool new\+\_\+data = false}
+
+
+
+Flag indicating new UART data received. 
+
+\Hypertarget{main_8c_a0aee9aa24b9ab3afd9e6af5a891fa9f1}\index{main.c@{main.c}!PWM\_duty\_cycle@{PWM\_duty\_cycle}}
+\index{PWM\_duty\_cycle@{PWM\_duty\_cycle}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{PWM\_duty\_cycle}{PWM\_duty\_cycle}}
+{\footnotesize\ttfamily \label{main_8c_a0aee9aa24b9ab3afd9e6af5a891fa9f1} 
+uint32\+\_\+t PWM\+\_\+duty\+\_\+cycle = 4800}
+
+
+
+PWM duty cycle (not currently used) 
+
+\Hypertarget{main_8c_a6de90bb7e8180681b9a421fdb5ab63a6}\index{main.c@{main.c}!tx\_buff@{tx\_buff}}
+\index{tx\_buff@{tx\_buff}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{tx\_buff}{tx\_buff}}
+{\footnotesize\ttfamily \label{main_8c_a6de90bb7e8180681b9a421fdb5ab63a6} 
+char tx\+\_\+buff\mbox{[}64\mbox{]}}
+
+
+
+Transmit buffer for UART responses. 
+
+\Hypertarget{main_8c_a2c7582f6a334f3183819911ede27e716}\index{main.c@{main.c}!uart1\_rx\_data@{uart1\_rx\_data}}
+\index{uart1\_rx\_data@{uart1\_rx\_data}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{uart1\_rx\_data}{uart1\_rx\_data}}
+{\footnotesize\ttfamily \label{main_8c_a2c7582f6a334f3183819911ede27e716} 
+uint8\+\_\+t uart1\+\_\+rx\+\_\+data}
+
+\Hypertarget{main_8c_aa2828e9fe86766bf123720582f3e445c}\index{main.c@{main.c}!uart2\_rx\_data@{uart2\_rx\_data}}
+\index{uart2\_rx\_data@{uart2\_rx\_data}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{uart2\_rx\_data}{uart2\_rx\_data}}
+{\footnotesize\ttfamily \label{main_8c_aa2828e9fe86766bf123720582f3e445c} 
+uint8\+\_\+t uart2\+\_\+rx\+\_\+data}
+
+
+
+Single byte buffers for UART interrupts. 
+
+\Hypertarget{main_8c_af0e9c759254cf69d46288d60ccae888a}\index{main.c@{main.c}!uart\_rx\_buffer@{uart\_rx\_buffer}}
+\index{uart\_rx\_buffer@{uart\_rx\_buffer}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{uart\_rx\_buffer}{uart\_rx\_buffer}}
+{\footnotesize\ttfamily \label{main_8c_af0e9c759254cf69d46288d60ccae888a} 
+uint8\+\_\+t uart\+\_\+rx\+\_\+buffer\mbox{[}\mbox{\hyperlink{main_8c_a739a2a1a0047c98ac1b18ecd25dac092}{RX\+\_\+\+BUFFER\+\_\+\+SIZE}}\mbox{]}}
+
+
+
+Command assembly buffer. 
+
+\Hypertarget{main_8c_ae713a6952b3dfd08b26cc09008807094}\index{main.c@{main.c}!uart\_rx\_data@{uart\_rx\_data}}
+\index{uart\_rx\_data@{uart\_rx\_data}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{uart\_rx\_data}{uart\_rx\_data}}
+{\footnotesize\ttfamily \label{main_8c_ae713a6952b3dfd08b26cc09008807094} 
+uint8\+\_\+t uart\+\_\+rx\+\_\+data}
+
+
+
+Common variable for processing received data. 
+
+\Hypertarget{main_8c_a83d4899e1af23b67ac37afbb65cc0dd9}\index{main.c@{main.c}!uart\_rx\_index@{uart\_rx\_index}}
+\index{uart\_rx\_index@{uart\_rx\_index}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{uart\_rx\_index}{uart\_rx\_index}}
+{\footnotesize\ttfamily \label{main_8c_a83d4899e1af23b67ac37afbb65cc0dd9} 
+uint8\+\_\+t uart\+\_\+rx\+\_\+index = 0}
+
+
+
+Current position in receive buffer. 
+
+\Hypertarget{main_8c_a25a23681d2b4a01624065190975633fa}\index{main.c@{main.c}!uart\_status@{uart\_status}}
+\index{uart\_status@{uart\_status}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{uart\_status}{uart\_status}}
+{\footnotesize\ttfamily \label{main_8c_a25a23681d2b4a01624065190975633fa} 
+HAL\+\_\+\+Status\+Type\+Def uart\+\_\+status}
+
+
+
+UART operation status. 
+

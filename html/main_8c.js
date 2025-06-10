@@ -1,0 +1,28 @@
+var main_8c =
+[
+    [ "RX_BUFFER_SIZE", "main_8c.html#a739a2a1a0047c98ac1b18ecd25dac092", null ],
+    [ "Error_Handler", "main_8c.html#a1730ffe1e560465665eb47d9264826f9", null ],
+    [ "four_ascii_to_int", "main_8c.html#a1cf79069241c7176fab4bbac2a9c3627", null ],
+    [ "four_hex_to_int", "main_8c.html#a0763eb1b83fba15f5169a4f4c55db86d", null ],
+    [ "HAL_TIM_PeriodElapsedCallback", "main_8c.html#a8a3b0ad512a6e6c6157440b68d395eac", null ],
+    [ "HAL_UART_RxCpltCallback", "main_8c.html#ae494a9643f29b87d6d81e5264e60e57b", null ],
+    [ "hex_to_int", "main_8c.html#a277aca6e6d7eecf02cbdcc3f243c8035", null ],
+    [ "main", "main_8c.html#a840291bc02cba5474a4cb46a9b9566fe", null ],
+    [ "SystemClock_Config", "main_8c.html#a70af21c671abfcc773614a9a4f63d920", null ],
+    [ "board_dim_x", "main_8c.html#a605f21e5e75ad0d91fffa21f3b223009", null ],
+    [ "board_dim_y", "main_8c.html#aa0fb26c984d3a6aab58bccd9f2170750", null ],
+    [ "counterValue", "main_8c.html#ac888c22e9908fbb7cf75b7f73e31440e", null ],
+    [ "max_accel", "main_8c.html#a9a5267be8142ddc16ba713bccd5ae0ad", null ],
+    [ "max_speed", "main_8c.html#aaf1f3d96cc7a45bdd0c41084c3faddf7", null ],
+    [ "mgr", "main_8c.html#a3a03217ef6d0562a458adbbb06da7de7", null ],
+    [ "motor1", "main_8c.html#af9d1cee639a3fce5ae72cb65015063b4", null ],
+    [ "motor2", "main_8c.html#a8855fc3e98221d2560ad3f7b089ff477", null ],
+    [ "new_data", "main_8c.html#a5a4ba60143c31271df0f72bf0e503876", null ],
+    [ "PWM_duty_cycle", "main_8c.html#a0aee9aa24b9ab3afd9e6af5a891fa9f1", null ],
+    [ "tx_buff", "main_8c.html#a6de90bb7e8180681b9a421fdb5ab63a6", null ],
+    [ "uart2_rx_data", "main_8c.html#aa2828e9fe86766bf123720582f3e445c", null ],
+    [ "uart_rx_buffer", "main_8c.html#af0e9c759254cf69d46288d60ccae888a", null ],
+    [ "uart_rx_data", "main_8c.html#ae713a6952b3dfd08b26cc09008807094", null ],
+    [ "uart_rx_index", "main_8c.html#a83d4899e1af23b67ac37afbb65cc0dd9", null ],
+    [ "uart_status", "main_8c.html#a25a23681d2b4a01624065190975633fa", null ]
+];

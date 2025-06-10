@@ -1,0 +1,290 @@
+\doxysection{Stepper\+Manager Struct Reference}
+\hypertarget{struct_stepper_manager}{}\label{struct_stepper_manager}\index{StepperManager@{StepperManager}}
+
+
+Core\+XY stepper motor management structure.  
+
+
+
+
+{\ttfamily \#include $<$stepper\+\_\+manager.\+h$>$}
+
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{struct_stepper_manager_ad448af4c01b190b60b5fcfc62693a767}{motor\+\_\+x}}
+\begin{DoxyCompactList}\small\item\em Motor A in Core\+XY system (handles X+Y movement) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{struct_stepper_manager_af1231eeea3577d9e5f8b0d20fcb55b1e}{motor\+\_\+y}}
+\begin{DoxyCompactList}\small\item\em Motor B in Core\+XY system (handles X-\/Y movement) \end{DoxyCompactList}\item 
+GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{struct_stepper_manager_ad6df753ed4ccd2aaf0d68af8679facf7}{limit\+\_\+x\+\_\+port}}
+\begin{DoxyCompactList}\small\item\em GPIO port for X-\/axis limit switch. \end{DoxyCompactList}\item 
+uint16\+\_\+t \mbox{\hyperlink{struct_stepper_manager_a732f3495457e79037f3cb3ed9288b0d6}{limit\+\_\+x\+\_\+pin}}
+\begin{DoxyCompactList}\small\item\em GPIO pin for X-\/axis limit switch. \end{DoxyCompactList}\item 
+GPIO\+\_\+\+Type\+Def \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{struct_stepper_manager_ac55625e0178a6d55bae3f5fbedb350e0}{limit\+\_\+y\+\_\+port}}
+\begin{DoxyCompactList}\small\item\em GPIO port for Y-\/axis limit switch. \end{DoxyCompactList}\item 
+uint16\+\_\+t \mbox{\hyperlink{struct_stepper_manager_a2261b22d8416b6f5755ccabadc2f3b50}{limit\+\_\+y\+\_\+pin}}
+\begin{DoxyCompactList}\small\item\em GPIO pin for Y-\/axis limit switch. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a63419ddde6b18c64f6711e847abb3b55}{position\+\_\+x\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Current commanded X position in millimeters. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_aad0ca767c6cd5a77965fbad8058f8657}{position\+\_\+y\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Current commanded Y position in millimeters. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a48a0179816a0d90977328e9c0e512e4f}{soft\+\_\+limit\+\_\+x\+\_\+min\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Minimum allowed X position. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_acd1e1428b4fddae25e9b61583d9be788}{soft\+\_\+limit\+\_\+x\+\_\+max\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Maximum allowed X position. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a91309a8624b8cae5b5c2966eeb982dc2}{soft\+\_\+limit\+\_\+y\+\_\+min\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Minimum allowed Y position. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a570cb2b22bdb01d1cc867ae3fa9a5810}{soft\+\_\+limit\+\_\+y\+\_\+max\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Maximum allowed Y position. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_aef06fb32cbba9780055a7aac00057f98}{steps\+\_\+per\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Conversion factor\+: steps = mm × steps\+\_\+per\+\_\+mm. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a3fadd09189a4fe900fec5ce7a31f5848}{calib\+\_\+backoff\+\_\+mm}}
+\begin{DoxyCompactList}\small\item\em Distance to back off after hitting limit switch. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3}{Manager\+State}} \mbox{\hyperlink{struct_stepper_manager_ab1b3143c003bdc8150156e14af0a8ede}{state}}
+\begin{DoxyCompactList}\small\item\em Current operational state. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{struct_stepper_manager_a172b3ef6a7eeae8aa881dbc742b8819a}{calib\+\_\+x\+\_\+homed}}
+\begin{DoxyCompactList}\small\item\em True when X-\/axis homing is complete. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{struct_stepper_manager_a76a831cd6827c235d426e87f8d726ad4}{calib\+\_\+y\+\_\+homed}}
+\begin{DoxyCompactList}\small\item\em True when Y-\/axis homing is complete. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a76dbb6efc393b0d66aede91f4646b1d8}{default\+\_\+speed\+\_\+a}}
+\begin{DoxyCompactList}\small\item\em Default speed for motor A (steps/second) \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a70819f16a383beabbab2346394850ef2}{default\+\_\+speed\+\_\+b}}
+\begin{DoxyCompactList}\small\item\em Default speed for motor B (steps/second) \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_af0d6686dcddc10cc07ac5c60c34cd24b}{default\+\_\+accel\+\_\+a}}
+\begin{DoxyCompactList}\small\item\em Default acceleration for motor A (steps/second²) \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{struct_stepper_manager_a2ac61bc526dc536d9139b3d09a368991}{default\+\_\+accel\+\_\+b}}
+\begin{DoxyCompactList}\small\item\em Default acceleration for motor B (steps/second²) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Core\+XY stepper motor management structure. 
+
+Manages dual stepper motors in Core\+XY configuration with automatic calibration, soft limits, position tracking, and coordinated movement. Provides millimeter-\/based positioning with automatic step conversion.
+
+\begin{DoxyNote}{Note}
+Core\+XY Kinematics\+:
+\begin{DoxyItemize}
+\item Motor A (motor\+\_\+x)\+: Controls X+Y movement (A = X + Y)
+\item Motor B (motor\+\_\+y)\+: Controls X-\/Y movement (B = X -\/ Y)
+\item Forward\+: X = (A + B)/2, Y = (A -\/ B)/2
+\item Inverse\+: A = X + Y, B = X -\/ Y 
+\end{DoxyItemize}
+\end{DoxyNote}
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{struct_stepper_manager_a3fadd09189a4fe900fec5ce7a31f5848}\index{StepperManager@{StepperManager}!calib\_backoff\_mm@{calib\_backoff\_mm}}
+\index{calib\_backoff\_mm@{calib\_backoff\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{calib\_backoff\_mm}{calib\_backoff\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a3fadd09189a4fe900fec5ce7a31f5848} 
+float Stepper\+Manager\+::calib\+\_\+backoff\+\_\+mm}
+
+
+
+Distance to back off after hitting limit switch. 
+
+\Hypertarget{struct_stepper_manager_a172b3ef6a7eeae8aa881dbc742b8819a}\index{StepperManager@{StepperManager}!calib\_x\_homed@{calib\_x\_homed}}
+\index{calib\_x\_homed@{calib\_x\_homed}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{calib\_x\_homed}{calib\_x\_homed}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a172b3ef6a7eeae8aa881dbc742b8819a} 
+bool Stepper\+Manager\+::calib\+\_\+x\+\_\+homed}
+
+
+
+True when X-\/axis homing is complete. 
+
+\Hypertarget{struct_stepper_manager_a76a831cd6827c235d426e87f8d726ad4}\index{StepperManager@{StepperManager}!calib\_y\_homed@{calib\_y\_homed}}
+\index{calib\_y\_homed@{calib\_y\_homed}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{calib\_y\_homed}{calib\_y\_homed}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a76a831cd6827c235d426e87f8d726ad4} 
+bool Stepper\+Manager\+::calib\+\_\+y\+\_\+homed}
+
+
+
+True when Y-\/axis homing is complete. 
+
+\Hypertarget{struct_stepper_manager_af0d6686dcddc10cc07ac5c60c34cd24b}\index{StepperManager@{StepperManager}!default\_accel\_a@{default\_accel\_a}}
+\index{default\_accel\_a@{default\_accel\_a}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{default\_accel\_a}{default\_accel\_a}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_af0d6686dcddc10cc07ac5c60c34cd24b} 
+float Stepper\+Manager\+::default\+\_\+accel\+\_\+a}
+
+
+
+Default acceleration for motor A (steps/second²) 
+
+\Hypertarget{struct_stepper_manager_a2ac61bc526dc536d9139b3d09a368991}\index{StepperManager@{StepperManager}!default\_accel\_b@{default\_accel\_b}}
+\index{default\_accel\_b@{default\_accel\_b}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{default\_accel\_b}{default\_accel\_b}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a2ac61bc526dc536d9139b3d09a368991} 
+float Stepper\+Manager\+::default\+\_\+accel\+\_\+b}
+
+
+
+Default acceleration for motor B (steps/second²) 
+
+\Hypertarget{struct_stepper_manager_a76dbb6efc393b0d66aede91f4646b1d8}\index{StepperManager@{StepperManager}!default\_speed\_a@{default\_speed\_a}}
+\index{default\_speed\_a@{default\_speed\_a}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{default\_speed\_a}{default\_speed\_a}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a76dbb6efc393b0d66aede91f4646b1d8} 
+float Stepper\+Manager\+::default\+\_\+speed\+\_\+a}
+
+
+
+Default speed for motor A (steps/second) 
+
+\Hypertarget{struct_stepper_manager_a70819f16a383beabbab2346394850ef2}\index{StepperManager@{StepperManager}!default\_speed\_b@{default\_speed\_b}}
+\index{default\_speed\_b@{default\_speed\_b}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{default\_speed\_b}{default\_speed\_b}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a70819f16a383beabbab2346394850ef2} 
+float Stepper\+Manager\+::default\+\_\+speed\+\_\+b}
+
+
+
+Default speed for motor B (steps/second) 
+
+\Hypertarget{struct_stepper_manager_a732f3495457e79037f3cb3ed9288b0d6}\index{StepperManager@{StepperManager}!limit\_x\_pin@{limit\_x\_pin}}
+\index{limit\_x\_pin@{limit\_x\_pin}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{limit\_x\_pin}{limit\_x\_pin}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a732f3495457e79037f3cb3ed9288b0d6} 
+uint16\+\_\+t Stepper\+Manager\+::limit\+\_\+x\+\_\+pin}
+
+
+
+GPIO pin for X-\/axis limit switch. 
+
+\Hypertarget{struct_stepper_manager_ad6df753ed4ccd2aaf0d68af8679facf7}\index{StepperManager@{StepperManager}!limit\_x\_port@{limit\_x\_port}}
+\index{limit\_x\_port@{limit\_x\_port}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{limit\_x\_port}{limit\_x\_port}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_ad6df753ed4ccd2aaf0d68af8679facf7} 
+GPIO\+\_\+\+Type\+Def\texorpdfstring{$\ast$}{*} Stepper\+Manager\+::limit\+\_\+x\+\_\+port}
+
+
+
+GPIO port for X-\/axis limit switch. 
+
+\Hypertarget{struct_stepper_manager_a2261b22d8416b6f5755ccabadc2f3b50}\index{StepperManager@{StepperManager}!limit\_y\_pin@{limit\_y\_pin}}
+\index{limit\_y\_pin@{limit\_y\_pin}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{limit\_y\_pin}{limit\_y\_pin}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a2261b22d8416b6f5755ccabadc2f3b50} 
+uint16\+\_\+t Stepper\+Manager\+::limit\+\_\+y\+\_\+pin}
+
+
+
+GPIO pin for Y-\/axis limit switch. 
+
+\Hypertarget{struct_stepper_manager_ac55625e0178a6d55bae3f5fbedb350e0}\index{StepperManager@{StepperManager}!limit\_y\_port@{limit\_y\_port}}
+\index{limit\_y\_port@{limit\_y\_port}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{limit\_y\_port}{limit\_y\_port}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_ac55625e0178a6d55bae3f5fbedb350e0} 
+GPIO\+\_\+\+Type\+Def\texorpdfstring{$\ast$}{*} Stepper\+Manager\+::limit\+\_\+y\+\_\+port}
+
+
+
+GPIO port for Y-\/axis limit switch. 
+
+\Hypertarget{struct_stepper_manager_ad448af4c01b190b60b5fcfc62693a767}\index{StepperManager@{StepperManager}!motor\_x@{motor\_x}}
+\index{motor\_x@{motor\_x}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{motor\_x}{motor\_x}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_ad448af4c01b190b60b5fcfc62693a767} 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}}\texorpdfstring{$\ast$}{*} Stepper\+Manager\+::motor\+\_\+x}
+
+
+
+Motor A in Core\+XY system (handles X+Y movement) 
+
+\Hypertarget{struct_stepper_manager_af1231eeea3577d9e5f8b0d20fcb55b1e}\index{StepperManager@{StepperManager}!motor\_y@{motor\_y}}
+\index{motor\_y@{motor\_y}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{motor\_y}{motor\_y}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_af1231eeea3577d9e5f8b0d20fcb55b1e} 
+\mbox{\hyperlink{struct_stepper_motor}{Stepper\+Motor}}\texorpdfstring{$\ast$}{*} Stepper\+Manager\+::motor\+\_\+y}
+
+
+
+Motor B in Core\+XY system (handles X-\/Y movement) 
+
+\Hypertarget{struct_stepper_manager_a63419ddde6b18c64f6711e847abb3b55}\index{StepperManager@{StepperManager}!position\_x\_mm@{position\_x\_mm}}
+\index{position\_x\_mm@{position\_x\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{position\_x\_mm}{position\_x\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a63419ddde6b18c64f6711e847abb3b55} 
+float Stepper\+Manager\+::position\+\_\+x\+\_\+mm}
+
+
+
+Current commanded X position in millimeters. 
+
+\Hypertarget{struct_stepper_manager_aad0ca767c6cd5a77965fbad8058f8657}\index{StepperManager@{StepperManager}!position\_y\_mm@{position\_y\_mm}}
+\index{position\_y\_mm@{position\_y\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{position\_y\_mm}{position\_y\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_aad0ca767c6cd5a77965fbad8058f8657} 
+float Stepper\+Manager\+::position\+\_\+y\+\_\+mm}
+
+
+
+Current commanded Y position in millimeters. 
+
+\Hypertarget{struct_stepper_manager_acd1e1428b4fddae25e9b61583d9be788}\index{StepperManager@{StepperManager}!soft\_limit\_x\_max\_mm@{soft\_limit\_x\_max\_mm}}
+\index{soft\_limit\_x\_max\_mm@{soft\_limit\_x\_max\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{soft\_limit\_x\_max\_mm}{soft\_limit\_x\_max\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_acd1e1428b4fddae25e9b61583d9be788} 
+float Stepper\+Manager\+::soft\+\_\+limit\+\_\+x\+\_\+max\+\_\+mm}
+
+
+
+Maximum allowed X position. 
+
+\Hypertarget{struct_stepper_manager_a48a0179816a0d90977328e9c0e512e4f}\index{StepperManager@{StepperManager}!soft\_limit\_x\_min\_mm@{soft\_limit\_x\_min\_mm}}
+\index{soft\_limit\_x\_min\_mm@{soft\_limit\_x\_min\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{soft\_limit\_x\_min\_mm}{soft\_limit\_x\_min\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a48a0179816a0d90977328e9c0e512e4f} 
+float Stepper\+Manager\+::soft\+\_\+limit\+\_\+x\+\_\+min\+\_\+mm}
+
+
+
+Minimum allowed X position. 
+
+\Hypertarget{struct_stepper_manager_a570cb2b22bdb01d1cc867ae3fa9a5810}\index{StepperManager@{StepperManager}!soft\_limit\_y\_max\_mm@{soft\_limit\_y\_max\_mm}}
+\index{soft\_limit\_y\_max\_mm@{soft\_limit\_y\_max\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{soft\_limit\_y\_max\_mm}{soft\_limit\_y\_max\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a570cb2b22bdb01d1cc867ae3fa9a5810} 
+float Stepper\+Manager\+::soft\+\_\+limit\+\_\+y\+\_\+max\+\_\+mm}
+
+
+
+Maximum allowed Y position. 
+
+\Hypertarget{struct_stepper_manager_a91309a8624b8cae5b5c2966eeb982dc2}\index{StepperManager@{StepperManager}!soft\_limit\_y\_min\_mm@{soft\_limit\_y\_min\_mm}}
+\index{soft\_limit\_y\_min\_mm@{soft\_limit\_y\_min\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{soft\_limit\_y\_min\_mm}{soft\_limit\_y\_min\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_a91309a8624b8cae5b5c2966eeb982dc2} 
+float Stepper\+Manager\+::soft\+\_\+limit\+\_\+y\+\_\+min\+\_\+mm}
+
+
+
+Minimum allowed Y position. 
+
+\Hypertarget{struct_stepper_manager_ab1b3143c003bdc8150156e14af0a8ede}\index{StepperManager@{StepperManager}!state@{state}}
+\index{state@{state}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{state}{state}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_ab1b3143c003bdc8150156e14af0a8ede} 
+\mbox{\hyperlink{stepper__manager_8h_accf3352e7656cb155abd0b2c76d96ca3}{Manager\+State}} Stepper\+Manager\+::state}
+
+
+
+Current operational state. 
+
+\Hypertarget{struct_stepper_manager_aef06fb32cbba9780055a7aac00057f98}\index{StepperManager@{StepperManager}!steps\_per\_mm@{steps\_per\_mm}}
+\index{steps\_per\_mm@{steps\_per\_mm}!StepperManager@{StepperManager}}
+\doxysubsubsection{\texorpdfstring{steps\_per\_mm}{steps\_per\_mm}}
+{\footnotesize\ttfamily \label{struct_stepper_manager_aef06fb32cbba9780055a7aac00057f98} 
+float Stepper\+Manager\+::steps\+\_\+per\+\_\+mm}
+
+
+
+Conversion factor\+: steps = mm × steps\+\_\+per\+\_\+mm. 
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+workspace\+\_\+1.\+18.\+0/me507\+\_\+term\+\_\+project/\+Core/\+Inc/\mbox{\hyperlink{stepper__manager_8h}{stepper\+\_\+manager.\+h}}\end{DoxyCompactItemize}
