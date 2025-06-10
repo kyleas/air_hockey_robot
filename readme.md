@@ -2,7 +2,9 @@
 
 This project implements a 2-axis CoreXY air hockey robot designed as part of the ME507 embedded systems course. The robot plays against a human by tracking the puck with computer vision and responding with predictive paddle movements.
 
-![Air Hockey Table](images/overall.png)
+The documentation pages are at https://kyleas.github.io/air_hockey_robot/
+
+![Air Hockey Table](images/overall.jpg)
 
 ## Overview
 
@@ -30,7 +32,7 @@ Key features include:
 │       ├── stepper_driver.c     # Low-level stepper motor control
 │       └── stepper_manager.c    # CoreXY motion planning + FSM
 ├── Pi_Side/
-│   └── vision.py                # OpenCV puck detection and trajectory prediction
+│   └── airhockey.py             # OpenCV puck detection and trajectory prediction
 ├── docs/
 │   └── mainpage.md              # Doxygen top-level documentation file
 ├── README.md
