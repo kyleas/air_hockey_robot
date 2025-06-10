@@ -833,7 +833,7 @@ def main_loop():
                         # Calculate strike point - we need to hit the puck and go to halfway point
                         # First find where the vector crosses the striker's y position
                         if abs(norm_vector_y) > 1e-3:  # Avoid division by zero
-                            t = (y_target - puck_y) / norm_vector_y
+                            t = (y_target_normal - puck_y) / norm_vector_y
                             intercept_x = puck_x + norm_vector_x * t
                             
                             # Calculate how far we need to go to reach halfway point
